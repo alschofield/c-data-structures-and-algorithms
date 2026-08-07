@@ -1,0 +1,34 @@
+# Singly Linked List
+
+Generic node-based collection with one forward link. Stored `void *` values,
+including `NULL`, remain caller-owned.
+
+## Required API
+
+```c
+typedef struct SinglyLinkedList SinglyLinkedList;
+
+SinglyLinkedList *singly_linked_list_create(void);
+void singly_linked_list_destroy(SinglyLinkedList *list);
+bool singly_linked_list_push_front(SinglyLinkedList *list, void *item);
+bool singly_linked_list_push_back(SinglyLinkedList *list, void *item);
+bool singly_linked_list_pop_front(SinglyLinkedList *list, void **out_item);
+bool singly_linked_list_pop_back(SinglyLinkedList *list, void **out_item);
+bool singly_linked_list_get(const SinglyLinkedList *list, size_t index, void **out_item);
+bool singly_linked_list_insert(SinglyLinkedList *list, size_t index, void *item);
+bool singly_linked_list_remove(SinglyLinkedList *list, size_t index, void **out_item);
+size_t singly_linked_list_size(const SinglyLinkedList *list);
+bool singly_linked_list_is_empty(const SinglyLinkedList *list);
+```
+
+## Contract
+
+- Valid element indexes are `[0, size)`; `insert` also accepts `size`.
+- Failed operations leave output parameters and list contents unchanged.
+- Removing the final node returns the list to a valid empty state.
+- `destroy` frees nodes only, never stored values.
+
+## Complexity Targets
+
+- `push_front`, `pop_front`, `size`, `is_empty`: O(1)
+- `push_back`, `pop_back`, `get`, `insert`, `remove`: O(n)
