@@ -10,10 +10,10 @@ Completed and tested:
 - Stack: generic, dynamically growing LIFO container.
 - Queue: generic, dynamically growing circular FIFO buffer.
 - Singly linked list: generic, head-only linked list with indexed operations.
+- Dynamic array: generic, resizable contiguous collection with indexed operations.
 
 Planned:
 
-- Dynamic array
 - Hash table
 - Binary search tree
 
@@ -49,6 +49,7 @@ Completed module test commands:
 make test NAME=stack
 make test NAME=queue
 make test NAME=singly-linked-list
+make test NAME=dynamic-array
 ```
 
 The Makefile defaults to Clang. Override `CC` when needed, for example:
@@ -56,6 +57,23 @@ The Makefile defaults to Clang. Override `CC` when needed, for example:
 ```bash
 make CC=gcc test NAME=stack
 ```
+
+## Verification Results
+
+Each command below builds with strict C17 flags (`-Wall -Wextra -Wpedantic
+-Werror -g`) before running its assertion-based test executable.
+
+| Module | Test command | Coverage | Result | Median wall-clock time |
+| --- | --- | --- | --- | --- |
+| Stack | `make test NAME=stack` | Empty and null handling; generic values including `NULL`; LIFO ordering; 1,024-item growth and reuse. | Pass, 100/100 timed runs | 11.227 ms (6.025-47.323 ms) |
+| Queue | `make test NAME=queue` | Empty and null handling; generic values including `NULL`; FIFO ordering; 1,024-item growth and reuse; circular-buffer wraparound growth. | Pass, 100/100 timed runs | 7.453 ms (5.915-32.369 ms) |
+| Singly linked list | `make test NAME=singly-linked-list` | Empty and null handling; generic values including `NULL`; indexed insert/get/remove; head, append, tail, and final-node boundaries; 1,024-item traversal and reuse. | Pass, 100/100 timed runs | 8.740 ms (6.868-46.067 ms) |
+| Dynamic array | `make test NAME=dynamic-array` | Empty and null handling; generic values including `NULL`; indexed insert/get/set/remove; append insertion; 1,024-item growth. | Pass, 100/100 timed runs | 75.942 ms (47.772-998.044 ms) |
+
+Timings were captured on Windows by running each already-built test executable
+100 times. They include process startup and operating-system scheduling, so
+they verify test completion rather than benchmark individual data-structure
+operations.
 
 ## Test-Driven Workflow
 

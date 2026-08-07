@@ -35,8 +35,8 @@ static void test_indexed_operations_and_generic_values(void) {
     struct Record record = { .id = 4 };
     void *out = NULL;
 
-    assert(dynamic_array_push(array, &first));
-    assert(dynamic_array_push(array, &second));
+    assert(dynamic_array_insert(array, 0U, &first));
+    assert(dynamic_array_insert(array, 1U, &second));
     assert(dynamic_array_insert(array, 1U, &record));
     assert(dynamic_array_insert(array, 3U, NULL));
     assert(!dynamic_array_insert(array, 5U, &first));
@@ -71,7 +71,7 @@ static void test_growth(void) {
 
     for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         values[index] = (int)index;
-        assert(dynamic_array_push(array, &values[index]));
+        assert(dynamic_array_insert(array, dynamic_array_size(array), &values[index]));
     }
     assert(dynamic_array_size(array) == ITEM_COUNT);
     assert(dynamic_array_capacity(array) >= ITEM_COUNT);
@@ -85,7 +85,6 @@ static void test_null_container(void) {
     int value = 1;
     void *out = &value;
 
-    assert(!dynamic_array_push(NULL, &value));
     assert(!dynamic_array_get(NULL, 0U, &out));
     assert(!dynamic_array_set(NULL, 0U, &value, &out));
     assert(!dynamic_array_insert(NULL, 0U, &value));

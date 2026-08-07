@@ -10,7 +10,6 @@ typedef struct DynamicArray DynamicArray;
 
 DynamicArray *dynamic_array_create(void);
 void dynamic_array_destroy(DynamicArray *array);
-bool dynamic_array_push(DynamicArray *array, void *item);
 bool dynamic_array_get(const DynamicArray *array, size_t index, void **out_item);
 bool dynamic_array_set(DynamicArray *array, size_t index, void *item, void **out_old_item);
 bool dynamic_array_insert(DynamicArray *array, size_t index, void *item);
@@ -32,5 +31,5 @@ bool dynamic_array_is_empty(const DynamicArray *array);
 ## Complexity Targets
 
 - `get`, `set`, `size`, `capacity`, `is_empty`: O(1)
-- `push`: amortized O(1)
-- `insert`, `remove`: O(n)
+- `insert` at `size`: amortized O(1)
+- Other `insert` operations and `remove`: O(n)
