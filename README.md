@@ -22,6 +22,7 @@ Planned:
 ```text
 src/        One folder per data structure, containing its header, implementation,
             tests, and README
+bench/      Reusable in-process benchmark harness and module benchmarks
 build/      Generated binaries and debug symbols; ignored by Git
 Makefile    Local build and test commands
 ```
@@ -63,17 +64,46 @@ make CC=gcc test NAME=stack
 Each command below builds with strict C17 flags (`-Wall -Wextra -Wpedantic
 -Werror -g`) before running its assertion-based test executable.
 
-| Module | Test command | Coverage | Result | Median wall-clock time |
-| --- | --- | --- | --- | --- |
-| Stack | `make test NAME=stack` | Empty and null handling; generic values including `NULL`; LIFO ordering; 1,024-item growth and reuse. | Pass, 100/100 timed runs | 11.227 ms (6.025-47.323 ms) |
-| Queue | `make test NAME=queue` | Empty and null handling; generic values including `NULL`; FIFO ordering; 1,024-item growth and reuse; circular-buffer wraparound growth. | Pass, 100/100 timed runs | 7.453 ms (5.915-32.369 ms) |
-| Singly linked list | `make test NAME=singly-linked-list` | Empty and null handling; generic values including `NULL`; indexed insert/get/remove; head, append, tail, and final-node boundaries; 1,024-item traversal and reuse. | Pass, 100/100 timed runs | 8.740 ms (6.868-46.067 ms) |
-| Dynamic array | `make test NAME=dynamic-array` | Empty and null handling; generic values including `NULL`; indexed insert/get/set/remove; append insertion; 1,024-item growth. | Pass, 100/100 timed runs | 75.942 ms (47.772-998.044 ms) |
+| Module | Test command | Coverage | Result |
+| --- | --- | --- | --- |
+| Stack | `make test NAME=stack` | Empty and null handling; generic values including `NULL`; LIFO ordering; 1,024-item growth and reuse. | Pass |
+| Queue | `make test NAME=queue` | Empty and null handling; generic values including `NULL`; FIFO ordering; 1,024-item growth and reuse; circular-buffer wraparound growth. | Pass |
+| Singly linked list | `make test NAME=singly-linked-list` | Empty and null handling; generic values including `NULL`; indexed insert/get/remove; head, append, tail, and final-node boundaries; 1,024-item traversal and reuse. | Pass |
+| Dynamic array | `make test NAME=dynamic-array` | Empty and null handling; generic values including `NULL`; indexed insert/get/set/remove; append insertion; 1,024-item growth. | Pass |
 
-Timings were captured on Windows by running each already-built test executable
-100 times. They include process startup and operating-system scheduling, so
-they verify test completion rather than benchmark individual data-structure
-operations.
+## Benchmarking
+
+The dependency-free `bench/` harness measures repeated operations in one
+process. It excludes process startup, setup, verification, and teardown from
+the timed region, then reports median, minimum, and maximum nanoseconds per
+operation across independent samples. Benchmark targets compile with `-O2`.
+
+On Windows, it uses `QueryPerformanceCounter`; on POSIX systems, it uses
+`clock_gettime(CLOCK_MONOTONIC)`.
+
+```bash
+make benchmark-test
+make benchmark NAME=dynamic-array
+make benchmark NAME=dynamic-array BENCHMARK_ITEM_COUNT=100000
+```
+
+Add a future benchmark as `bench/<module_name>_benchmark.c`. Each benchmark
+provides setup, operation, verification, and teardown callbacks. To assess
+growth trends, run the same operation at increasing input sizes and compare
+normalized nanoseconds per operation; benchmarks provide evidence for expected
+complexity but do not prove Big-O behavior.
+
+Current benchmark coverage:
+
+- Stack: push and pop.
+- Queue: enqueue and dequeue.
+- Singly linked list: push front/back, pop front/back, middle `get`, middle
+  `insert`, and middle `remove`.
+- Dynamic array: append insertion through the general `insert` API.
+
+Stack, queue, and dynamic-array benchmarks default to 10,000 operations per
+sample. The singly linked-list benchmark defaults to 2,000 because its
+back/indexed operations intentionally traverse nodes.
 
 ## Test-Driven Workflow
 
