@@ -20,6 +20,37 @@ Completed and tested:
 Planned:
 
 - Binary search tree
+- Search algorithms: linear and binary search.
+- Sorting algorithms: bubble, selection, insertion, merge, and quick sort.
+- Doubly linked list, heap / priority queue, trie, graph, BFS, DFS, and Dijkstra.
+
+## Next Learning Scope
+
+The existing modules establish contiguous storage, circular indexing, node links,
+generic callback contracts, collision chains, and unbalanced ordered trees. The
+next sequence should expose the C-specific details that still matter in systems
+work:
+
+1. Finish the binary search tree: recursive destruction and in-order traversal,
+   iterative search/insertion, and leaf, one-child, and two-child removal.
+2. Implement linear and binary search: comparator conventions, loop invariants,
+   empty input, and overflow-safe midpoint calculation.
+3. Implement the sorting sequence: bubble, selection, insertion, merge, and
+   quick sort. Benchmark random, sorted, reversed, and duplicate-heavy input.
+4. Improve the hash table with load-factor resizing and rehashing. This converts
+   the current collision-correct fixed-bucket table into expected O(1) behavior
+   at scale.
+5. Add doubly linked list and heap / priority queue to compare pointer-heavy and
+   contiguous-memory tradeoffs.
+6. Add trie and graph representations, then BFS, DFS, and Dijkstra to connect
+   storage choices with traversal and pathfinding algorithms.
+7. Run AddressSanitizer and UndefinedBehaviorSanitizer on every completed module
+   and use the benchmark harness to distinguish algorithmic effects from timing
+   noise and cache behavior.
+
+The matching Rust repository follows this same sequence but deliberately uses
+ownership, borrowing, `Option`, `Result`, and trait bounds rather than copying
+the C APIs mechanically.
 
 ## Layout
 
@@ -55,6 +86,7 @@ make test NAME=stack
 make test NAME=queue
 make test NAME=singly-linked-list
 make test NAME=dynamic-array
+make test NAME=hash-table
 ```
 
 The Makefile defaults to Clang. Override `CC` when needed, for example:
@@ -75,6 +107,8 @@ Each command below builds with strict C17 flags (`-Wall -Wextra -Wpedantic
 | Singly linked list | `make test NAME=singly-linked-list` | Empty and null handling; generic values including `NULL`; indexed insert/get/remove; head, append, tail, and final-node boundaries; 1,024-item traversal and reuse. | Pass |
 | Dynamic array | `make test NAME=dynamic-array` | Empty and null handling; generic values including `NULL`; indexed insert/get/set/remove; append insertion; 1,024-item growth. | Pass |
 | Hash table | `make test NAME=hash-table` | Empty and null handling; caller-defined hash/equality; replacement; `NULL` values; removal; 256 forced collisions; and destruction. | Pass |
+| Search | `make test NAME=search` | Linear search over arbitrary input; binary search over sorted input; output stability on failure. | Scaffold |
+| Sorting | `make test NAME=sorting` | Ordering, empty input, and comparator validation for five comparison sorts. | Scaffold |
 
 ## Benchmarking
 
@@ -154,6 +188,11 @@ head-only rather than adding a saved tail pointer.
 
 Each module README defines its API and behavior contract. Its test file is the
 acceptance suite. Implement the header and source only after reading both.
+
+Search and sorting currently have intentionally failing acceptance tests because
+their C implementations are still TODO scaffolds. Compile them with `make test
+NAME=search` and `make test NAME=sorting` to see the next behavioral target;
+they become passing verification commands after implementation.
 
 - Containers store generic `void *` values and never free caller-owned values.
 - A failed operation returns `false` and must not change an output parameter.
