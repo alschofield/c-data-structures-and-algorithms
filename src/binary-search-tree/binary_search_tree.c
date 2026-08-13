@@ -77,61 +77,93 @@ bool binary_search_tree_insert(BinarySearchTree *tree, void *item) {
         return false;
     }
 
+    // Handles the special case where the first item becomes the root node.
     if (tree->size == 0U) {
+        // Allocates the first table-owned node.
         Node *node = malloc(sizeof(Node));
+        // Stops before accessing the node when allocation fails.
         if (node == NULL) {
+            // Leaves the empty tree unchanged on allocation failure.
             return false;
         }
 
+        // Stores the caller-owned item pointer in the new root node.
         node->value = item;
+        // Starts the root with no lower-valued child.
         node->left = NULL;
+        // Starts the root with no higher-valued child.
         node->right = NULL;
+        // Connects the first node as the tree root.
         tree->root = node;
+        // Counts the newly inserted item.
         tree->size++;
+        // Reports successful root insertion.
         return true;
     }
 
-    // TODO: Create the first root node when the tree is empty.
+    // Starts at the existing root to follow one comparison-guided path.
     Node *temp = tree->root;
-    while(temp != NULL) {
+    // Continues until inserting a new leaf or finding a duplicate.
+    while (temp != NULL) {
+        // Compares the current item with the caller's new item.
         int direction = tree->compare(temp->value, item);
         if (direction > 0) {
+            // Uses the lower-valued branch because the new item sorts before current.
             if (temp->left == NULL) {
+                // Allocates a leaf where the lower-valued child belongs.
                 Node *left = malloc(sizeof(Node));
+                // Stops without changing the tree when allocation fails.
                 if (left == NULL) {
                     return false;
                 }
 
+                // Stores the caller-owned item pointer in the new leaf.
                 left->value = item;
+                // Starts the new leaf without children.
                 left->left = NULL;
                 left->right = NULL;
+                // Links the new leaf below the current node.
                 temp->left = left;
+                // Counts the newly inserted item.
                 tree->size++;
+                // Reports successful lower-branch insertion.
                 return true;
             } else {
+                // Continues down the existing lower-valued branch.
                 temp = temp->left;
             }
         } else if (direction < 0) {
+            // Uses the higher-valued branch because the new item sorts after current.
             if (temp->right == NULL) {
+                // Allocates a leaf where the higher-valued child belongs.
                 Node *right = malloc(sizeof(Node));
+                // Stops without changing the tree when allocation fails.
                 if (right == NULL) {
                     return false;
                 }
 
+                // Stores the caller-owned item pointer in the new leaf.
                 right->value = item;
+                // Starts the new leaf without children.
                 right->left = NULL;
                 right->right = NULL;
+                // Links the new leaf below the current node.
                 temp->right = right;
+                // Counts the newly inserted item.
                 tree->size++;
+                // Reports successful higher-branch insertion.
                 return true;
             } else {
+                // Continues down the existing higher-valued branch.
                 temp = temp->right;
             }
         } else {
+            // Preserves the first stored pointer when the new item compares equal.
             return false;
         }
     }
 
+    // Defensively reports failure if a broken tree invariant ends the loop.
     return false;
 }
 
@@ -157,7 +189,7 @@ bool binary_search_tree_find(const BinarySearchTree *tree, const void *key, void
     // Starts at the root of the comparison-guided search path.
     Node *temp = tree->root;
     // Follows one branch at each node until finding a match or reaching a missing child.
-    while(temp != NULL) {
+    while (temp != NULL) {
         // Compares the current stored item against the caller's lookup key.
         int direction = tree->compare(temp->value, key);
         if (direction > 0) {
@@ -251,6 +283,8 @@ bool binary_search_tree_remove(BinarySearchTree *tree, const void *key, void **o
                     previous->right = current->right;
                 }
             }
+
+            // TODO: the rest of actually removign the node
 
             tree->size--;
             return true;
