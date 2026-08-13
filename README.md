@@ -3,6 +3,10 @@
 A C17 portfolio for independently implementing and documenting data
 structures and algorithms from first principles.
 
+> Brought to you by the offices of SchoTech: we bring you something you already
+> have and will not need in the future, in a language you have already seen and
+> also will not need in the future.
+
 ## Progress
 
 Completed and tested:
@@ -156,3 +160,11 @@ acceptance suite. Implement the header and source only after reading both.
 - `destroy(NULL)` is a no-op; other operations on a `NULL` container fail safely.
 - Allocation-failure behavior is part of each contract, but needs allocator
   injection before it can be tested deterministically.
+
+## Source Material
+
+- [Capital STEEZ - Infinity And Beyond](https://www.youtube.com/watch?v=6z2W06cmpmE)
+  - Session soundtrack and moral support.
+- The APIs, behavioral contracts, tests, benchmark harness, and README material
+  are authored directly in this repository; no other external technical source
+  was used or attributed during their creation.
