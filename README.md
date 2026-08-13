@@ -164,6 +164,7 @@ acceptance suite. Implement the header and source only after reading both.
 ## Source Material
 
 - [Capital STEEZ - Infinity And Beyond](https://www.youtube.com/watch?v=6z2W06cmpmE)
+- [YouTube source material](https://www.youtube.com/watch?v=We2om9wO-bI)
 - The APIs, behavioral contracts, tests, benchmark harness, and README material
   are authored directly in this repository; no other external technical source
   was used or attributed during their creation.
