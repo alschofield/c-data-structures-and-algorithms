@@ -35,3 +35,30 @@ bool hash_table_is_empty(const HashTable *table);
 
 - `set`, `get`, `remove`, `contains`: expected O(1), O(n) under collisions
 - `size`, `is_empty`: O(1)
+
+## Implementation Notes
+
+Use separate chaining: `buckets` is an array of `HashTableEntry *`, and every
+entry points to the next entry in its collision chain. A bucket is selected by:
+
+```c
+size_t index = table->hash(key) % table->capacity;
+```
+
+The entry stores the original caller-owned key and value pointers, not the hash
+result. Different keys may have the same hash, so lookup and mutation must
+traverse the selected chain and call `table->equals(current->key, key)` before
+treating two keys as the same.
+
+For `set`, replace only the value when an equal key already exists; retain the
+first key pointer as required by the contract. For a new key, allocate one entry
+and prepend it to the selected bucket chain. `remove` uses `previous` and
+`current` pointers to unlink the matched entry, frees that entry only, and never
+frees caller-owned keys or values.
+
+The generic singly linked-list module is intentionally not reused here. Hash
+table buckets need direct entry traversal and key comparison, while the generic
+list API only exposes index-based operations and would add unnecessary wrapper
+nodes. Rehashing later must allocate a new bucket array and place every existing
+entry using its stored key and the new capacity; do not cache a separate hash
+value unless the contract and invariant explicitly require it.
