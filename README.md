@@ -11,10 +11,10 @@ Completed and tested:
 - Queue: generic, dynamically growing circular FIFO buffer.
 - Singly linked list: generic, head-only linked list with indexed operations.
 - Dynamic array: generic, resizable contiguous collection with indexed operations.
+- Hash table: generic key-value collection using separate chaining.
 
 Planned:
 
-- Hash table
 - Binary search tree
 
 ## Layout
@@ -70,6 +70,7 @@ Each command below builds with strict C17 flags (`-Wall -Wextra -Wpedantic
 | Queue | `make test NAME=queue` | Empty and null handling; generic values including `NULL`; FIFO ordering; 1,024-item growth and reuse; circular-buffer wraparound growth. | Pass |
 | Singly linked list | `make test NAME=singly-linked-list` | Empty and null handling; generic values including `NULL`; indexed insert/get/remove; head, append, tail, and final-node boundaries; 1,024-item traversal and reuse. | Pass |
 | Dynamic array | `make test NAME=dynamic-array` | Empty and null handling; generic values including `NULL`; indexed insert/get/set/remove; append insertion; 1,024-item growth. | Pass |
+| Hash table | `make test NAME=hash-table` | Empty and null handling; caller-defined hash/equality; replacement; `NULL` values; removal; 256 forced collisions; and destruction. | Pass |
 
 ## Benchmarking
 
@@ -100,10 +101,50 @@ Current benchmark coverage:
 - Singly linked list: push front/back, pop front/back, middle `get`, middle
   `insert`, and middle `remove`.
 - Dynamic array: append insertion through the general `insert` API.
+- Hash table: `set`, `get`, `contains`, and `remove` with distributed integer hashes.
 
 Stack, queue, and dynamic-array benchmarks default to 10,000 operations per
 sample. The singly linked-list benchmark defaults to 2,000 because its
-back/indexed operations intentionally traverse nodes.
+back/indexed operations intentionally traverse nodes. The hash-table benchmark
+also defaults to 10,000 operations per sample.
+
+The current hash table has a fixed initial capacity of 10 buckets and does not
+yet rehash. Its collision handling is correct, but average chain length grows
+with the number of entries, so large-table operations do not yet meet the
+expected O(1) complexity target. Run the benchmark at increasing item counts to
+observe that behavior; resizing and rehashing are the next required improvement.
+
+### Example Local Results
+
+These measurements were collected on the development machine with Clang and
+`-O2`; they are regression evidence for that environment, not portable speed
+claims or proof of algorithmic complexity.
+
+| Module / operation | Sample shape | Median ns/op |
+| --- | --- | ---: |
+| Stack push | 21 x 10,000 | 2.69 |
+| Stack pop | 21 x 10,000 | 2.17 |
+| Queue enqueue | 21 x 10,000 | 12.53 |
+| Queue dequeue | 21 x 10,000 | 3.50 |
+| Dynamic array append insertion | 21 x 10,000 | 3.84 |
+| Singly linked list push front | 21 x 2,000 | 29.70 |
+| Singly linked list push back | 21 x 2,000 | 1,628.05 |
+| Singly linked list get middle | 21 x 2,000 | 1,117.55 |
+| Singly linked list insert middle | 21 x 2,000 | 3,178.00 |
+| Singly linked list remove middle | 21 x 2,000 | 577.50 |
+| Hash table set | 21 x 1,000 | 98.20 |
+| Hash table get | 21 x 1,000 | 64.50 |
+| Hash table contains | 21 x 1,000 | 68.50 |
+| Hash table remove | 21 x 1,000 | 84.80 |
+| Hash table set | 21 x 10,000 | 2,634.72 |
+| Hash table get | 21 x 10,000 | 2,507.58 |
+| Hash table contains | 21 x 10,000 | 2,559.70 |
+| Hash table remove | 21 x 10,000 | 2,540.57 |
+
+The hash-table increase between 1,000 and 10,000 entries is expected from the
+current fixed bucket count. The singly linked-list back and middle operations
+likewise show their intentional traversal cost; the list deliberately remains
+head-only rather than adding a saved tail pointer.
 
 ## Test-Driven Workflow
 

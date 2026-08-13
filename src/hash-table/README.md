@@ -36,6 +36,26 @@ bool hash_table_is_empty(const HashTable *table);
 - `set`, `get`, `remove`, `contains`: expected O(1), O(n) under collisions
 - `size`, `is_empty`: O(1)
 
+## Benchmarking
+
+Run the reusable benchmark harness from the repository root:
+
+```bash
+make benchmark NAME=hash-table
+make benchmark NAME=hash-table BENCHMARK_ITEM_COUNT=100000
+```
+
+It measures `set`, `get`, `contains`, and `remove` across 21 timed samples,
+excluding table setup, verification, teardown, and process startup from the
+timed region. Results report minimum, median, and maximum nanoseconds per
+operation. Compare multiple item counts to observe growth trends rather than
+treating one machine's timing as proof of complexity.
+
+The current implementation has 10 fixed buckets and does not yet resize or
+rehash. It is collision-correct, but its average chain length grows as entries
+are added, so large tables currently have growing average operation cost. Add
+resizing and rehashing before claiming expected O(1) behavior at scale.
+
 ## Implementation Notes
 
 Use separate chaining: `buckets` is an array of `HashTableEntry *`, and every
