@@ -60,6 +60,7 @@ void binary_search_tree_destroy(BinarySearchTree *tree) {
     }
 
     // TODO: Traverse and free every node without freeing caller-owned values.
+
     return;
 }
 
@@ -71,10 +72,66 @@ bool binary_search_tree_insert(BinarySearchTree *tree, void *item) {
         return false;
     }
 
-    // TODO: Reject NULL items, allocate a node, and link it at the correct leaf position.
-    (void)(item);
+    if (item == NULL) {
+        // Rejects null items because the tree contract disallows them.
+        return false;
+    }
 
-    // Reports failure until insertion is implemented.
+    if (tree->size == 0U) {
+        Node *node = malloc(sizeof(Node));
+        if (node == NULL) {
+            return false;
+        }
+
+        node->value = item;
+        node->left = NULL;
+        node->right = NULL;
+        tree->root = node;
+        tree->size++;
+        return true;
+    }
+
+    // TODO: Create the first root node when the tree is empty.
+    Node *temp = tree->root;
+    while(temp != NULL) {
+        int direction = tree->compare(temp->value, item);
+        if (direction > 0) {
+            if (temp->left == NULL) {
+                Node *left = malloc(sizeof(Node));
+                if (left == NULL) {
+                    return false;
+                }
+
+                left->value = item;
+                left->left = NULL;
+                left->right = NULL;
+                temp->left = left;
+                tree->size++;
+                return true;
+            } else {
+                temp = temp->left;
+            }
+        } else if (direction < 0) {
+            if (temp->right == NULL) {
+                Node *right = malloc(sizeof(Node));
+                if (right == NULL) {
+                    return false;
+                }
+
+                right->value = item;
+                right->left = NULL;
+                right->right = NULL;
+                temp->right = right;
+                tree->size++;
+                return true;
+            } else {
+                temp = temp->right;
+            }
+        } else {
+            return false;
+        }
+    }
+
     return false;
 }
 
@@ -86,11 +143,50 @@ bool binary_search_tree_find(const BinarySearchTree *tree, const void *key, void
         return false;
     }
 
-    // TODO: Reject NULL keys/output, walk left or right by compare result, and copy a match to out_item.
-    (void)(key);
-    (void)(out_item);
+    if (key == NULL) {
+        // Leaves the caller's output pointer unchanged for an invalid key.
+        return false;
+    }
 
-    // Reports absence until lookup is implemented.
+    // Rejects a missing location for the stored item pointer.
+    if (out_item == NULL) {
+        // Reports failure because a successful lookup needs an output location.
+        return false;
+    }
+
+    // Starts at the root of the comparison-guided search path.
+    Node *temp = tree->root;
+    // Follows one branch at each node until finding a match or reaching a missing child.
+    while(temp != NULL) {
+        // Compares the current stored item against the caller's lookup key.
+        int direction = tree->compare(temp->value, key);
+        if (direction > 0) {
+            // Searches left because the lookup key is lower than the current item.
+            if (temp->left == NULL) {
+                // Reports absence when the required child does not exist.
+                return false;
+            } else {
+                // Continues at the lower-valued child.
+                temp = temp->left;
+            }
+        } else if (direction < 0) {
+            // Searches right because the lookup key is higher than the current item.
+            if (temp->right == NULL) {
+                // Reports absence when the required child does not exist.
+                return false;
+            } else {
+                // Continues at the higher-valued child.
+                temp = temp->right;
+            }
+        } else {
+            // Copies the original caller-owned stored pointer to the output location.
+            *out_item = temp->value;
+            // Reports the successful lookup.
+            return true;
+        }
+    }
+
+    // Reports absence when the tree has no root or the search path ends.
     return false;
 }
 
@@ -102,11 +198,11 @@ bool binary_search_tree_contains(const BinarySearchTree *tree, const void *key) 
         return false;
     }
 
-    // TODO: Reject NULL keys and walk the search path until a matching comparison result is found.
-    (void)(key);
+    // Provides find with a valid output location that contains does not otherwise need.
+    void *out_item = NULL;
 
-    // Reports absence until membership lookup is implemented.
-    return false;
+    // Reuses comparison-guided lookup and reports only whether it found a match.
+    return binary_search_tree_find(tree, key, &out_item);
 }
 
 // Removes the stored item matching a caller-supplied comparison key.
@@ -117,9 +213,49 @@ bool binary_search_tree_remove(BinarySearchTree *tree, const void *key, void **o
         return false;
     }
 
+    if (key == NULL) {
+        return false;
+    }
+
+    if (out_item == NULL) {
+        return false;
+    }
+
     // TODO: Reject NULL keys/output and handle leaf, one-child, two-child, and root removal.
-    (void)(key);
-    (void)(out_item);
+    Node *current = tree->root;
+    Node *previous = NULL;
+    while(current != NULL) {
+        int direction = tree->compare(current->value, key);
+        if (direction > 0) {
+            if (current->left == NULL) {
+                return false;
+            } else {
+                previous = current;
+                current = current->left;
+            }
+        } else if (direction < 0) {
+            if (current->right == NULL) {
+                return false;
+            } else {
+                previous = current;
+                current = current->right;
+            }
+        } else {
+            *out_item = current->value;
+            // need to remove the node and set the falling leaves back in the new correct spots
+            int old_direction = tree->compare(previous->value, key);
+            if (current->left == NULL && current->right == NULL) {
+                if (old_direction < 0) {
+                    previous->left = current->left;
+                } else {
+                    previous->right = current->right;
+                }
+            }
+
+            tree->size--;
+            return true;
+        }
+    }
 
     // Reports absence until removal is implemented.
     return false;
