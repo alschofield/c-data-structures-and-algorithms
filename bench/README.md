@@ -57,31 +57,62 @@ because its traversal costs would otherwise dominate the suite's runtime).
 
 The spread spans three orders of magnitude, so it is split into two charts —
 a single linear axis would flatten the fast group into invisible slivers.
+Bars are color-coded by structure; Mermaid's chart renderer has no hover
+tooltips or built-in legend, so each chart carries its legend inline below it.
 
 **The fast group — O(1) and O(log n) operations (median ns/op at 10,000 items):**
 
 ```mermaid
+---
+config:
+  xyChart:
+    chartOrientation: horizontal
+    width: 800
+    height: 520
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#2f7ed8, #f28c28, #d63b3b, #3f9c46, #8f5bd4"
+---
 xychart-beta
     title "Constant-time and logarithmic operations"
-    x-axis ["queue deq", "array append", "stack pop", "stack push", "queue enq", "ll pop front", "bst find", "bst contains", "ll push front", "bst remove", "bst insert"]
+    x-axis ["queue dequeue", "array append", "stack pop", "stack push", "queue enqueue", "list pop front", "BST find", "BST contains", "list push front", "BST remove", "BST insert"]
     y-axis "median ns/op" 0 --> 120
-    bar [3.30, 5.87, 7.22, 9.60, 11.20, 15.45, 58.72, 60.88, 64.30, 103.70, 111.65]
+    bar [3.30, 0, 0, 0, 11.20, 0, 0, 0, 0, 0, 0]
+    bar [0, 5.87, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    bar [0, 0, 7.22, 9.60, 0, 0, 0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 0, 15.45, 0, 0, 64.30, 0, 0]
+    bar [0, 0, 0, 0, 0, 0, 58.72, 60.88, 0, 103.70, 111.65]
 ```
+
+🟦 queue · 🟧 dynamic array · 🟥 stack · 🟩 singly linked list · 🟪 binary search tree
 
 **The slow group — traversal-bound operations (median ns/op at 10,000 items;
 linked list measured at 2,000 items):**
 
 ```mermaid
+---
+config:
+  xyChart:
+    chartOrientation: horizontal
+    width: 800
+    height: 460
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#3f9c46, #e0b62f"
+---
 xychart-beta
     title "Linear-traversal operations"
-    x-axis ["ll remove mid", "ll get mid", "ll pop back", "ll push back", "hash remove", "hash set", "hash get", "hash contains", "ll insert mid"]
+    x-axis ["list remove middle", "list get middle", "list pop back", "list push back", "hash remove", "hash set", "hash get", "hash contains", "list insert middle"]
     y-axis "median ns/op" 0 --> 2900
-    bar [511.25, 976.40, 1365.20, 1415.60, 1793.73, 1821.51, 1965.16, 1973.57, 2773.05]
+    bar [511.25, 976.40, 1365.20, 1415.60, 0, 0, 0, 0, 2773.05]
+    bar [0, 0, 0, 0, 1793.73, 1821.51, 1965.16, 1973.57, 0]
 ```
 
-Read the two y-axes carefully: the *tallest* bar of the fast group (BST insert,
-111.65) would be a barely visible sliver at the base of the slow group's chart.
-That gap — not any single number — is the point.
+🟩 singly linked list · 🟨 hash table (10 fixed buckets)
+
+Read the two value axes carefully: the *longest* bar of the fast group (BST
+insert, 111.65) would be a barely visible sliver at the base of the slow
+group's chart. That gap — not any single number — is the point.
 
 ## Why It Plays Out This Way
 
@@ -106,12 +137,26 @@ fast as memory allows."
 ### The linked list is a lesson in what pointers cost
 
 ```mermaid
+---
+config:
+  xyChart:
+    chartOrientation: horizontal
+    width: 800
+    height: 400
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#2f7ed8, #8f5bd4, #d63b3b"
+---
 xychart-beta
     title "One structure, three cost tiers (singly linked list, 2,000 items)"
-    x-axis ["pop front", "push front", "remove mid", "get mid", "pop back", "push back", "insert mid"]
+    x-axis ["pop front", "push front", "remove middle", "get middle", "pop back", "push back", "insert middle"]
     y-axis "median ns/op" 0 --> 2900
-    bar [15.45, 64.30, 511.25, 976.40, 1365.20, 1415.60, 2773.05]
+    bar [15.45, 0, 0, 0, 0, 0, 0]
+    bar [0, 64.30, 0, 0, 0, 0, 0]
+    bar [0, 0, 511.25, 976.40, 1365.20, 1415.60, 2773.05]
 ```
+
+🟦 pointer-only (held end) · 🟪 O(1) + malloc · 🟥 traversal-bound
 
 The tiers are visible at a glance: pointer-only operations at the held end
 (~15 ns), allocation-bearing operations (~64 ns), and anything requiring a
@@ -173,6 +218,12 @@ and rehashing, hash get would flatten to roughly constant ~100 ns at both
 sizes and beat the BST at scale.
 
 ```mermaid
+---
+config:
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#e0b62f, #8f5bd4"
+---
 xychart-beta
     title "Lookup cost vs collection size: chain walk vs guided descent"
     x-axis ["1,000 items", "10,000 items"]
@@ -180,6 +231,8 @@ xychart-beta
     line "Hash table get (10 fixed buckets)" [111.20, 1965.16]
     line "BST find (shuffled insert)" [35.80, 58.72]
 ```
+
+🟨 hash table get (10 fixed buckets) · 🟪 BST find (shuffled insert)
 
 The hash line is the visual definition of linear growth; the BST line is what
 logarithmic growth looks like at benchmark scale — nearly flat.
@@ -193,6 +246,12 @@ logarithmic growth looks like at benchmark scale — nearly flat.
 | 100,000 | 206.34 | 76.96 | 79.62 | 177.33 |
 
 ```mermaid
+---
+config:
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#d63b3b, #f28c28, #3f9c46, #2f7ed8"
+---
 xychart-beta
     title "BST operations across three decades of collection size"
     x-axis ["1,000", "10,000", "100,000"]
@@ -202,6 +261,8 @@ xychart-beta
     line "contains" [36.60, 60.88, 79.62]
     line "find" [35.80, 58.72, 76.96]
 ```
+
+🟥 insert · 🟧 remove · 🟩 contains · 🟦 find
 
 Each 10x growth adds a roughly constant increment (find: +23, +18) rather than
 multiplying the cost — the additive signature of logarithmic growth. On this
