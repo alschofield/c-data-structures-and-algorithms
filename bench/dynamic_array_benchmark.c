@@ -1,7 +1,7 @@
 // Provides the reusable benchmark API.
 #include "benchmark.h"
 // Provides the public dynamic-array API.
-#include "../src/dynamic-array/dynamic_array.h"
+#include "../src/data-structures/linear/arrays/dynamic-array/dynamic_array.h"
 
 // Uses the default sample size unless Make supplies an experiment-specific size.
 #ifndef BENCHMARK_ITEM_COUNT

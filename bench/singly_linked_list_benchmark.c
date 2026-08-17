@@ -1,7 +1,7 @@
 // Provides the reusable benchmark API.
 #include "benchmark.h"
 // Provides the public singly linked-list API.
-#include "../src/singly-linked-list/singly_linked_list.h"
+#include "../src/data-structures/linear/linked/singly-linked-list/singly_linked_list.h"
 
 // Uses a smaller default because several linked-list operations are O(n).
 #ifndef BENCHMARK_ITEM_COUNT

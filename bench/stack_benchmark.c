@@ -1,7 +1,7 @@
 // Provides the reusable benchmark API.
 #include "benchmark.h"
 // Provides the public stack API.
-#include "../src/stack/stack.h"
+#include "../src/data-structures/linear/stacks/stack/stack.h"
 
 // Uses the default sample size unless Make supplies an experiment-specific size.
 #ifndef BENCHMARK_ITEM_COUNT

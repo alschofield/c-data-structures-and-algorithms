@@ -1,7 +1,7 @@
 // Provides the reusable benchmark API.
 #include "benchmark.h"
 // Provides the public queue API.
-#include "../src/queue/queue.h"
+#include "../src/data-structures/linear/queues/queue/queue.h"
 
 // Uses the default sample size unless Make supplies an experiment-specific size.
 #ifndef BENCHMARK_ITEM_COUNT

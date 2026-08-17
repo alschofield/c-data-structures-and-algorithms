@@ -1,7 +1,7 @@
 // Provides the reusable benchmark API.
 #include "benchmark.h"
 // Provides the public hash-table API.
-#include "../src/hash-table/hash_table.h"
+#include "../src/data-structures/associative/hash-tables/separate-chaining/hash_table.h"
 
 // Uses the default sample size unless Make supplies an experiment-specific size.
 #ifndef BENCHMARK_ITEM_COUNT
