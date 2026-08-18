@@ -6,13 +6,21 @@ The standard choice for sparse graphs.
 ## Required API
 
 ```c
-bool adjacency_list_is_implemented(void);
+typedef struct AdjacencyList AdjacencyList;
+typedef bool (*AdjacencyListVisitFn)(size_t neighbor, void *context);
+
+AdjacencyList *adjacency_list_create(size_t vertex_count, bool directed);
+void adjacency_list_destroy(AdjacencyList *graph);
+bool adjacency_list_add_edge(AdjacencyList *graph, size_t from, size_t to);
+bool adjacency_list_has_edge(const AdjacencyList *graph, size_t from, size_t to);
+bool adjacency_list_neighbors(const AdjacencyList *graph, size_t vertex,
+                              AdjacencyListVisitFn visit, void *context);
+size_t adjacency_list_vertex_count(const AdjacencyList *graph);
+size_t adjacency_list_edge_count(const AdjacencyList *graph);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the graph type and
-operations (create/destroy for a fixed vertex count, add_edge, has_edge,
-neighbor iteration, vertex/edge counts).
+The checked-in source is still the scaffold gate `bool
+adjacency_list_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -36,15 +44,3 @@ neighbor iteration, vertex/edge counts).
 - Iterate neighbors of u: O(deg(u))
 - Full traversal of all edges: O(V + E)
 - Space: O(V + E)
-
-## Learning Focus
-
-The adjacency list is the representation every graph algorithm in this
-curriculum assumes when it claims O(V + E). Implementing it shows why: work is
-proportional to edges that actually exist, not to all possible pairs.
-Contrasting its O(deg(u)) edge check against the matrix's O(1) makes the
-sparse-versus-dense trade-off concrete before BFS, DFS, and Dijkstra build on
-top.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

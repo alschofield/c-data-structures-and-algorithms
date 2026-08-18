@@ -6,11 +6,13 @@ recursively sorts both sides.
 ## Required API
 
 ```c
-bool quick_sort_is_implemented(void);
+typedef int (*QuickSortCompareFn)(const void *left, const void *right);
+
+bool quick_sort(void **items, size_t count, QuickSortCompareFn compare);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+quick_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -25,8 +27,6 @@ test asserts exactly that.
   without degrading to unbounded recursion.
 - Zero-length and single-element inputs are no-ops; a `NULL` array with
   nonzero length is invalid input handled without undefined behavior.
-- Scaffold gate: `quick_sort_is_implemented` returns `false`; the test asserts
-  exactly that.
 
 ## Complexity Targets
 
@@ -35,15 +35,3 @@ test asserts exactly that.
 - Worst: O(n^2) (adversarial pivots)
 - Space: O(log n) expected recursion depth (recurse on the smaller side),
   in place otherwise
-
-## Learning Focus
-
-Quick sort teaches partitioning, the workhorse primitive behind quickselect
-and many divide-and-conquer routines. It is the clearest case study in
-average-case versus worst-case analysis: the same code is O(n log n) or
-O(n^2) depending entirely on pivot quality. Implementing it also forces
-recursion-depth discipline — recurse into the smaller partition to bound the
-stack at O(log n).
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

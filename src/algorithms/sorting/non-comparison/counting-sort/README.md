@@ -6,11 +6,12 @@ counts into positions, and places elements directly.
 ## Required API
 
 ```c
-bool counting_sort_is_implemented(void);
+bool counting_sort(uint32_t *items, size_t count, uint32_t key_limit);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+counting_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+Keys must lie in `[0, key_limit)`.
 
 ## Contract
 
@@ -25,8 +26,6 @@ test asserts exactly that.
   reported cleanly and leave the input unmodified.
 - Zero-length input is a no-op; keys outside the declared range are invalid
   input handled without undefined behavior.
-- Scaffold gate: `counting_sort_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
@@ -34,14 +33,3 @@ test asserts exactly that.
 - Average: O(n + k)
 - Worst: O(n + k)
 - Space: O(n + k) auxiliary
-
-## Learning Focus
-
-Counting sort is the proof that the O(n log n) lower bound applies only to
-comparison sorts — with structural knowledge of the keys you can sort in
-linear time. Implementing the prefix-sum placement pass teaches how counts
-become positions, and preserving stability in that pass is the exact skill
-radix sort depends on.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

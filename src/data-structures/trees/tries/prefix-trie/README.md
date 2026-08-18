@@ -6,13 +6,19 @@ marked nodes denote complete keys.
 ## Required API
 
 ```c
-bool prefix_trie_is_implemented(void);
+typedef struct PrefixTrie PrefixTrie;
+
+PrefixTrie *prefix_trie_create(void);
+void prefix_trie_destroy(PrefixTrie *trie);
+bool prefix_trie_insert(PrefixTrie *trie, const char *key);
+bool prefix_trie_contains(const PrefixTrie *trie, const char *key);
+bool prefix_trie_starts_with(const PrefixTrie *trie, const char *prefix);
+bool prefix_trie_remove(PrefixTrie *trie, const char *key);
+size_t prefix_trie_size(const PrefixTrie *trie);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the trie type and
-operations (create/destroy, insert, contains, starts_with prefix query,
-remove, size).
+The checked-in source is still the scaffold gate `bool
+prefix_trie_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -34,15 +40,3 @@ remove, size).
   independent of the number of stored keys
 - Space: O(total characters across stored keys) nodes in the worst case;
   shared prefixes share nodes
-
-## Learning Focus
-
-The trie replaces hashing and comparison with structural position: a key's
-characters are its address. Implementing it makes the key-versus-prefix
-distinction concrete via the end flag, and remove-with-pruning is a good
-exercise in freeing shared structure safely. It explains why autocomplete and
-prefix routing use tries rather than hash tables, which cannot answer prefix
-queries.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

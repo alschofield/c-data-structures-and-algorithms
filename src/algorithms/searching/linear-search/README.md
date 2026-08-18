@@ -6,11 +6,14 @@ match is found or the input is exhausted.
 ## Required API
 
 ```c
-bool linear_search_is_implemented(void);
+typedef int (*LinearSearchCompareFn)(const void *left, const void *right);
+
+bool linear_search(void *const *items, size_t count, const void *key,
+                   LinearSearchCompareFn compare, size_t *out_index);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+linear_search_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -21,8 +24,6 @@ test asserts exactly that.
 - An empty input or `NULL` array pointer is a clean not-found result, not
   undefined behavior.
 - The input array is never modified.
-- Scaffold gate: `linear_search_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
@@ -30,14 +31,3 @@ test asserts exactly that.
 - Average: O(n)
 - Worst: O(n) (target absent or last)
 - Space: O(1)
-
-## Learning Focus
-
-Linear search is the baseline every other search is measured against. Writing
-it precisely forces attention on the details that matter everywhere else:
-first-match semantics under duplicates, an unambiguous not-found signal, and
-edge handling for empty input. It also anchors the intuition for why sorted
-input plus binary search is worth the preprocessing cost.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

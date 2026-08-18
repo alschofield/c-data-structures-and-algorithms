@@ -6,11 +6,11 @@ counting sort per digit, least significant digit first.
 ## Required API
 
 ```c
-bool radix_sort_is_implemented(void);
+bool radix_sort(uint32_t *items, size_t count);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+radix_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -25,8 +25,6 @@ test asserts exactly that.
   allocation failure must be reported cleanly and leave the input unmodified.
 - Zero-length input is a no-op; a `NULL` array with nonzero length is invalid
   input handled without undefined behavior.
-- Scaffold gate: `radix_sort_is_implemented` returns `false`; the test asserts
-  exactly that.
 
 ## Complexity Targets
 
@@ -34,14 +32,3 @@ test asserts exactly that.
 - Average: O(d(n + k))
 - Worst: O(d(n + k))
 - Space: O(n + k) auxiliary
-
-## Learning Focus
-
-Radix sort shows how a stable subroutine composes into a bigger algorithm:
-LSD ordering works only because earlier (less significant) passes are never
-undone by later stable passes. Implementing it makes the radix/digit-count
-trade-off concrete — larger radix means fewer passes but bigger count arrays —
-and demonstrates linear-time sorting of fixed-width keys in practice.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

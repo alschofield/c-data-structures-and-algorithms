@@ -6,12 +6,18 @@ set merging and membership queries.
 ## Required API
 
 ```c
-bool union_find_is_implemented(void);
+typedef struct UnionFind UnionFind;
+
+UnionFind *union_find_create(size_t element_count);
+void union_find_destroy(UnionFind *set);
+bool union_find_find(UnionFind *set, size_t element, size_t *out_representative);
+bool union_find_union(UnionFind *set, size_t a, size_t b, bool *out_merged);
+bool union_find_connected(UnionFind *set, size_t a, size_t b, bool *out_connected);
+size_t union_find_set_count(const UnionFind *set);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the structure and
-operations (create/destroy for n elements, find, union, connected, set count).
+The checked-in source is still the scaffold gate `bool
+union_find_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -34,15 +40,3 @@ operations (create/destroy for n elements, find, union, connected, set count).
   plus union by rank — effectively constant for all practical n
 - `create`: O(n)
 - Space: O(n) for parent and rank arrays
-
-## Learning Focus
-
-Union-find delivers one of the most striking results in data structures: two
-small optimizations turn a potentially linear operation into inverse-Ackermann
-amortized time. Implementing it teaches amortized reasoning on a structure
-that mutates during reads (path compression), and it is the enabling primitive
-for Kruskal's MST, connectivity queries, and cycle detection in undirected
-graphs.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

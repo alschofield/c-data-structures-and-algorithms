@@ -6,11 +6,13 @@ until it reaches its correct position.
 ## Required API
 
 ```c
-bool insertion_sort_is_implemented(void);
+typedef int (*InsertionSortCompareFn)(const void *left, const void *right);
+
+bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+insertion_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -22,8 +24,6 @@ test asserts exactly that.
 - Zero-length and single-element inputs are no-ops; a `NULL` array with
   nonzero length is invalid input handled without undefined behavior.
 - Invariant: before processing index `i`, the range `[0, i)` is sorted.
-- Scaffold gate: `insertion_sort_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
@@ -31,14 +31,3 @@ test asserts exactly that.
 - Average: O(n^2)
 - Worst: O(n^2) (reverse-sorted input)
 - Space: O(1), in place
-
-## Learning Focus
-
-Insertion sort is the standard example of an adaptive algorithm: its cost is
-proportional to the number of inversions, not just n. That makes it the
-practical base case inside merge sort and quick sort for small subarrays.
-Implementing the shift-then-place pattern (hold the element, shift, insert
-once) instead of repeated swaps teaches a real constant-factor optimization.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

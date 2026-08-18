@@ -6,13 +6,20 @@ orders before its children under the caller's comparison.
 ## Required API
 
 ```c
-bool binary_heap_is_implemented(void);
+typedef struct BinaryHeap BinaryHeap;
+typedef int (*BinaryHeapCompareFn)(const void *left, const void *right);
+
+BinaryHeap *binary_heap_create(BinaryHeapCompareFn compare);
+void binary_heap_destroy(BinaryHeap *heap);
+bool binary_heap_push(BinaryHeap *heap, void *item);
+bool binary_heap_pop(BinaryHeap *heap, void **out_item);
+bool binary_heap_peek(const BinaryHeap *heap, void **out_item);
+size_t binary_heap_size(const BinaryHeap *heap);
+bool binary_heap_is_empty(const BinaryHeap *heap);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the heap type and
-operations (create/destroy with a comparison function, push, pop, peek,
-size/is_empty).
+The checked-in source is still the scaffold gate `bool
+binary_heap_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -36,14 +43,3 @@ size/is_empty).
 - `peek`, `size`, `is_empty`: O(1)
 - Build from n items via bottom-up heapify: O(n)
 - Space: O(n) contiguous, no per-element pointer overhead
-
-## Learning Focus
-
-The binary heap is the standard priority queue and the engine inside heap
-sort, Dijkstra, and A-star. Implementing it teaches the implicit-tree trick —
-a complete tree needs no pointers — and the two dual restoration operations,
-sift-up and sift-down. Understanding why bottom-up construction is O(n) while
-n pushes are O(n log n) is a classic amortized-analysis exercise.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

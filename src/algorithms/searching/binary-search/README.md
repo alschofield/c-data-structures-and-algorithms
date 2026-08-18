@@ -6,11 +6,14 @@ on every comparison.
 ## Required API
 
 ```c
-bool binary_search_is_implemented(void);
+typedef int (*BinarySearchCompareFn)(const void *left, const void *right);
+
+bool binary_search(void *const *items, size_t count, const void *key,
+                   BinarySearchCompareFn compare, size_t *out_index);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+binary_search_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -22,8 +25,6 @@ test asserts exactly that.
   index is acceptable unless a lower-bound variant is specified.
 - Empty input or a `NULL` array pointer is a clean not-found result.
 - The input array is never modified.
-- Scaffold gate: `binary_search_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
@@ -31,14 +32,3 @@ test asserts exactly that.
 - Average: O(log n)
 - Worst: O(log n)
 - Space: O(1) iterative
-
-## Learning Focus
-
-Binary search is short but notoriously easy to get subtly wrong: off-by-one
-bounds, non-terminating loops, and midpoint overflow are classic defects.
-Implementing it from first principles builds the loop-invariant discipline
-("the target, if present, is always inside [low, high]") that generalizes to
-partition-based algorithms and to reasoning about any halving process.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

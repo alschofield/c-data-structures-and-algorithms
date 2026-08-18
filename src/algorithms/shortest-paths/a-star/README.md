@@ -6,11 +6,18 @@ Goal-directed shortest-path search that orders the frontier by
 ## Required API
 
 ```c
-bool a_star_is_implemented(void);
+typedef struct WeightedGraph WeightedGraph;
+typedef uint64_t (*AStarHeuristicFn)(size_t vertex, void *context);
+
+bool a_star(const WeightedGraph *graph, size_t source, size_t goal,
+            AStarHeuristicFn heuristic, void *context,
+            size_t *out_path, size_t *out_path_length);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+a_star_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+`WeightedGraph` is the non-negative-weight digraph this module
+defines alongside the algorithm.
 
 ## Contract
 
@@ -27,8 +34,6 @@ test asserts exactly that.
   frontier empties.
 - Parent links must reconstruct the returned path; unreachable goals are an
   explicit no-path result.
-- Scaffold gate: `a_star_is_implemented` returns `false`; the test asserts
-  exactly that.
 
 ## Complexity Targets
 
@@ -36,14 +41,3 @@ test asserts exactly that.
   heuristic gives no pruning); a strong admissible heuristic prunes most of
   the graph in practice
 - Space: O(V) for scores, parents, and the frontier
-
-## Learning Focus
-
-A-star shows how domain knowledge slots into a general algorithm without
-breaking its guarantees: the heuristic reshapes exploration order while
-admissibility preserves optimality. Implementing it clarifies the
-admissible/consistent distinction and why the goal test must happen at
-extraction, not at edge relaxation — testing early sacrifices optimality.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

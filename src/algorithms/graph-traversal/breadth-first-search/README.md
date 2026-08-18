@@ -6,11 +6,17 @@ any vertex at distance k + 1, using a FIFO queue.
 ## Required API
 
 ```c
-bool breadth_first_search_is_implemented(void);
+typedef struct AdjacencyList AdjacencyList;
+
+bool breadth_first_search(const AdjacencyList *graph, size_t source,
+                          size_t *out_order, size_t *out_count);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+breadth_first_search_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+`AdjacencyList` is the graph from
+`data-structures/graphs/representations/adjacency-list`. Distance and
+parent-tracking variants extend the same shape.
 
 ## Contract
 
@@ -25,21 +31,8 @@ test asserts exactly that.
 - Correct on cyclic graphs, self-loops, and disconnected graphs; an invalid
   source vertex is rejected cleanly.
 - The graph is never modified during traversal.
-- Scaffold gate: `breadth_first_search_is_implemented` returns `false`; the
-  test asserts exactly that.
 
 ## Complexity Targets
 
 - Time: O(V + E) with an adjacency list
 - Space: O(V) for the visited set, queue, and parent array
-
-## Learning Focus
-
-BFS shows that a traversal's order is entirely a property of its frontier data
-structure — swap the queue for a stack and you get DFS from the same skeleton.
-The enqueue-time-marking rule is a classic correctness subtlety worth getting
-wrong once and understanding. BFS is also the foundation Dijkstra generalizes:
-same pattern, priority queue instead of FIFO.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

@@ -6,11 +6,13 @@ out-of-order pairs until a full pass makes no swaps.
 ## Required API
 
 ```c
-bool bubble_sort_is_implemented(void);
+typedef int (*BubbleSortCompareFn)(const void *left, const void *right);
+
+bool bubble_sort(void **items, size_t count, BubbleSortCompareFn compare);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+bubble_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -23,8 +25,6 @@ test asserts exactly that.
   nonzero length is invalid input handled without undefined behavior.
 - After each pass `k`, the largest `k` elements occupy their final positions
   at the tail.
-- Scaffold gate: `bubble_sort_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
@@ -32,14 +32,3 @@ test asserts exactly that.
 - Average: O(n^2)
 - Worst: O(n^2) (reverse-sorted input)
 - Space: O(1), in place
-
-## Learning Focus
-
-Bubble sort teaches the anatomy of a comparison sort in its simplest form:
-the invariant that grows a sorted suffix, why adjacent-only swaps guarantee
-stability, and how a cheap flag turns a quadratic algorithm into a linear-time
-verifier of already-sorted input. It is the reference point for appreciating
-what merge and quick sort buy with their extra structure.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

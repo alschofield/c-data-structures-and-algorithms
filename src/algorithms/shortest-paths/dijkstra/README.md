@@ -6,11 +6,19 @@ weights, driven by a min-priority queue over tentative distances.
 ## Required API
 
 ```c
-bool dijkstra_is_implemented(void);
+#define DIJKSTRA_INFINITY UINT64_MAX
+
+typedef struct WeightedGraph WeightedGraph;
+
+bool dijkstra(const WeightedGraph *graph, size_t source,
+              uint64_t *out_distances, size_t *out_parents);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+dijkstra_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+`WeightedGraph` is the non-negative-weight digraph this module
+defines alongside the algorithm. Unreachable vertexes report
+`DIJKSTRA_INFINITY`.
 
 ## Contract
 
@@ -27,21 +35,8 @@ test asserts exactly that.
 - Parent links must reconstruct an actual shortest path from the source.
 - Correct on graphs with cycles, parallel edges, and self-loops; an invalid
   source vertex is rejected cleanly.
-- Scaffold gate: `dijkstra_is_implemented` returns `false`; the test asserts
-  exactly that.
 
 ## Complexity Targets
 
 - Time: O((V + E) log V) with a binary heap
 - Space: O(V) for distances, parents, and the heap
-
-## Learning Focus
-
-Dijkstra is BFS generalized to weighted graphs: the FIFO queue becomes a
-priority queue and levels become tentative distances. Implementing it teaches
-the greedy exchange argument for why settled vertices are final, why that
-argument collapses under negative weights, and the practical lazy-deletion
-technique for priority queues that lack decrease-key.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

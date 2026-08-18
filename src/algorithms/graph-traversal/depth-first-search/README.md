@@ -6,11 +6,17 @@ backtracking, using recursion or an explicit stack.
 ## Required API
 
 ```c
-bool depth_first_search_is_implemented(void);
+typedef struct AdjacencyList AdjacencyList;
+
+bool depth_first_search(const AdjacencyList *graph, size_t source,
+                        size_t *out_order, size_t *out_count);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+depth_first_search_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+`AdjacencyList` is the graph from
+`data-structures/graphs/representations/adjacency-list`.
+Discovery/finish-time variants extend the same shape.
 
 ## Contract
 
@@ -24,21 +30,8 @@ test asserts exactly that.
 - Correct on cyclic graphs, self-loops, and disconnected graphs; an invalid
   source vertex is rejected cleanly.
 - The graph is never modified during traversal.
-- Scaffold gate: `depth_first_search_is_implemented` returns `false`; the test
-  asserts exactly that.
 
 ## Complexity Targets
 
 - Time: O(V + E) with an adjacency list
 - Space: O(V) for the visited set plus recursion/stack depth up to O(V)
-
-## Learning Focus
-
-DFS is the substrate for a large family of graph algorithms: topological sort,
-cycle detection, connected and strongly connected components, and edge
-classification all fall out of its discovery/finish structure. Implementing
-both the recursive and iterative forms teaches how the call stack is an
-implicit data structure and what changes when you make it explicit.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

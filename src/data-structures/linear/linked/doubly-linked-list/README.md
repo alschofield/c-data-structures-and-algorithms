@@ -6,13 +6,20 @@ Stored `void *` values, including `NULL`, remain caller-owned.
 ## Required API
 
 ```c
-bool doubly_linked_list_is_implemented(void);
-```
+typedef struct DoublyLinkedList DoublyLinkedList;
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the list type and
-operations (create/destroy, push/pop at both ends, indexed get/insert/remove,
-size/is_empty).
+DoublyLinkedList *doubly_linked_list_create(void);
+void doubly_linked_list_destroy(DoublyLinkedList *list);
+bool doubly_linked_list_push_front(DoublyLinkedList *list, void *item);
+bool doubly_linked_list_push_back(DoublyLinkedList *list, void *item);
+bool doubly_linked_list_pop_front(DoublyLinkedList *list, void **out_item);
+bool doubly_linked_list_pop_back(DoublyLinkedList *list, void **out_item);
+bool doubly_linked_list_get(const DoublyLinkedList *list, size_t index, void **out_item);
+bool doubly_linked_list_insert(DoublyLinkedList *list, size_t index, void *item);
+bool doubly_linked_list_remove(DoublyLinkedList *list, size_t index, void **out_item);
+size_t doubly_linked_list_size(const DoublyLinkedList *list);
+bool doubly_linked_list_is_empty(const DoublyLinkedList *list);
+```
 
 ## Contract
 
@@ -33,14 +40,3 @@ size/is_empty).
 - `get`, `insert`, `remove` by index: O(n), at most n/2 traversal steps from
   the nearer end
 - Space: O(n) nodes, two pointers of overhead per node
-
-## Learning Focus
-
-The doubly linked list doubles the invariant surface of the singly linked
-version: every splice must update four pointers correctly or the structure
-silently corrupts. Implementing it builds the habit of stating and re-checking
-structural invariants after each mutation, and shows what the second pointer
-buys — O(1) tail removal and O(1) deletion given a node reference.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

@@ -6,11 +6,13 @@ them with an auxiliary buffer.
 ## Required API
 
 ```c
-bool merge_sort_is_implemented(void);
+typedef int (*MergeSortCompareFn)(const void *left, const void *right);
+
+bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that.
+The checked-in source is still the scaffold gate `bool
+merge_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -24,8 +26,6 @@ test asserts exactly that.
   nonzero length is invalid input handled without undefined behavior.
 - The merge must handle uneven halves and runs that exhaust at different
   times without reading out of bounds.
-- Scaffold gate: `merge_sort_is_implemented` returns `false`; the test asserts
-  exactly that.
 
 ## Complexity Targets
 
@@ -33,14 +33,3 @@ test asserts exactly that.
 - Average: O(n log n)
 - Worst: O(n log n)
 - Space: O(n) auxiliary buffer (plus O(log n) recursion depth)
-
-## Learning Focus
-
-Merge sort is the canonical divide-and-conquer algorithm and the cleanest
-proof that comparison sorting can be O(n log n) worst case. Implementing the
-merge step precisely — left-first on ties, correct exhaustion handling —
-demonstrates where stability actually comes from. It also introduces the
-space/time trade-off: the guaranteed bound is bought with a linear buffer.
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.

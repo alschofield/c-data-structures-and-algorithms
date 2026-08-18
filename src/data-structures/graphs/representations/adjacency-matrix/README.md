@@ -6,13 +6,22 @@ indexed by vertex pair. The standard choice for dense graphs.
 ## Required API
 
 ```c
-bool adjacency_matrix_is_implemented(void);
+typedef struct AdjacencyMatrix AdjacencyMatrix;
+typedef bool (*AdjacencyMatrixVisitFn)(size_t neighbor, void *context);
+
+AdjacencyMatrix *adjacency_matrix_create(size_t vertex_count, bool directed);
+void adjacency_matrix_destroy(AdjacencyMatrix *graph);
+bool adjacency_matrix_add_edge(AdjacencyMatrix *graph, size_t from, size_t to);
+bool adjacency_matrix_remove_edge(AdjacencyMatrix *graph, size_t from, size_t to);
+bool adjacency_matrix_has_edge(const AdjacencyMatrix *graph, size_t from, size_t to);
+bool adjacency_matrix_neighbors(const AdjacencyMatrix *graph, size_t vertex,
+                                AdjacencyMatrixVisitFn visit, void *context);
+size_t adjacency_matrix_vertex_count(const AdjacencyMatrix *graph);
+size_t adjacency_matrix_edge_count(const AdjacencyMatrix *graph);
 ```
 
-The header exposes only this scaffold gate. The source returns `false` and the
-test asserts exactly that. The contract below specifies the graph type and
-operations (create/destroy for a fixed vertex count, add_edge, remove_edge,
-has_edge, neighbor iteration, vertex/edge counts).
+The checked-in source is still the scaffold gate `bool
+adjacency_matrix_is_implemented(void)`, which returns `false`; the test asserts exactly that.
 
 ## Contract
 
@@ -35,15 +44,3 @@ has_edge, neighbor iteration, vertex/edge counts).
 - Iterate neighbors of u: O(V), regardless of degree
 - Full traversal of all edges: O(V^2)
 - Space: O(V^2), independent of edge count
-
-## Learning Focus
-
-The matrix is the memory-for-speed extreme of graph representation: O(1) edge
-checks bought with O(V^2) space and O(V) neighbor scans. Implementing both
-representations against the same conceptual interface teaches how
-representation choice changes algorithm cost — BFS on a matrix is O(V^2), not
-O(V + E) — and where each earns its keep (dense graphs, edge-heavy queries,
-Floyd-Warshall).
-
-Status: scaffold — the source is a gate stub; tests assert the unimplemented
-state.
