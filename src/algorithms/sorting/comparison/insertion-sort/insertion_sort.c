@@ -1,9 +1,2 @@
-// Scaffold stub: replace the body with the real implementation.
+// Implement the functions declared in insertion_sort.h here.
 #include "insertion_sort.h"
-
-bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare) {
-    (void)items;
-    (void)count;
-    (void)compare;
-    return false;
-}

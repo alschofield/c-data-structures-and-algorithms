@@ -1,12 +1,2 @@
-// Scaffold stub: replace the body with the real implementation.
+// Implement the functions declared in linear_search.h here.
 #include "linear_search.h"
-
-bool linear_search(void *const *items, size_t count, const void *key,
-                   LinearSearchCompareFn compare, size_t *out_index) {
-    (void)items;
-    (void)count;
-    (void)key;
-    (void)compare;
-    (void)out_index;
-    return false;
-}

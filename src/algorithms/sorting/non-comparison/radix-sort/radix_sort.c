@@ -1,8 +1,2 @@
-// Scaffold stub: replace the body with the real implementation.
+// Implement the functions declared in radix_sort.h here.
 #include "radix_sort.h"
-
-bool radix_sort(uint32_t *items, size_t count) {
-    (void)items;
-    (void)count;
-    return false;
-}

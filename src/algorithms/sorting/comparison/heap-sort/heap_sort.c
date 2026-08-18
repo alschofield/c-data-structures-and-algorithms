@@ -1,9 +1,2 @@
-// Scaffold stub: replace the body with the real implementation.
+// Implement the functions declared in heap_sort.h here.
 #include "heap_sort.h"
-
-bool heap_sort(void **items, size_t count, HeapSortCompareFn compare) {
-    (void)items;
-    (void)count;
-    (void)compare;
-    return false;
-}

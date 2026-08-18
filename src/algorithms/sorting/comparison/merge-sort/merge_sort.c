@@ -1,9 +1,2 @@
-// Scaffold stub: replace the body with the real implementation.
+// Implement the functions declared in merge_sort.h here.
 #include "merge_sort.h"
-
-bool merge_sort(void **items, size_t count, MergeSortCompareFn compare) {
-    (void)items;
-    (void)count;
-    (void)compare;
-    return false;
-}
