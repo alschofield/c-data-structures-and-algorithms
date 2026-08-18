@@ -29,8 +29,9 @@ Timing uses `QueryPerformanceCounter` on Windows and
 
 ## Results at 10,000 Items
 
-Default sample shape: 21 samples x 10,000 operations (linked list: 2,000,
-because its traversal costs would otherwise dominate the suite's runtime).
+Default sample shape: 21 samples x 10,000 operations (both linked lists:
+2,000, because their traversal costs would otherwise dominate the suite's
+runtime).
 
 | Structure / operation | Median ns/op | Expected complexity |
 | --- | ---: | --- |
@@ -39,21 +40,28 @@ because its traversal costs would otherwise dominate the suite's runtime).
 | Stack pop | 7.22 | O(1) |
 | Stack push | 9.60 | O(1) amortized |
 | Queue enqueue | 11.20 | O(1) amortized |
-| Linked list pop front | 15.45 | O(1) |
+| Doubly linked list pop front | 14.40 | O(1) |
+| Doubly linked list pop back | 14.60 | O(1) |
+| Singly linked list pop front | 15.45 | O(1) |
+| Doubly linked list push back | 26.25 | O(1) + malloc |
 | BST find | 58.72 | O(log n) average |
 | BST contains | 60.88 | O(log n) average |
-| Linked list push front | 64.30 | O(1) + malloc |
+| Doubly linked list push front | 61.40 | O(1) + malloc |
+| Singly linked list push front | 64.30 | O(1) + malloc |
 | BST remove | 103.70 | O(log n) average |
 | BST insert | 111.65 | O(log n) average + malloc |
-| Linked list remove middle | 511.25 | O(n) traversal |
-| Linked list get middle | 976.40 | O(n) traversal |
-| Linked list pop back | 1,365.20 | O(n) traversal |
-| Linked list push back | 1,415.60 | O(n) traversal |
+| Singly linked list remove middle | 511.25 | O(n) traversal |
+| Doubly linked list remove middle | 529.30 | O(n/2) traversal |
+| Doubly linked list get middle | 973.35 | O(n/2) traversal |
+| Singly linked list get middle | 976.40 | O(n) traversal |
+| Singly linked list pop back | 1,365.20 | O(n) traversal |
+| Singly linked list push back | 1,415.60 | O(n) traversal |
 | Hash table remove | 1,793.73 | O(1) expected — **O(n/buckets) with 10 fixed buckets** |
 | Hash table set | 1,821.51 | O(1) expected — **O(n/buckets) with 10 fixed buckets** |
 | Hash table get | 1,965.16 | O(1) expected — **O(n/buckets) with 10 fixed buckets** |
 | Hash table contains | 1,973.57 | O(1) expected — **O(n/buckets) with 10 fixed buckets** |
-| Linked list insert middle | 2,773.05 | O(n) traversal |
+| Singly linked list insert middle | 2,773.05 | O(n) traversal |
+| Doubly linked list insert middle | 2,787.85 | O(n/2) traversal |
 
 The spread spans three orders of magnitude, so it is split into two charts —
 a single linear axis would flatten the fast group into invisible slivers.
@@ -174,6 +182,29 @@ The list deliberately keeps no tail pointer. That is a curriculum decision
 pointers), and the benchmark shows the price of the head-only contract
 honestly.
 
+### The doubly linked list is that migration, measured
+
+The doubly linked list is the "right structure" the rule points to when both
+ends matter, and the benchmark shows exactly what the second pointer buys:
+
+| Operation | Singly (ns/op) | Doubly (ns/op) | Why |
+| --- | ---: | ---: | --- |
+| pop front | 15.45 | 14.40 | same pointer-only work at the held end |
+| push front | 64.30 | 61.40 | same O(1) + malloc |
+| push back | 1,415.60 | 26.25 | **O(n) walk became a held-tail write** |
+| pop back | 1,365.20 | 14.60 | **O(n) walk became a held-tail write** |
+| get middle | 976.40 | 973.35 | middle is equidistant from both ends |
+| insert middle | 2,773.05 | 2,787.85 | traversal still dominates the splice |
+| remove middle | 511.25 | 529.30 | traversal still dominates the unlink |
+
+The tail operations collapsed by ~50-90x — from traversal-bound to the
+pointer-only tier — because `last` plus `prev` links make the back a held end.
+Everything else is a wash: the nearer-end walk halves the *step count* for
+middle operations, but the middle is exactly where both ends are farthest
+away, so the halving never shows at that index. The per-node cost of the
+second pointer (one extra write per insert, one extra field per node) is
+invisible at this scale.
+
 ### The BST sits exactly where theory says it should
 
 Shuffled insertion keeps the unbalanced tree near log-depth. log2(10,000) ~ 13
@@ -274,13 +305,14 @@ outgrows L2/L3.
 
 ## How the Structures Relate
 
-The table is one story told five ways: **the price of finding your data.**
+The table is one story told six ways: **the price of finding your data.**
 
 - Stack, queue, and dynamic array never search — the position is known
   arithmetic. Cost: single-digit ns.
-- The linked list makes position a *walk*. O(1) at the ends it holds pointers
+- The linked lists make position a *walk*. O(1) at the ends they hold pointers
   to; O(n) anywhere else. Cost: 15 ns to 2,800 ns depending entirely on
-  where.
+  where. The doubly linked list holds *both* ends, which moves push/pop back
+  into the O(1) tier — but the middle stays a walk.
 - The BST turns the walk into a *guided descent* — each comparison discards
   half the remaining tree. Cost: ~4-5 ns per level, ~log n levels.
 - The hash table tries to skip the search entirely by *computing* the
@@ -300,6 +332,7 @@ make benchmark NAME=data-structures/linear/stacks/stack BENCHMARK=stack
 make benchmark NAME=data-structures/linear/queues/queue BENCHMARK=queue
 make benchmark NAME=data-structures/linear/arrays/dynamic-array BENCHMARK=dynamic_array
 make benchmark NAME=data-structures/linear/linked/singly-linked-list BENCHMARK=singly_linked_list
+make benchmark NAME=data-structures/linear/linked/doubly-linked-list BENCHMARK=doubly_linked_list
 make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
 make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree BENCHMARK=binary_search_tree
 
@@ -320,7 +353,8 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Queue | `queue_benchmark.c` | enqueue, dequeue |
 | Dynamic array | `dynamic_array_benchmark.c` | append insertion |
 | Singly linked list | `singly_linked_list_benchmark.c` | push/pop front and back, get/insert/remove middle |
+| Doubly linked list | `doubly_linked_list_benchmark.c` | push/pop front and back, get/insert/remove middle |
 | Hash table | `hash_table_benchmark.c` | set, get, contains, remove |
 | Binary search tree | `binary_search_tree_benchmark.c` | insert, find, contains, remove |
 
-Benchmarks exist for the six completed modules listed above.
+Benchmarks exist for the seven completed modules listed above.
