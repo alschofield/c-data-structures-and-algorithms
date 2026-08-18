@@ -54,7 +54,7 @@ static void test_undirected_edges(void) {
 
 static void test_neighbor_iteration(void) {
     AdjacencyList *graph = adjacency_list_create(4U, true);
-    struct NeighborLog log = { { 0U }, 0U };
+    struct NeighborLog log = { .count = 0U };
 
     assert(graph != NULL);
     assert(adjacency_list_add_edge(graph, 1U, 0U));
@@ -76,7 +76,7 @@ static void test_neighbor_iteration(void) {
 
 static void test_out_of_range_vertexes(void) {
     AdjacencyList *graph = adjacency_list_create(2U, true);
-    struct NeighborLog log = { { 0U }, 0U };
+    struct NeighborLog log = { .count = 0U };
 
     assert(graph != NULL);
     assert(!adjacency_list_add_edge(graph, 0U, 2U));
@@ -88,7 +88,7 @@ static void test_out_of_range_vertexes(void) {
 }
 
 static void test_null_container(void) {
-    struct NeighborLog log = { { 0U }, 0U };
+    struct NeighborLog log = { .count = 0U };
 
     assert(!adjacency_list_add_edge(NULL, 0U, 1U));
     assert(!adjacency_list_has_edge(NULL, 0U, 1U));

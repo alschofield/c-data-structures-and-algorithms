@@ -6,7 +6,7 @@
 static bool visited_exactly_once(const size_t *order, size_t count, size_t vertex) {
     size_t seen = 0U;
 
-    for (size_t index = 0U; index < count; index++) {
+    for (size_t index = 0U; index < count; ++index) {
         if (order[index] == vertex) {
             seen++;
         }

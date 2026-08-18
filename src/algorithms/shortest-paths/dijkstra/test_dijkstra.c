@@ -4,16 +4,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static const WeightedGraphEdge EDGES_FROM_0[] = { { 1U, 4U }, { 2U, 1U } };
-static const WeightedGraphEdge EDGES_FROM_1[] = { { 3U, 1U } };
-static const WeightedGraphEdge EDGES_FROM_2[] = { { 1U, 2U }, { 3U, 5U } };
+static const WeightedGraphEdge EDGES_FROM_0[] = {
+    { .to = 1U, .weight = 4U }, { .to = 2U, .weight = 1U }
+};
+static const WeightedGraphEdge EDGES_FROM_1[] = { { .to = 3U, .weight = 1U } };
+static const WeightedGraphEdge EDGES_FROM_2[] = {
+    { .to = 1U, .weight = 2U }, { .to = 3U, .weight = 5U }
+};
 static const WeightedGraphEdge *const EDGE_TABLE[] = {
     EDGES_FROM_0, EDGES_FROM_1, EDGES_FROM_2, NULL, NULL
 };
 static const size_t DEGREES[] = { 2U, 1U, 2U, 0U, 0U };
 
 static void test_shortest_distances_and_parents(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     uint64_t distances[5] = { 0U };
     size_t parents[5] = { 0U };
 
@@ -32,7 +38,9 @@ static void test_shortest_distances_and_parents(void) {
 }
 
 static void test_single_vertex_graph(void) {
-    WeightedGraph graph = { 1U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 1U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     uint64_t distances[1] = { 99U };
     size_t parents[1] = { 99U };
 
@@ -42,7 +50,9 @@ static void test_single_vertex_graph(void) {
 }
 
 static void test_invalid_inputs(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     uint64_t distances[5] = { 0U };
     size_t parents[5] = { 0U };
 

@@ -3,6 +3,11 @@
 #include <assert.h>
 #include <stddef.h>
 
+struct Record {
+    int key;
+    int sequence;
+};
+
 static int compare_ints(const void *left, const void *right) {
     const int *left_value = left;
     const int *right_value = right;
@@ -17,18 +22,13 @@ static int compare_ints(const void *left, const void *right) {
 }
 
 static bool ints_sorted(void *const *items, size_t count) {
-    for (size_t index = 1U; index < count; index++) {
+    for (size_t index = 1U; index < count; ++index) {
         if (compare_ints(items[index - 1U], items[index]) > 0) {
             return false;
         }
     }
     return true;
 }
-
-struct Record {
-    int key;
-    int sequence;
-};
 
 static int compare_record_keys(const void *left, const void *right) {
     const struct Record *left_record = left;
@@ -58,7 +58,7 @@ static void test_sorts_shuffled_values(void) {
     void *items[10];
     size_t found = 0U;
 
-    for (size_t index = 0U; index < 10U; index++) {
+    for (size_t index = 0U; index < 10U; ++index) {
         items[index] = &values[index];
     }
 
@@ -82,19 +82,19 @@ static void test_sorted_reverse_and_equal_inputs(void) {
     int equal[] = { 4, 4, 4, 4 };
     void *items[6];
 
-    for (size_t index = 0U; index < 6U; index++) {
+    for (size_t index = 0U; index < 6U; ++index) {
         items[index] = &ascending[index];
     }
     assert(insertion_sort(items, 6U, compare_ints));
     assert(ints_sorted(items, 6U));
 
-    for (size_t index = 0U; index < 6U; index++) {
+    for (size_t index = 0U; index < 6U; ++index) {
         items[index] = &descending[index];
     }
     assert(insertion_sort(items, 6U, compare_ints));
     assert(ints_sorted(items, 6U));
 
-    for (size_t index = 0U; index < 4U; index++) {
+    for (size_t index = 0U; index < 4U; ++index) {
         items[index] = &equal[index];
     }
     assert(insertion_sort(items, 4U, compare_ints));
@@ -103,11 +103,13 @@ static void test_sorted_reverse_and_equal_inputs(void) {
 
 static void test_equal_keys_keep_original_order(void) {
     struct Record records[] = {
-        { 2, 0 }, { 1, 1 }, { 2, 2 }, { 1, 3 }, { 2, 4 }, { 1, 5 }
+        { .key = 2, .sequence = 0 }, { .key = 1, .sequence = 1 },
+        { .key = 2, .sequence = 2 }, { .key = 1, .sequence = 3 },
+        { .key = 2, .sequence = 4 }, { .key = 1, .sequence = 5 }
     };
     void *items[6];
 
-    for (size_t index = 0U; index < 6U; index++) {
+    for (size_t index = 0U; index < 6U; ++index) {
         items[index] = &records[index];
     }
 
@@ -126,7 +128,7 @@ static void test_large_shuffled_input(void) {
     static void *items[ITEM_COUNT];
     unsigned int seed = 12345U;
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         seed = seed * 1103515245U + 12345U;
         values[index] = (int)(seed % 100000U);
         items[index] = &values[index];

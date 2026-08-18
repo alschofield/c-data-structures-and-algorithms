@@ -4,9 +4,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static const WeightedGraphEdge EDGES_FROM_0[] = { { 1U, 4U }, { 2U, 1U } };
-static const WeightedGraphEdge EDGES_FROM_1[] = { { 3U, 1U } };
-static const WeightedGraphEdge EDGES_FROM_2[] = { { 1U, 2U }, { 3U, 5U } };
+static const WeightedGraphEdge EDGES_FROM_0[] = {
+    { .to = 1U, .weight = 4U }, { .to = 2U, .weight = 1U }
+};
+static const WeightedGraphEdge EDGES_FROM_1[] = { { .to = 3U, .weight = 1U } };
+static const WeightedGraphEdge EDGES_FROM_2[] = {
+    { .to = 1U, .weight = 2U }, { .to = 3U, .weight = 5U }
+};
 static const WeightedGraphEdge *const EDGE_TABLE[] = {
     EDGES_FROM_0, EDGES_FROM_1, EDGES_FROM_2, NULL, NULL
 };
@@ -25,7 +29,9 @@ static uint64_t table_heuristic(size_t vertex, void *context) {
 }
 
 static void test_zero_heuristic_matches_dijkstra(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
 
@@ -38,7 +44,9 @@ static void test_zero_heuristic_matches_dijkstra(void) {
 }
 
 static void test_admissible_heuristic_stays_optimal(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     uint64_t remaining_costs[5] = { 4U, 1U, 3U, 0U, 0U };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
@@ -52,7 +60,9 @@ static void test_admissible_heuristic_stays_optimal(void) {
 }
 
 static void test_source_equals_goal(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
 
@@ -62,7 +72,9 @@ static void test_source_equals_goal(void) {
 }
 
 static void test_unreachable_goal_is_no_path(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 99U;
 
@@ -72,7 +84,9 @@ static void test_unreachable_goal_is_no_path(void) {
 }
 
 static void test_invalid_inputs(void) {
-    WeightedGraph graph = { 5U, EDGE_TABLE, DEGREES };
+    WeightedGraph graph = {
+        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
+    };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 99U;
 

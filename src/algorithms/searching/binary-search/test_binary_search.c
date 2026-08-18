@@ -21,11 +21,11 @@ static void test_finds_every_element(void) {
     void *items[6];
     size_t out_index = 99U;
 
-    for (size_t index = 0U; index < 6U; index++) {
+    for (size_t index = 0U; index < 6U; ++index) {
         items[index] = &values[index];
     }
 
-    for (size_t index = 0U; index < 6U; index++) {
+    for (size_t index = 0U; index < 6U; ++index) {
         assert(binary_search(items, 6U, &values[index], compare_ints, &out_index));
         assert(out_index == index);
     }
@@ -37,7 +37,7 @@ static void test_duplicates_return_any_matching_index(void) {
     int key = 3;
     size_t out_index = 99U;
 
-    for (size_t index = 0U; index < 5U; index++) {
+    for (size_t index = 0U; index < 5U; ++index) {
         items[index] = &values[index];
     }
 
@@ -54,7 +54,7 @@ static void test_missing_target_reported_distinctly(void) {
     int high_key = 9;
     size_t out_index = 99U;
 
-    for (size_t index = 0U; index < 4U; index++) {
+    for (size_t index = 0U; index < 4U; ++index) {
         items[index] = &values[index];
     }
 
@@ -83,12 +83,12 @@ static void test_large_sorted_input(void) {
     int absent_key = 1;
     size_t out_index = 0U;
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         values[index] = (int)(index * 2U);
         items[index] = &values[index];
     }
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         assert(binary_search(items, ITEM_COUNT, &values[index], compare_ints, &out_index));
         assert(out_index == index);
     }

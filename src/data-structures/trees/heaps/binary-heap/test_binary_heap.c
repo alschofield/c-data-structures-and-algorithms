@@ -40,7 +40,7 @@ static void test_orders_by_comparison(void) {
     void *out = NULL;
 
     assert(heap != NULL);
-    for (size_t index = 0U; index < 5U; index++) {
+    for (size_t index = 0U; index < 5U; ++index) {
         assert(binary_heap_push(heap, &values[index]));
     }
     assert(binary_heap_size(heap) == 5U);
@@ -49,7 +49,7 @@ static void test_orders_by_comparison(void) {
     assert(*(int *)out == 1);
     assert(binary_heap_size(heap) == 5U);
 
-    for (size_t index = 0U; index < 5U; index++) {
+    for (size_t index = 0U; index < 5U; ++index) {
         assert(binary_heap_pop(heap, &out));
         assert(*(int *)out == expected[index]);
     }
@@ -91,14 +91,14 @@ static void test_growth_and_reuse(void) {
     unsigned int seed = 12345U;
 
     assert(heap != NULL);
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         seed = seed * 1103515245U + 12345U;
         values[index] = (int)(seed % 100000U);
         assert(binary_heap_push(heap, &values[index]));
     }
     assert(binary_heap_size(heap) == (size_t)ITEM_COUNT);
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         assert(binary_heap_pop(heap, &out));
         assert(*(int *)out >= previous);
         previous = *(int *)out;

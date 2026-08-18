@@ -61,7 +61,7 @@ static void test_duplicate_and_absent_edges_are_noops(void) {
 
 static void test_neighbor_iteration_scans_row(void) {
     AdjacencyMatrix *graph = adjacency_matrix_create(4U, true);
-    struct NeighborLog log = { { 0U }, 0U };
+    struct NeighborLog log = { .count = 0U };
 
     assert(graph != NULL);
     assert(adjacency_matrix_add_edge(graph, 2U, 0U));
@@ -76,7 +76,7 @@ static void test_neighbor_iteration_scans_row(void) {
 
 static void test_out_of_range_and_null(void) {
     AdjacencyMatrix *graph = adjacency_matrix_create(2U, true);
-    struct NeighborLog log = { { 0U }, 0U };
+    struct NeighborLog log = { .count = 0U };
 
     assert(graph != NULL);
     assert(!adjacency_matrix_add_edge(graph, 0U, 2U));

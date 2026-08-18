@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 static bool values_sorted(const uint32_t *items, size_t count) {
-    for (size_t index = 1U; index < count; index++) {
+    for (size_t index = 1U; index < count; ++index) {
         if (items[index - 1U] > items[index]) {
             return false;
         }
@@ -45,7 +45,7 @@ static void test_large_shuffled_input(void) {
     static uint32_t values[ITEM_COUNT];
     unsigned int seed = 12345U;
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         seed = seed * 1103515245U + 12345U;
         values[index] = (uint32_t)seed * 2654435761U;
     }

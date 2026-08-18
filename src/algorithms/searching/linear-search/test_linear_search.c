@@ -22,7 +22,7 @@ static void test_finds_first_match_in_unsorted_input(void) {
     int key = 2;
     size_t out_index = 99U;
 
-    for (size_t index = 0U; index < 5U; index++) {
+    for (size_t index = 0U; index < 5U; ++index) {
         items[index] = &values[index];
     }
 
@@ -44,7 +44,7 @@ static void test_missing_target_reported_distinctly(void) {
     int key = 5;
     size_t out_index = 99U;
 
-    for (size_t index = 0U; index < 3U; index++) {
+    for (size_t index = 0U; index < 3U; ++index) {
         items[index] = &values[index];
     }
 
@@ -71,7 +71,7 @@ static void test_large_input(void) {
     int key = 0;
     size_t out_index = 0U;
 
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
+    for (size_t index = 0U; index < ITEM_COUNT; ++index) {
         values[index] = (int)index;
         items[index] = &values[index];
     }
