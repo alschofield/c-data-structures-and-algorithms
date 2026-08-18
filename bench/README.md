@@ -325,6 +325,34 @@ compare/hash functions, so all results include function-pointer call overhead.
 That is the cost of the shared contract style, paid uniformly, so
 cross-structure comparisons stay fair.
 
+## Algorithm Benchmarks
+
+Algorithm benchmarks time one whole run as the operation (21 samples of one
+sort each) rather than repeating a small operation, because a sort's cost is
+a function of its input shape, not a per-call constant.
+
+### Bubble sort: the input decides everything
+
+Whole-sort cost in milliseconds (median of 21 runs):
+
+| Input shape | 2,000 items | 4,000 items | Growth for 2x |
+| --- | ---: | ---: | ---: |
+| Sorted (early exit) | 0.0017 | 0.0032 | 1.9x |
+| Shuffled | 7.31 | 30.27 | 4.1x |
+| Reverse-sorted | 8.81 | 35.18 | 4.0x |
+
+Doubling the input multiplied the shuffled and reverse costs by ~4x — the
+quadratic signature (2^2 = 4) — while the sorted input grew ~2x, the linear
+signature of the required early-exit pass. Same function, three complexity
+behaviors: sorted input costs one O(n) verification pass, and the ~5,200x gap
+between sorted and shuffled at 2,000 items is the difference between "confirm
+order" and "repair order one adjacent swap at a time."
+
+The implementation's shrinking boundary and early exit are both visible here:
+reverse input (the worst case, every pair out of order on every pass) costs
+only ~20% more than shuffled, because the boundary already halves the
+comparison total that a naive full-rescan version would pay.
+
 ## Reproducing
 
 ```bash
@@ -335,6 +363,7 @@ make benchmark NAME=data-structures/linear/linked/singly-linked-list BENCHMARK=s
 make benchmark NAME=data-structures/linear/linked/doubly-linked-list BENCHMARK=doubly_linked_list
 make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
 make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree BENCHMARK=binary_search_tree
+make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_sort
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -356,5 +385,6 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Doubly linked list | `doubly_linked_list_benchmark.c` | push/pop front and back, get/insert/remove middle |
 | Hash table | `hash_table_benchmark.c` | set, get, contains, remove |
 | Binary search tree | `binary_search_tree_benchmark.c` | insert, find, contains, remove |
+| Bubble sort | `bubble_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 
-Benchmarks exist for the seven completed modules listed above.
+Benchmarks exist for the eight completed modules listed above.
