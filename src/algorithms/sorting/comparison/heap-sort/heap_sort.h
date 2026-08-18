@@ -1,5 +1,11 @@
 #ifndef HEAP_SORT_H
 #define HEAP_SORT_H
+
 #include <stdbool.h>
-bool heap_sort_is_implemented(void);
+#include <stddef.h>
+
+typedef int (*HeapSortCompareFn)(const void *left, const void *right);
+
+bool heap_sort(void **items, size_t count, HeapSortCompareFn compare);
+
 #endif

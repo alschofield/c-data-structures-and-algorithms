@@ -14,8 +14,8 @@ bool dijkstra(const WeightedGraph *graph, size_t source,
               uint64_t *out_distances, size_t *out_parents);
 ```
 
-The checked-in source is still the scaffold gate `bool
-dijkstra_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 `WeightedGraph` is the non-negative-weight digraph this module
 defines alongside the algorithm. Unreachable vertexes report
 `DIJKSTRA_INFINITY`.

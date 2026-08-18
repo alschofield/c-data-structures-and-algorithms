@@ -19,8 +19,8 @@ size_t adjacency_list_vertex_count(const AdjacencyList *graph);
 size_t adjacency_list_edge_count(const AdjacencyList *graph);
 ```
 
-The checked-in source is still the scaffold gate `bool
-adjacency_list_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 
 ## Contract
 

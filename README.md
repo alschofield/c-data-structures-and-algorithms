@@ -20,7 +20,9 @@ src/algorithms/graph-traversal/{breadth-first-search,depth-first-search}
 src/algorithms/shortest-paths/{dijkstra,a-star}
 ```
 
-Entries not labelled complete are compile-tested scaffolds whose tests assert the unimplemented state.
+Entries not labelled complete are failing-stub scaffolds: the header declares
+the target API, the source stubs it out, and the full test suite defines the
+expected behavior. `make test` fails until the topic is implemented.
 
 ## Commands
 

@@ -9,8 +9,8 @@ counts into positions, and places elements directly.
 bool counting_sort(uint32_t *items, size_t count, uint32_t key_limit);
 ```
 
-The checked-in source is still the scaffold gate `bool
-counting_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 Keys must lie in `[0, key_limit)`.
 
 ## Contract

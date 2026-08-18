@@ -1,5 +1,12 @@
 #ifndef LINEAR_SEARCH_H
 #define LINEAR_SEARCH_H
+
 #include <stdbool.h>
-bool linear_search_is_implemented(void);
+#include <stddef.h>
+
+typedef int (*LinearSearchCompareFn)(const void *left, const void *right);
+
+bool linear_search(void *const *items, size_t count, const void *key,
+                   LinearSearchCompareFn compare, size_t *out_index);
+
 #endif

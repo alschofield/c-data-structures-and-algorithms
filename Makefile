@@ -14,6 +14,12 @@ ifeq ($(NAME),data-structures/associative/hash-tables/separate-chaining)
 MODULE := hash_table
 endif
 
+# Graph traversals link against the adjacency-list module they traverse.
+EXTRA_SOURCES :=
+ifneq ($(filter $(NAME),algorithms/graph-traversal/breadth-first-search algorithms/graph-traversal/depth-first-search),)
+EXTRA_SOURCES := src/data-structures/graphs/representations/adjacency-list/adjacency_list.c
+endif
+
 ifeq ($(OS),Windows_NT)
 CREATE_BUILD_DIR = if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
 REMOVE_BUILD_DIR = if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)"
@@ -39,7 +45,7 @@ benchmark:
 else
 test:
 	$(CREATE_BUILD_DIR)
-	$(CC) $(CFLAGS) $(MODULE_DIR)/$(MODULE).c $(MODULE_DIR)/test_$(MODULE).c -o $(BUILD_DIR)/test_$(MODULE)
+	$(CC) $(CFLAGS) $(MODULE_DIR)/$(MODULE).c $(EXTRA_SOURCES) $(MODULE_DIR)/test_$(MODULE).c -o $(BUILD_DIR)/test_$(MODULE)
 	$(BUILD_DIR)/test_$(MODULE)
 benchmark:
 	$(CREATE_BUILD_DIR)

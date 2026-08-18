@@ -12,8 +12,8 @@ bool breadth_first_search(const AdjacencyList *graph, size_t source,
                           size_t *out_order, size_t *out_count);
 ```
 
-The checked-in source is still the scaffold gate `bool
-breadth_first_search_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 `AdjacencyList` is the graph from
 `data-structures/graphs/representations/adjacency-list`. Distance and
 parent-tracking variants extend the same shape.

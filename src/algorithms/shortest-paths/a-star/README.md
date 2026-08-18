@@ -14,8 +14,8 @@ bool a_star(const WeightedGraph *graph, size_t source, size_t goal,
             size_t *out_path, size_t *out_path_length);
 ```
 
-The checked-in source is still the scaffold gate `bool
-a_star_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 `WeightedGraph` is the non-negative-weight digraph this module
 defines alongside the algorithm.
 

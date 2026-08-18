@@ -11,8 +11,8 @@ typedef int (*MergeSortCompareFn)(const void *left, const void *right);
 bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
 ```
 
-The checked-in source is still the scaffold gate `bool
-merge_sort_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 
 ## Contract
 

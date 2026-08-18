@@ -1,5 +1,10 @@
 #ifndef RADIX_SORT_H
 #define RADIX_SORT_H
+
 #include <stdbool.h>
-bool radix_sort_is_implemented(void);
+#include <stddef.h>
+#include <stdint.h>
+
+bool radix_sort(uint32_t *items, size_t count);
+
 #endif

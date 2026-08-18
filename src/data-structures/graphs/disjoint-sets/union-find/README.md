@@ -16,8 +16,8 @@ bool union_find_connected(UnionFind *set, size_t a, size_t b, bool *out_connecte
 size_t union_find_set_count(const UnionFind *set);
 ```
 
-The checked-in source is still the scaffold gate `bool
-union_find_is_implemented(void)`, which returns `false`; the test asserts exactly that.
+The checked-in source is a failing stub; the tests define the expected
+behavior and pass only once the implementation is written.
 
 ## Contract
 
