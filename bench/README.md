@@ -402,6 +402,32 @@ the minimum and bubble pays a swap per inversion. This is why insertion
 sort is the finisher inside production sorts and the others are teaching
 tools.
 
+### Merge sort: the class change
+
+At 2,000 items merge sort finishes in ~0.1 ms — ~10x faster than insertion,
+the best quadratic sort — and the gap is not the interesting part. The
+interesting part is that whole sorts this fast drown in timer noise, so
+merge sort's own rows are measured at sizes the quadratic sorts cannot
+reasonably visit:
+
+| Input shape | 100,000 items | 200,000 items | Growth for 2x |
+| --- | ---: | ---: | ---: |
+| Sorted | 2.45 ms | 5.77 ms | 2.4x |
+| Shuffled | 8.83 ms | 20.07 ms | 2.3x |
+| Reverse-sorted | 2.29 ms | 5.18 ms | 2.3x |
+
+Doubling the input costs ~2.3x — the n log n signature (2x from n, the rest
+from one extra merge level) versus the quadratic sorts' 4x. Extrapolating
+insertion sort's displacement model to 100,000 shuffled items predicts ~2.6
+seconds; merge sort measures 8.8 ms — a ~300x gap that widens with n.
+
+Input shape still matters, but for a new reason: sorted and reverse inputs
+run ~4x faster than shuffled not because fewer comparisons happen, but
+because every zip comparison branches the same way, and the branch predictor
+stops missing. Reverse input is no worse than sorted — reversal produces two
+descending halves whose merges are trivially lopsided, unlike the quadratic
+sorts where reversal is the worst case.
+
 ## Reproducing
 
 ```bash
@@ -415,6 +441,7 @@ make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree
 make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_sort
 make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
 make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
+make benchmark NAME=algorithms/sorting/comparison/merge-sort BENCHMARK=merge_sort
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -439,5 +466,6 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Bubble sort | `bubble_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Merge sort | `merge_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 
-Benchmarks exist for the ten completed modules listed above.
+Benchmarks exist for the eleven completed modules listed above.

@@ -21,9 +21,6 @@ typedef int (*MergeSortCompareFn)(const void *left, const void *right);
 bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
-
 ## Contract
 
 - Sorts into ascending order under the caller's comparison.
