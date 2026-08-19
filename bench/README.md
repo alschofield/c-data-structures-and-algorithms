@@ -353,6 +353,30 @@ reverse input (the worst case, every pair out of order on every pass) costs
 only ~20% more than shuffled, because the boundary already halves the
 comparison total that a naive full-rescan version would pay.
 
+### Selection sort: input-blind by design
+
+Whole-sort cost in milliseconds (median of 21 runs):
+
+| Input shape | 2,000 items | 4,000 items | Growth for 2x |
+| --- | ---: | ---: | ---: |
+| Sorted | 1.67 | 6.72 | 4.0x |
+| Shuffled | 1.71 | 6.64 | 3.9x |
+| Reverse-sorted | 1.68 | 6.48 | 3.9x |
+
+All three rows are the same number, and that flatness is the measurement:
+selection sort's comparison count is fixed by n alone — every pass must scan
+the whole remainder to prove it found the minimum, so input order cannot
+help or hurt. Contrast bubble sort directly above: bubble spans a 5,000x
+range across the same three inputs; selection spans 2%. The 4x growth per 2x
+size is the quadratic signature both share.
+
+The other side of the coin: selection beats bubble by ~4-5x on the shuffled
+and reverse rows (1.7 ms vs 7.3-8.8 ms at 2,000) because it performs at most
+n-1 swaps where bubble swaps on every out-of-order neighbor — but loses by
+~1,000x on sorted input (1.67 ms vs 0.0017 ms), where bubble's early exit
+pays off and selection still runs its full scan schedule. Neither dominates;
+the input distribution decides.
+
 ## Reproducing
 
 ```bash
@@ -364,6 +388,7 @@ make benchmark NAME=data-structures/linear/linked/doubly-linked-list BENCHMARK=d
 make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
 make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree BENCHMARK=binary_search_tree
 make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_sort
+make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -386,5 +411,6 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Hash table | `hash_table_benchmark.c` | set, get, contains, remove |
 | Binary search tree | `binary_search_tree_benchmark.c` | insert, find, contains, remove |
 | Bubble sort | `bubble_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 
-Benchmarks exist for the eight completed modules listed above.
+Benchmarks exist for the nine completed modules listed above.
