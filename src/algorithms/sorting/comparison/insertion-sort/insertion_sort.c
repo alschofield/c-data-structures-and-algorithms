@@ -27,11 +27,11 @@ bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare) 
     size_t index = 1U;
     while(index != count) {
         // Walks the new element leftward from the end of the sorted prefix.
-        for (int i = (index - 1); i >= 0; i--) {
+        for (size_t i = index; i > 0; i--) {
             // Swaps one step left while the sorted element is strictly greater.
-            if (compare(items[i], items[i + 1]) > 0) {
-                void *temp = items[i + 1];
-                items[i + 1] = items[i];
+            if (compare(items[i - 1], items[i]) > 0) {
+                void *temp = items[i - 1];
+                items[i - 1] = items[i];
                 items[i] = temp;
             } else {
                 // Stops at the first non-greater element: the slot is found,
