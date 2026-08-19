@@ -3,6 +3,16 @@
 Graph representation storing, for each vertex, a list of its outgoing edges.
 The standard choice for sparse graphs.
 
+## How It Works
+
+One bucket per vertex, listing the vertices it points at. Memory scales with
+what actually exists — vertices plus edges — which makes this the default
+representation for sparse graphs, and neighbor iteration (the operation
+traversals live on) touches exactly the edges that exist. The trade: asking
+"does u point at v?" means scanning u's bucket, O(deg(u)). Pairing rule of
+thumb: adjacency list for sparse graphs and traversal-heavy work, adjacency
+matrix for dense graphs and constant-time edge tests.
+
 ## Required API
 
 ```c

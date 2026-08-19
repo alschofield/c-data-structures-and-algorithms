@@ -3,6 +3,16 @@
 Divide-and-conquer comparison sort that recursively sorts halves and merges
 them with an auxiliary buffer.
 
+## How It Works
+
+Divide and conquer. Split the array in half, sort each half (recursively,
+down to single elements, which are trivially sorted), then merge: walk both
+sorted halves front-to-front, repeatedly taking the smaller head into the
+output. The merge is where the work and the guarantees live — taking from the
+left run on ties is what makes the sort stable, and no input order can make
+merging degrade, which is why the cost is O(n log n) unconditionally. The
+price is the O(n) auxiliary buffer the merge writes into.
+
 ## Required API
 
 ```c

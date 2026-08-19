@@ -3,6 +3,21 @@
 Single-source shortest paths on a weighted graph with non-negative edge
 weights, driven by a min-priority queue over tentative distances.
 
+## How It Works
+
+BFS grown up to handle weighted edges: the ripple expands by total path cost
+instead of hop count. Every vertex carries a tentative best-known distance
+(infinity at the start). Repeatedly extract the cheapest unsettled vertex —
+this is why the min-priority queue exists — and settle it: no cheaper route
+to it can exist, because any alternative would have to pass through something
+already more expensive. That settlement argument is exactly what negative
+edge weights break, which is why they must be rejected.
+
+Settling a vertex relaxes its edges: for each neighbor, if going through the
+settled vertex beats the neighbor's current best, update the distance and
+record the settled vertex as its parent. The parent links reconstruct the
+actual shortest path once the goal settles.
+
 ## Required API
 
 ```c

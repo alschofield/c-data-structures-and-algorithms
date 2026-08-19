@@ -3,6 +3,21 @@
 Character-tree over strings where each root-to-node path spells a prefix and
 marked nodes denote complete keys.
 
+## How It Works
+
+Strings stored as a tree of characters: the root is the empty string, each
+edge adds one letter, and a root-to-node path spells a prefix. "car" and
+"carton" share the c-a-r path and diverge after it, so shared prefixes are
+stored exactly once. An end-of-key flag on each node distinguishes a stored
+word from a mere waypoint — "car" can be a real entry while "cart" is only a
+path on the way to "carton".
+
+Every operation costs O(m) in the key's length, independent of how many keys
+the trie holds — the property neither a hash table nor a BST can offer, and
+what makes prefix queries (starts_with) natural. The delicate operation is
+remove: clear the flag, then prune nodes that no longer lead to any stored
+key without cutting a branch another key still needs.
+
 ## Required API
 
 ```c

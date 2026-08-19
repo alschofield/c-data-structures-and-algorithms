@@ -3,6 +3,21 @@
 Disjoint-set forest over dense integer elements supporting near-constant-time
 set merging and membership queries.
 
+## How It Works
+
+Answers one question fast while groups keep merging: are these two elements
+in the same group? Every element points at a parent; following parents ends
+at the group's representative, and two elements share a group exactly when
+they reach the same representative. Merging groups means pointing one
+representative at the other.
+
+Left alone, parent chains grow long, so two cheap tricks keep the forest
+near-flat. Path compression: after walking up to find the root, re-point
+every visited node directly at it — the lookup flattens the tree behind
+itself (which is why find takes a mutable structure). Union by rank: attach
+the shorter tree under the taller root so chains grow only when unavoidable.
+Together they make operations effectively constant time.
+
 ## Required API
 
 ```c

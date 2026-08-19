@@ -3,6 +3,19 @@
 Array-backed complete binary tree maintaining the heap property: every parent
 orders before its children under the caller's comparison.
 
+## How It Works
+
+The priority queue. An array treated as an implicit complete tree — children
+of index i at 2i+1 and 2i+2, parent at (i-1)/2, no gaps, no pointers — under
+one rule: every parent orders at or before its children, which pins the
+extreme element at index 0 without sorting anything else.
+
+Push appends at the end and sifts up (swap with the parent while it orders
+after the new element). Pop swaps the root with the last element, shrinks,
+and sifts the new root down (swap with the better-ordered child until
+settled). Both cost one root-to-leaf path, O(log n). This structure is heap
+sort's engine and the frontier Dijkstra and A* extract from.
+
 ## Required API
 
 ```c

@@ -3,6 +3,15 @@
 Generic resizable contiguous collection of caller-owned `void *` values,
 including `NULL`.
 
+## How It Works
+
+A plain array that lies about its size. It keeps capacity (allocated) apart
+from size (used); append writes at index size and increments. When capacity
+runs out, allocate roughly double, copy everything once, and continue. The
+doubling is why append is O(1) amortized: an occasional O(n) copy is paid
+for by the n cheap appends that preceded it. Indexing is pure arithmetic,
+which is also why the structure is the cache-friendliest thing here.
+
 ## Required API
 
 ```c

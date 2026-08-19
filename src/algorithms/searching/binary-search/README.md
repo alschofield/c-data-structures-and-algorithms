@@ -3,6 +3,17 @@
 Divide-and-conquer search over a sorted array that halves the candidate range
 on every comparison.
 
+## How It Works
+
+Guided elimination over sorted input. Check the middle element: too small,
+and the target can only be right of it; too large, only left. Either way half
+the candidates disappear, so the search finishes in O(log n) comparisons. The
+invariant that keeps the implementation honest: if the target exists, it is
+always inside the current [low, high] window — every step must shrink the
+window or exit. The famous defects are boundary bugs: midpoint overflow
+(hence `low + (high - low) / 2`), off-by-one window updates, and loops that
+stop shrinking.
+
 ## Required API
 
 ```c

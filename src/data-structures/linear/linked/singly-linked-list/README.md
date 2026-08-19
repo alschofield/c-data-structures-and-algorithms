@@ -3,6 +3,15 @@
 Generic node-based collection with one forward link. Stored `void *` values,
 including `NULL`, remain caller-owned.
 
+## How It Works
+
+A chain of nodes, each holding a value and a pointer to the next. The list
+holds only the head, so the front is O(1) and everything else is a walk —
+push back must traverse all n nodes because nothing remembers the tail.
+Insertion and removal never shift elements; they re-point two pointers.
+The trade against the dynamic array: cheap splicing, but every step is a
+dependent pointer load with no cache locality.
+
 ## Required API
 
 ```c

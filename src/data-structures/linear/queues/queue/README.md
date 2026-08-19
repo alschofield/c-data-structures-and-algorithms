@@ -3,6 +3,14 @@
 Generic FIFO collection that stores caller-owned `void *` values, including
 `NULL`.
 
+## How It Works
+
+First in, first out — a checkout line. Enqueue joins the back, dequeue
+leaves from the front. The array-backed version keeps head and tail indexes
+that wrap around the buffer (a ring), so neither operation ever shifts
+elements — both are O(1). The FIFO discipline is BFS's frontier and every
+producer-consumer handoff.
+
 ## Required API
 
 ```c

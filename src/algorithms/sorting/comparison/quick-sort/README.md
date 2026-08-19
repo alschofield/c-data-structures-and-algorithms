@@ -3,6 +3,18 @@
 In-place divide-and-conquer comparison sort that partitions around a pivot and
 recursively sorts both sides.
 
+## How It Works
+
+Partition, then recurse. Pick a pivot, then rearrange the array so
+everything smaller sits left of it and everything larger right — after one
+partition pass the pivot occupies its final sorted position. Recurse on the
+two sides. Nothing merges; the partition itself is the sort.
+
+All the danger is pivot choice: a fixed first/last pivot turns sorted input
+into the O(n^2) worst case because one side of every partition is empty.
+Median-of-three or randomized selection defends against that. Partitioning
+moves equal elements across each other, so the sort is not stable.
+
 ## Required API
 
 ```c

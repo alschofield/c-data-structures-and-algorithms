@@ -3,6 +3,23 @@
 Comparison sort that builds a max-heap in the array, then repeatedly swaps the
 root to the tail and re-heapifies the shrinking prefix.
 
+## How It Works
+
+Two ideas glued together. First, the array is treated as an implicit tree:
+the element at index i has children at 2i+1 and 2i+2, and the max-heap rule
+(every parent >= its children) guarantees the largest element sits at index 0
+without the array being sorted. The maintenance move is sift-down: a node
+smaller than a child swaps with its larger child and repeats from its new
+position until it settles.
+
+Second, harvest: swap the root (the maximum) with the last heap element,
+shrink the heap by one so that slot is final, and sift the new root down to
+restore the rule. Each round locks one element at the tail — bubble sort's
+shape, but finding the max costs O(log n) instead of an O(n) pass. The build
+step walks backward from the last parent sifting each node down, which is
+O(n) because most nodes are near the bottom and barely move. Long-distance
+swaps leap over equal elements, which is why the sort cannot be stable.
+
 ## Required API
 
 ```c

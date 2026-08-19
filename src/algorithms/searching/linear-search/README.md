@@ -3,6 +3,14 @@
 Sequential scan that finds a target by comparing every element in order until a
 match is found or the input is exhausted.
 
+## How It Works
+
+The honest baseline: examine elements front to back until one matches or the
+input is exhausted. No ordering precondition, no preprocessing — this is the
+only search that works on arbitrary unsorted data. The contract wrinkle is
+duplicates: the scan direction guarantees the first match is the one
+reported.
+
 ## Required API
 
 ```c

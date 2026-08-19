@@ -3,6 +3,18 @@
 Goal-directed shortest-path search that orders the frontier by
 `f(n) = g(n) + h(n)`: cost so far plus a heuristic estimate to the goal.
 
+## How It Works
+
+Dijkstra with a sense of direction. Plain Dijkstra explores a blind circle
+around the source; A* orders its frontier by f(n) = g(n) + h(n) — cost paid
+so far plus a heuristic guess of the cost remaining — stretching the search
+ellipse toward the goal and skipping regions that cannot help. The one law is
+admissibility: the heuristic must never overestimate the true remaining cost.
+Underestimating merely explores more; overestimating can commit the search to
+a wrong path and return a non-optimal answer. With h(n) = 0 everywhere the
+guess contributes nothing and A* degenerates into exactly Dijkstra — which
+the tests check directly.
+
 ## Required API
 
 ```c

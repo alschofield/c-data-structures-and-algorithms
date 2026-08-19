@@ -3,6 +3,17 @@
 Graph traversal that explores as far as possible along each branch before
 backtracking, using recursion or an explicit stack.
 
+## How It Works
+
+Charge down one path as far as it goes; back up only at dead ends and try
+the next branch — maze-running with a hand on the wall. The stack (explicit,
+or the call stack via recursion) creates that order, and the visited set is
+what terminates loops on cyclic graphs. Swap DFS's stack for a queue and it
+becomes BFS; the frontier discipline is the entire difference between them.
+DFS's finish ordering — a vertex finishes only after everything reachable
+through it finishes — is the foundation topological sort and cycle detection
+build on.
+
 ## Required API
 
 ```c

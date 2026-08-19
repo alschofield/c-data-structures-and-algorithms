@@ -3,6 +3,15 @@
 Generic LIFO collection that stores caller-owned `void *` values, including
 `NULL`.
 
+## How It Works
+
+Last in, first out — a stack of plates. Push places on top, pop takes from
+the top, and nothing below the top is reachable without removing what sits
+on it. Array-backed with a count, the top is just index count-1, so both
+operations are O(1) pointer-and-counter work plus occasional geometric
+growth. The LIFO discipline is the call stack, undo history, and DFS's
+frontier.
+
 ## Required API
 
 ```c

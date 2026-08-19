@@ -3,6 +3,16 @@
 Graph representation storing edge presence (or weight) in a V x V grid,
 indexed by vertex pair. The standard choice for dense graphs.
 
+## How It Works
+
+A V x V grid of edge flags flattened into one allocation, indexed as
+u * vertex_count + v. Its defining strength is the O(1) edge test — one cell
+read answers "does u point at v?" — and undirected graphs simply keep the
+matrix symmetric by writing both (u, v) and (v, u). The costs are structural:
+V^2 memory regardless of how few edges exist, and neighbor iteration scans a
+full row even for a vertex with one edge. Dense graphs amortize both;
+sparse graphs are better served by the adjacency list.
+
 ## Required API
 
 ```c

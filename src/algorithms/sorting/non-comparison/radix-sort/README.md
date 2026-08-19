@@ -3,6 +3,18 @@
 Non-comparison integer sort that sorts by one digit at a time using a stable
 counting sort per digit, least significant digit first.
 
+## How It Works
+
+Sort by one digit at a time, least significant digit first, using a stable
+counting sort for each pass. Later passes look like they should scramble
+earlier work, but they cannot: when two keys tie on the current digit, the
+stable inner sort keeps them in the order the previous pass established, so
+earlier-digit ordering survives as the tiebreak. After the most significant
+digit's pass, the array is sorted. LSD order plus a stable inner sort is the
+entire trick; break either and the algorithm fails. The digit count comes
+from the key width (for example four base-256 passes for 32-bit keys), never
+from comparisons.
+
 ## Required API
 
 ```c

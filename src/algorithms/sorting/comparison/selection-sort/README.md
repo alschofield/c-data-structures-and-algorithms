@@ -3,6 +3,15 @@
 Comparison sort that grows a sorted prefix by repeatedly selecting the minimum
 of the unsorted remainder and swapping it into place.
 
+## How It Works
+
+Grow a sorted prefix by selection: scan the unsorted remainder for its
+minimum, swap it into the next prefix slot, repeat. Comparisons never shrink
+— sorted input still costs a full scan per position, so every case is O(n^2)
+— but the sort performs at most n-1 swaps total, its one real advantage when
+writes are expensive. The long-distance swap can carry an element past an
+equal one, so the classic form is not stable.
+
 ## Required API
 
 ```c

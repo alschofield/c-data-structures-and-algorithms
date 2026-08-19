@@ -3,6 +3,16 @@
 Generic key-value collection. Keys and values are caller-owned pointers; values
 may be `NULL`, but keys may not.
 
+## How It Works
+
+Skip the search by computing the location: hash the key to pick one of the
+buckets, then deal with collisions by letting each bucket hold a linked
+chain of entries. Lookup hashes, jumps to the bucket, and walks the chain
+comparing keys. With enough buckets the chains stay short and every
+operation is O(1) expected; this implementation's 10 fixed buckets make the
+chains grow with n instead, degrading to O(n/buckets) — measured honestly
+in the benchmarks as the cost of skipping rehashing.
+
 ## Required API
 
 ```c
