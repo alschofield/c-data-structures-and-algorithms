@@ -377,6 +377,31 @@ n-1 swaps where bubble swaps on every out-of-order neighbor — but loses by
 pays off and selection still runs its full scan schedule. Neither dominates;
 the input distribution decides.
 
+### Insertion sort: pays only for displacement
+
+Whole-sort cost in milliseconds (median of 21 runs):
+
+| Input shape | 2,000 items | 4,000 items | Growth for 2x |
+| --- | ---: | ---: | ---: |
+| Sorted (adaptive) | 0.0020 | 0.0040 | 2.0x |
+| Shuffled | 1.03 | 3.98 | 3.9x |
+| Reverse-sorted | 2.15 | 8.68 | 4.0x |
+
+Each element's cost is exactly how far it must travel to its slot. Sorted
+input: zero displacement, one comparison per element, perfectly linear 2x
+growth. Shuffled: average displacement is ~n/4, giving the quadratic 4x
+growth. Reverse: maximum displacement — every element walks the entire
+prefix — costing almost exactly 2x shuffled, which is the n/2 vs n/4 average
+travel distance made visible.
+
+The three-way comparison at 2,000 shuffled items — insertion 1.03 ms,
+selection 1.71 ms, bubble 7.31 ms — matches the textbook ranking of the
+simple quadratic sorts: insertion wins on real data because it stops
+scanning the moment the slot is found, while selection must always prove
+the minimum and bubble pays a swap per inversion. This is why insertion
+sort is the finisher inside production sorts and the others are teaching
+tools.
+
 ## Reproducing
 
 ```bash
@@ -389,6 +414,7 @@ make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BE
 make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree BENCHMARK=binary_search_tree
 make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_sort
 make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
+make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -412,5 +438,6 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Binary search tree | `binary_search_tree_benchmark.c` | insert, find, contains, remove |
 | Bubble sort | `bubble_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 
-Benchmarks exist for the nine completed modules listed above.
+Benchmarks exist for the ten completed modules listed above.

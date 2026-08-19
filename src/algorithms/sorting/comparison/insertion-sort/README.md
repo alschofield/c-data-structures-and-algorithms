@@ -21,9 +21,6 @@ typedef int (*InsertionSortCompareFn)(const void *left, const void *right);
 bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
-
 ## Contract
 
 - Sorts in place into ascending order under the caller's comparison.
