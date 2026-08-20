@@ -3,6 +3,11 @@
 
 // Sorts the pointer array in place into ascending comparison order.
 bool bubble_sort(void **items, size_t count, BubbleSortCompareFn compare) {
+    // Rejects a missing comparison function.
+    if (compare == NULL) {
+        return false;
+    }
+
     // Accepts an empty input as a successful no-op before validating pointers.
     if (count == 0U) {
         return true;
@@ -10,11 +15,6 @@ bool bubble_sort(void **items, size_t count, BubbleSortCompareFn compare) {
 
     // Rejects a missing array when there are elements to sort.
     if (items == NULL) {
-        return false;
-    }
-
-    // Rejects a missing comparison function.
-    if (compare == NULL) {
         return false;
     }
 
