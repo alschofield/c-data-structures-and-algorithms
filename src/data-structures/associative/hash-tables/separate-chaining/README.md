@@ -51,8 +51,8 @@ bool hash_table_is_empty(const HashTable *table);
 Run the reusable benchmark harness from the repository root:
 
 ```bash
-make benchmark NAME=hash-table
-make benchmark NAME=hash-table BENCHMARK_ITEM_COUNT=100000
+make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
+make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table BENCHMARK_ITEM_COUNT=100000
 ```
 
 It measures `set`, `get`, `contains`, and `remove` across 21 timed samples,

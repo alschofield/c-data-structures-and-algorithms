@@ -9,20 +9,27 @@ src/data-structures/linear/arrays/dynamic-array                 complete
 src/data-structures/linear/stacks/stack                         complete
 src/data-structures/linear/queues/queue                         complete
 src/data-structures/linear/linked/singly-linked-list           complete
-src/data-structures/linear/linked/doubly-linked-list
+src/data-structures/linear/linked/doubly-linked-list           complete
 src/data-structures/associative/hash-tables/separate-chaining   complete
+src/data-structures/associative/hash-tables/resizable-separate-chaining
 src/data-structures/trees/binary-search-trees/binary-search-tree complete
 src/data-structures/trees/{heaps/binary-heap,tries/prefix-trie}
 src/data-structures/graphs/{representations/{adjacency-list,adjacency-matrix},disjoint-sets/union-find}
 src/algorithms/searching/{linear-search,binary-search}
-src/algorithms/sorting/{comparison/{bubble,selection,insertion,merge,quick,heap}-sort,non-comparison/{counting,radix}-sort}
+src/algorithms/sorting/comparison/bubble-sort                  complete
+src/algorithms/sorting/comparison/selection-sort               complete
+src/algorithms/sorting/comparison/insertion-sort               complete
+src/algorithms/sorting/comparison/merge-sort                   complete
+src/algorithms/sorting/comparison/{quick,heap}-sort
+src/algorithms/sorting/non-comparison/{counting,radix}-sort
 src/algorithms/graph-traversal/{breadth-first-search,depth-first-search}
 src/algorithms/shortest-paths/{dijkstra,a-star}
 ```
 
-Entries not labelled complete are failing-stub scaffolds: the header declares
-the target API, the source stubs it out, and the full test suite defines the
-expected behavior. `make test` fails until the topic is implemented.
+Entries not labelled complete are empty learning scaffolds: their README
+defines the target API and behavior, while the header and source are left for
+you to write. Their full test suite becomes buildable once the declarations
+exist and passes once the implementation is correct.
 
 ## Commands
 
@@ -36,6 +43,11 @@ make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree
 make benchmark-test
 ```
 
-Only stack, queue, singly linked list, dynamic array, separate-chaining hash table, and binary search tree have benchmark sources. The dependency-free harness reports repeated-sample timing; it is not a complexity proof. See [bench/README.md](bench/README.md) for full results, scaling comparisons, and analysis of why each structure performs the way it does.
+Stack, queue, dynamic array, singly and doubly linked lists, separate-chaining
+hash table, binary search tree, and bubble, selection, insertion, and merge
+sort have benchmark sources. The dependency-free harness reports repeated-sample
+timing; it is not a complexity proof. See [bench/README.md](bench/README.md)
+for full results, scaling comparisons, and analysis of why each structure
+performs the way it does.
 
 Implement learning modules from first principles. Do not substitute library search or sorting routines for the exercise.
