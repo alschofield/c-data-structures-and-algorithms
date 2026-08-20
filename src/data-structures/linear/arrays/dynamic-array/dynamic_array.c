@@ -2,6 +2,8 @@
 #include "dynamic_array.h"
 // Declares malloc, realloc, and free.
 #include <stdlib.h>
+// Declares SIZE_MAX.
+#include <stdint.h>
 
 // Defines the fields hidden from callers of the public API.
 struct DynamicArray {
@@ -119,8 +121,18 @@ bool dynamic_array_insert(DynamicArray *array, size_t index, void *item) {
 
     // Grows the buffer only when every allocated slot is occupied.
     if (array->size == array->capacity) {
+        // Rejects a capacity that cannot double without overflowing size_t.
+        if (array->capacity > SIZE_MAX / 2U) {
+            return false;
+        }
+
         // Allocates two slots initially and doubles capacity afterward.
         size_t new_capacity = array->capacity == 0U ? 2U : array->capacity * 2U;
+        // Rejects a pointer-slot count whose byte allocation would overflow.
+        if (new_capacity > SIZE_MAX / sizeof(*array->items)) {
+            return false;
+        }
+
         // Requests enough bytes for the new number of pointer slots.
         void **items = realloc(array->items, new_capacity * sizeof(*array->items));
         // Checks whether resizing failed.

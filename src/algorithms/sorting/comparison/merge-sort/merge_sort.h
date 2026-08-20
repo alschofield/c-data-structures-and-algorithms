@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 typedef int (*MergeSortCompareFn)(const void *left, const void *right);
 

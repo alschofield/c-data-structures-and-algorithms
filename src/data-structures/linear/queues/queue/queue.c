@@ -2,6 +2,8 @@
 #include "queue.h"
 // Declares malloc and free.
 #include <stdlib.h>
+// Declares SIZE_MAX.
+#include <stdint.h>
 
 // Defines the fields hidden from callers of the public API.
 struct Queue {
@@ -67,8 +69,16 @@ bool queue_enqueue(Queue *queue, void *item) {
 
     // Grows the item buffer only when every allocated slot is occupied.
     if (queue->size == queue->capacity) {
+        // Rejects a capacity that cannot double without overflowing size_t.
+        if (queue->capacity > SIZE_MAX / 2U) {
+            return false;
+        }
         // Uses two slots for the first allocation and doubles later allocations.
         size_t new_capacity = queue->capacity == 0U ? 2U : queue->capacity * 2U;
+        // Rejects a pointer-slot count whose byte allocation would overflow.
+        if (new_capacity > SIZE_MAX / sizeof(*queue->items)) {
+            return false;
+        }
         // Allocates a new buffer so wrapped items can be copied into FIFO order.
         void **temp = malloc(new_capacity * sizeof(*queue->items));
         // Checks whether allocation failed.

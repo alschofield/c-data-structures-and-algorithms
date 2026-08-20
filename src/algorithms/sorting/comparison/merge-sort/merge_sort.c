@@ -1,5 +1,9 @@
 // Provides the merge sort declaration and comparison callback type.
 #include "merge_sort.h"
+// Declares malloc and free.
+#include <stdlib.h>
+// Declares SIZE_MAX.
+#include <stdint.h>
 
 // Sorts one window of the array by recursive halving and merging.
 static void traverse(void **items, void **temp, size_t front, size_t back, MergeSortCompareFn compare) {
@@ -75,6 +79,11 @@ bool merge_sort(void **items, size_t count, MergeSortCompareFn compare) {
     // Accepts a single element as already sorted.
     if (count == 1U) {
         return true;
+    }
+
+    // Rejects a pointer count whose byte allocation would overflow size_t.
+    if (count > SIZE_MAX / sizeof(void *)) {
+        return false;
     }
 
     // Allocates the shared merge buffer once; every recursive merge reuses it.

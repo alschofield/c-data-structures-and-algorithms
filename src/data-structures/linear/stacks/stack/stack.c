@@ -2,6 +2,8 @@
 #include "stack.h"
 // Declares malloc, realloc, and free.
 #include <stdlib.h>
+// Declares SIZE_MAX.
+#include <stdint.h>
 
 // Defines the fields hidden from callers of the public API.
 struct Stack {
@@ -73,10 +75,19 @@ bool stack_push(Stack *stack, void *item) {
 
     // Grows the item buffer only when every allocated slot is occupied.
     if (stack->size == stack->capacity) {
+        // Rejects a capacity that cannot double without overflowing size_t.
+        if (stack->capacity > SIZE_MAX / 2U) {
+            return false;
+        }
         // Uses one slot for the first allocation and doubles later allocations.
         size_t new_capacity = stack->capacity == 0U ? 1U : stack->capacity * 2U;
+        // Rejects a pointer-slot count whose byte allocation would overflow.
+        if (new_capacity > SIZE_MAX / sizeof(*stack->items)) {
+            return false;
+        }
+
         // Requests storage for the new total number of pointer slots.
-        void **temp = realloc(stack->items, new_capacity * sizeof *stack->items);
+        void **temp = realloc(stack->items, new_capacity * sizeof(*stack->items));
         // Checks whether the resize failed.
         if (temp == NULL) {
             // Preserves the old allocation and reports failure.
