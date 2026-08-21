@@ -43,52 +43,7 @@ bool hash_table_is_empty(const HashTable *table);
 
 ## Complexity Targets
 
-- `set`, `get`, `remove`, `contains`: expected O(1), O(n) under collisions
+- `set`, `get`, `remove`, `contains`: expected O(1) with short chains,
+  O(n / buckets) as fixed-bucket chains grow, O(n) worst case
 - `size`, `is_empty`: O(1)
-
-## Benchmarking
-
-Run the reusable benchmark harness from the repository root:
-
-```bash
-make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
-make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table BENCHMARK_ITEM_COUNT=100000
-```
-
-It measures `set`, `get`, `contains`, and `remove` across 21 timed samples,
-excluding table setup, verification, teardown, and process startup from the
-timed region. Results report minimum, median, and maximum nanoseconds per
-operation. Compare multiple item counts to observe growth trends rather than
-treating one machine's timing as proof of complexity.
-
-The implementation has 10 fixed buckets and does not resize or rehash. It is
-collision-correct, but its average chain length grows as entries are added, so
-average operation cost grows with n. Expected O(1) behavior at scale depends
-on load-factor resizing and rehashing, which this module does not perform.
-
-## Implementation Notes
-
-Use separate chaining: `buckets` is an array of `HashTableEntry *`, and every
-entry points to the next entry in its collision chain. A bucket is selected by:
-
-```c
-size_t index = table->hash(key) % table->capacity;
-```
-
-The entry stores the original caller-owned key and value pointers, not the hash
-result. Different keys may have the same hash, so lookup and mutation must
-traverse the selected chain and call `table->equals(current->key, key)` before
-treating two keys as the same.
-
-For `set`, replace only the value when an equal key already exists; retain the
-first key pointer as required by the contract. For a new key, allocate one entry
-and prepend it to the selected bucket chain. `remove` uses `previous` and
-`current` pointers to unlink the matched entry, frees that entry only, and never
-frees caller-owned keys or values.
-
-The generic singly linked-list module is intentionally not reused here. Hash
-table buckets need direct entry traversal and key comparison, while the generic
-list API only exposes index-based operations and would add unnecessary wrapper
-nodes. A rehash must allocate a new bucket array and place every existing
-entry using its stored key and the new capacity; do not cache a separate hash
-value unless the contract and invariant explicitly require it.
+- Space: O(entries + 10 buckets)

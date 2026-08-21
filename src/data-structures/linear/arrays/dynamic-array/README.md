@@ -42,3 +42,4 @@ bool dynamic_array_is_empty(const DynamicArray *array);
 - `get`, `set`, `size`, `capacity`, `is_empty`: O(1)
 - `insert` at `size`: amortized O(1)
 - Other `insert` operations and `remove`: O(n)
+- Space: O(n) contiguous

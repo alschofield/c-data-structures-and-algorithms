@@ -41,3 +41,4 @@ bool stack_is_empty(const Stack *stack);
 
 - `push`: amortized O(1)
 - `pop`, `peek`, `size`, `is_empty`: O(1)
+- Space: O(n) contiguous

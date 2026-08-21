@@ -1,6 +1,9 @@
 # Data Structures and Algorithms in C
 
-The source tree is the curriculum. Every leaf topic contains a contract README, public header, implementation source, and dedicated assertion test.
+The source tree is the curriculum. Completed and scaffold topics contain a
+contract README, public header, implementation source, and dedicated assertion
+test. Follow-on contract-only topics define the next learning target before
+their source files are created.
 
 ## Taxonomy
 
@@ -50,4 +53,5 @@ timing; it is not a complexity proof. See [bench/README.md](bench/README.md)
 for full results, scaling comparisons, and analysis of why each structure
 performs the way it does.
 
-Implement learning modules from first principles. Do not substitute library search or sorting routines for the exercise.
+Implement learning modules from first principles. Do not substitute library
+containers, search routines, or sorting routines for the exercise.

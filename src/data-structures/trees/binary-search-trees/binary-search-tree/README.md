@@ -50,3 +50,4 @@ bool binary_search_tree_is_empty(const BinarySearchTree *tree);
 - Balanced tree: `insert`, `find`, `remove`, `contains`: O(log n)
 - This unbalanced BST: worst case O(n)
 - `in_order`: O(n)
+- Space: O(n) nodes plus O(height) working space for traversal/removal

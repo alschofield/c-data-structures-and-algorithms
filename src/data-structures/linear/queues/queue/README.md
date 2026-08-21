@@ -36,4 +36,6 @@ bool queue_is_empty(const Queue *queue);
 
 ## Complexity Targets
 
-- `enqueue`, `dequeue`, `peek`, `size`, `is_empty`: O(1)
+- `enqueue`: O(1) amortized
+- `dequeue`, `peek`, `size`, `is_empty`: O(1)
+- Space: O(n) contiguous
