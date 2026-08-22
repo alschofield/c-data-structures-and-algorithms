@@ -16,7 +16,8 @@ src/data-structures/linear/linked/doubly-linked-list           complete
 src/data-structures/associative/hash-tables/separate-chaining   complete
 src/data-structures/associative/hash-tables/resizable-separate-chaining
 src/data-structures/trees/binary-search-trees/binary-search-tree complete
-src/data-structures/trees/{heaps/binary-heap,tries/prefix-trie}
+src/data-structures/trees/tries/prefix-trie                      complete
+src/data-structures/trees/heaps/binary-heap
 src/data-structures/graphs/{representations/{adjacency-list,adjacency-matrix},disjoint-sets/union-find}
 src/algorithms/searching/{linear-search,binary-search}
 src/algorithms/sorting/comparison/bubble-sort                  complete
@@ -47,11 +48,11 @@ make benchmark-test
 ```
 
 Stack, queue, dynamic array, singly and doubly linked lists, separate-chaining
-hash table, binary search tree, and bubble, selection, insertion, and merge
-sort have benchmark sources. The dependency-free harness reports repeated-sample
-timing; it is not a complexity proof. See [bench/README.md](bench/README.md)
-for full results, scaling comparisons, and analysis of why each structure
-performs the way it does.
+hash table, binary search tree, prefix trie, and bubble, selection, insertion,
+and merge sort have benchmark sources. The dependency-free harness reports
+repeated-sample timing; it is not a complexity proof. See
+[bench/README.md](bench/README.md) for full results, scaling comparisons, and
+analysis of why each structure performs the way it does.
 
 Implement learning modules from first principles. Do not substitute library
 containers, search routines, or sorting routines for the exercise.

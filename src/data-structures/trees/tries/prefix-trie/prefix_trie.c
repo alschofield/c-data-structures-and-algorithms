@@ -60,7 +60,7 @@ PrefixTrie *prefix_trie_create(void) {
 }
 
 // Frees every node and child-pointer array reachable from node.
-void recursively_delete(Node *node) {
+static void recursively_delete(Node *node) {
     // Treats a missing subtree as already deleted.
     if (node == NULL) {
         return;
@@ -96,7 +96,7 @@ void prefix_trie_destroy(PrefixTrie *trie) {
 }
 
 // Adds a missing suffix as a detached subtree, then links it into node.
-bool recursively_add(Node *node, const char *key) {
+static bool recursively_add(Node *node, const char *key) {
     // Rejects a missing destination node.
     if (node == NULL) {
         return false;
@@ -220,6 +220,10 @@ bool prefix_trie_insert(PrefixTrie *trie, const char *key) {
         return false;
     }
 
+    if (*key == '\0') {
+        return false;
+    }
+
     // Treats a previously stored key as an idempotent success.
     if (prefix_trie_contains(trie, key)) {
         return true;
@@ -326,58 +330,72 @@ bool prefix_trie_starts_with(const PrefixTrie *trie, const char *prefix) {
     return true;
 }
 
-// TODO: Return word-removal success separately from the parent-pruning result.
-// TODO: Compact child pointers after freeing a pruned child node.
-bool recursively_remove(Node *node, const char *key) {
+// Removes one nonempty stored key and prunes unused suffix nodes on unwind.
+static bool recursively_remove(Node *node, const char *key) {
+    // Rejects a missing subtree.
     if (node == NULL) {
         return false;
     }
 
+    // The public function rejects empty keys, and a parent handles the final
+    // character directly before recursion receives the terminator.
     if (*key == '\0') {
-        node->is_end_of_word = false;
-        return true;
+        return false;
     }
 
+    // Searches this node's sparse child collection for the next key character.
     size_t n = 0U;
     while(n != node->child_count) {
         if (node->children[n]->character == *key) {
+            // Advances to the next key character after matching this child.
             key++;
 
+            // Handles the final character without recursing into a terminator.
             if (*key == '\0') {
+                // Rejects a path that is only a prefix, not a stored word.
                 if (node->children[n]->is_end_of_word) {
+                    // Removes the stored-word marker while preserving descendants.
                     node->children[n]->is_end_of_word = false;
 
+                    // Deletes the child only when no longer needed by any word.
                     if (node->children[n]->child_count == 0) {
+                        // Compacts the sparse array with its final occupied slot.
                         recursively_delete(node->children[n]);
-                        node->children[n] = node->children[node->child_count];
-                        node->children[node->child_count] = NULL;
+                        node->children[n] = node->children[node->child_count - 1U];
+                        node->children[node->child_count - 1U] = NULL;
                         node->child_count--;
-                        return true;
-                    } else {
-                        return false;
                     }
+                    
+                    // Reports that the complete word was removed.
+                    return true;
                 }
+            // Recurses through longer keys after consuming this character.
             } else if (recursively_remove(node->children[n], key)) {
+                // Deletes a child that became an unused non-word leaf.
                 if (node->children[n]->child_count == 0U && !node->children[n]->is_end_of_word) {
+                    // Compacts the sparse array with its final occupied slot.
                     recursively_delete(node->children[n]);
                     node->children[n] = node->children[node->child_count - 1U];
                     node->children[node->child_count - 1U] = NULL;
                     node->child_count--;
-                    return true;
-                } else {
-                    return false;
                 }
+
+                // Propagates successful word removal even when this child remains.
+                return true;
             }
         }
 
+        // Tries the next existing child when this one does not match.
         n++;
     }
 
+    // No child path matches the requested key.
     return false;
 }
 
-// TODO: Decrement size only when the recursive helper confirms word removal.
+// Removes a nonempty stored key and decrements the stored-word count on success.
 bool prefix_trie_remove(PrefixTrie *trie, const char *key) {
+    // Rejects a missing trie or C string.
     if (trie == NULL) {
         return false;
     }
@@ -386,11 +404,19 @@ bool prefix_trie_remove(PrefixTrie *trie, const char *key) {
         return false;
     }
 
+    // Empty strings are valid prefixes but not valid stored keys in this API.
+    if (*key == '\0') {
+        return false;
+    }
+
+    // Rejects removal from an empty trie without traversal.
     if (trie->size == 0U) {
         return false;
     }
 
+    // Removes the key only when it exists as a complete stored word.
     if (recursively_remove(trie->root, key)) {
+        // Counts the successfully removed word.
         trie->size--;
         return true;
     } else {

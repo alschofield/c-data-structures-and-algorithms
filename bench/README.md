@@ -305,7 +305,7 @@ outgrows L2/L3.
 
 ## How the Structures Relate
 
-The table is one story told six ways: **the price of finding your data.**
+The table is one story told seven ways: **the price of finding your data.**
 
 - Stack, queue, and dynamic array never search — the position is known
   arithmetic. Cost: single-digit ns.
@@ -319,11 +319,32 @@ The table is one story told six ways: **the price of finding your data.**
   location. Done right it is the fastest lookup structure here; with 10 fixed
   buckets it quietly degenerates back into the linked list it was meant to
   replace.
+- The prefix trie follows one edge per key character. Its cost is independent
+  of how many keys are stored; it depends only on the key or prefix length.
 
 Every structure is generic over `void *` with caller-supplied
 compare/hash functions, so all results include function-pointer call overhead.
 That is the cost of the shared contract style, paid uniformly, so
 cross-structure comparisons stay fair.
+
+## Prefix Trie Benchmark
+
+Generated keys share the prefix `word-` and differ in their trailing digits.
+Each operation runs across 21 samples; insert, contains, and remove use one
+distinct key per operation, while `starts_with` repeatedly checks `word-`.
+
+| Operation | 10,000 keys (ns/op) | 100,000 keys (ns/op) |
+| --- | ---: | ---: |
+| Insert | 156.67 | 165.42 |
+| Contains exact key | 48.65 | 55.72 |
+| Starts with `word-` | 4.60 | 4.85 |
+| Remove | 75.38 | 75.78 |
+
+The key lengths stay nearly fixed, so the 10x growth in stored keys barely
+changes exact lookup, prefix lookup, or removal. That is the trie contract
+made visible: traversal follows characters, not the number of stored keys.
+Insertion rises slightly as the growing sparse child collections allocate and
+touch more memory, but it remains effectively constant for this key shape.
 
 ## Algorithm Benchmarks
 
@@ -442,6 +463,7 @@ make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_s
 make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
 make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
 make benchmark NAME=algorithms/sorting/comparison/merge-sort BENCHMARK=merge_sort
+make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -467,5 +489,6 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Merge sort | `merge_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 
-Benchmarks exist for the eleven completed modules listed above.
+Benchmarks exist for the twelve completed modules listed above.

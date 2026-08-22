@@ -32,9 +32,6 @@ bool prefix_trie_remove(PrefixTrie *trie, const char *key);
 size_t prefix_trie_size(const PrefixTrie *trie);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
-
 ## Contract
 
 - Each node holds child links per character plus an is-end-of-key flag; the
@@ -55,3 +52,7 @@ behavior and pass only once the implementation is written.
   independent of the number of stored keys
 - Space: O(total characters across stored keys) nodes in the worst case;
   shared prefixes share nodes
+
+## Source Material
+
+- https://www.youtube.com/watch?v=OLPebSpTISE

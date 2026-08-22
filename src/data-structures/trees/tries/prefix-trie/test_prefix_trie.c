@@ -133,6 +133,10 @@ static void test_null_container(void) {
     prefix_trie_destroy(NULL);
 
     assert(trie != NULL);
+    assert(!prefix_trie_insert(trie, ""));
+    assert(!prefix_trie_contains(trie, ""));
+    assert(prefix_trie_starts_with(trie, ""));
+    assert(!prefix_trie_remove(trie, ""));
     assert(!prefix_trie_insert(trie, NULL));
     assert(!prefix_trie_contains(trie, NULL));
     assert(!prefix_trie_starts_with(trie, NULL));
