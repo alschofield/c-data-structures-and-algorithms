@@ -1,14 +1,18 @@
 # Adjacency List
 
-Graph representation storing, for each vertex, a list of its outgoing edges.
-The standard choice for sparse graphs.
+Dynamic weighted graph representation storing caller-owned values in nodes and
+outgoing edges on each node. The standard choice for sparse graphs and the
+shared input for every graph algorithm in this curriculum.
 
 ## How It Works
 
-One bucket per vertex, listing the vertices it points at. Memory scales with
-what actually exists — vertices plus edges — which makes this the default
-representation for sparse graphs, and neighbor iteration (the operation
-traversals live on) touches exactly the edges that exist. The trade: asking
+The graph owns a growable array of node pointers. Each node holds a
+caller-owned value, a stable dense internal index, and a growable list of
+outgoing edges; each edge points to its target node and stores a nonnegative
+weight. Memory scales with what actually exists — nodes plus edges — which
+makes this the default representation for sparse graphs, and neighbor
+iteration (the operation traversals live on) touches exactly the edges that
+exist. The trade: asking
 "does u point at v?" means scanning u's bucket, O(deg(u)). Pairing rule of
 thumb: adjacency list for sparse graphs and traversal-heavy work, adjacency
 matrix for dense graphs and constant-time edge tests.
@@ -17,16 +21,30 @@ matrix for dense graphs and constant-time edge tests.
 
 ```c
 typedef struct AdjacencyList AdjacencyList;
-typedef bool (*AdjacencyListVisitFn)(size_t neighbor, void *context);
+typedef struct AdjacencyListNode AdjacencyListNode;
+typedef struct GraphView GraphView;
+typedef bool (*AdjacencyListVisitFn)(AdjacencyListNode *neighbor,
+                                     uint64_t weight, void *context);
 
-AdjacencyList *adjacency_list_create(size_t vertex_count, bool directed);
+AdjacencyList *adjacency_list_create(bool directed);
 void adjacency_list_destroy(AdjacencyList *graph);
-bool adjacency_list_add_edge(AdjacencyList *graph, size_t from, size_t to);
-bool adjacency_list_has_edge(const AdjacencyList *graph, size_t from, size_t to);
-bool adjacency_list_neighbors(const AdjacencyList *graph, size_t vertex,
+bool adjacency_list_add_node(AdjacencyList *graph, void *value,
+                             AdjacencyListNode **out_node);
+bool adjacency_list_node_value(const AdjacencyListNode *node, void **out_value);
+bool adjacency_list_node_at(const AdjacencyList *graph, size_t index,
+                            AdjacencyListNode **out_node);
+bool adjacency_list_add_edge(AdjacencyList *graph, AdjacencyListNode *from,
+                             AdjacencyListNode *to,
+                             uint64_t weight);
+bool adjacency_list_has_edge(const AdjacencyList *graph,
+                             const AdjacencyListNode *from,
+                             const AdjacencyListNode *to);
+bool adjacency_list_neighbors(const AdjacencyList *graph,
+                              const AdjacencyListNode *node,
                               AdjacencyListVisitFn visit, void *context);
-size_t adjacency_list_vertex_count(const AdjacencyList *graph);
+size_t adjacency_list_node_count(const AdjacencyList *graph);
 size_t adjacency_list_edge_count(const AdjacencyList *graph);
+bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view);
 ```
 
 The checked-in source is a failing stub; the tests define the expected
@@ -34,23 +52,31 @@ behavior and pass only once the implementation is written.
 
 ## Contract
 
-- Vertexes are dense indexes `[0, vertex_count)`; out-of-range vertexes are
-  rejected cleanly by every operation.
-- `add_edge(u, v)` appends v to u's edge list; the directed/undirected policy
-  is fixed at creation, and undirected graphs store both directions
-  consistently.
+- `create` starts with zero nodes. `add_node(value)` appends one node, returns
+  its stable pointer through `out_node`, and assigns it the next dense internal
+  index. The graph never frees caller-owned values.
+- Node pointers passed to graph operations must belong to that graph; foreign
+  or `NULL` nodes are rejected cleanly.
+- `add_edge(from, to, weight)` appends a nonnegative weighted edge to from's
+  list; the directed/undirected policy is fixed at creation, and undirected
+  graphs store matching weighted edges in both directions consistently.
 - Duplicate edge policy is explicit: either reject duplicates or document
   multigraph behavior; `has_edge` scans only u's list.
-- Neighbor iteration visits exactly u's out-edges, each once, in a
-  deterministic order.
+- Neighbor iteration visits exactly a node's out-edges, each once, with target
+  node pointers and weights, in a deterministic order.
 - Self-loops are permitted unless documented otherwise.
-- `destroy` frees all list nodes and the vertex array; the structure owns its
-  edges, never caller data.
+- `destroy` frees all graph-owned nodes, edge arrays, and the node array; it
+  never frees caller data values.
+- BFS and DFS ignore weight; Dijkstra and A* consume it. An unweighted edge
+  uses weight `1U`.
+- `adjacency_list_graph_view` fills a non-owning GraphView adapter that maps
+  each internal node index to weighted neighbor indexes, letting algorithms
+  traverse this representation without depending on its fields.
 
 ## Complexity Targets
 
-- `add_edge`: O(1) (amortized, prepend or tail append)
-- `has_edge(u, v)`: O(deg(u))
-- Iterate neighbors of u: O(deg(u))
+- `add_node`, `add_edge`: O(1) amortized
+- `has_edge(from, to)`: O(deg(from))
+- Iterate a node's neighbors: O(deg(node))
 - Full traversal of all edges: O(V + E)
 - Space: O(V + E)

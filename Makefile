@@ -14,10 +14,14 @@ ifeq ($(NAME),data-structures/associative/hash-tables/separate-chaining)
 MODULE := hash_table
 endif
 
-# Graph traversals link against the adjacency-list module they traverse.
+# Graph algorithms consume GraphView adapters from both graph representations.
 EXTRA_SOURCES :=
-ifneq ($(filter $(NAME),algorithms/graph-traversal/breadth-first-search algorithms/graph-traversal/depth-first-search),)
-EXTRA_SOURCES := src/data-structures/graphs/representations/adjacency-list/adjacency_list.c
+ifneq ($(filter $(NAME),algorithms/graph-traversal/breadth-first-search algorithms/graph-traversal/depth-first-search algorithms/shortest-paths/dijkstra algorithms/shortest-paths/a-star),)
+EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c
+endif
+
+ifneq ($(filter $(NAME),data-structures/graphs/representations/adjacency-list data-structures/graphs/representations/adjacency-matrix),)
+EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c
 endif
 
 ifeq ($(OS),Windows_NT)

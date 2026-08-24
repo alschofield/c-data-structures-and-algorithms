@@ -1,108 +1,178 @@
 #include "adjacency_list.h"
+#include "../../graph-view/graph_view.h"
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct NeighborLog {
-    size_t visited[8];
+    AdjacencyListNode *visited[8];
+    uint64_t weights[8];
     size_t count;
 };
 
-static bool record_neighbor(size_t neighbor, void *context) {
+struct GraphNeighborLog {
+    size_t visited[8];
+    uint64_t weights[8];
+    size_t count;
+};
+
+static bool record_neighbor(AdjacencyListNode *neighbor, uint64_t weight, void *context) {
     struct NeighborLog *log = context;
 
     log->visited[log->count] = neighbor;
+    log->weights[log->count] = weight;
     log->count++;
     return true;
 }
 
-static bool stop_after_first(size_t neighbor, void *context) {
-    struct NeighborLog *log = context;
-
-    log->visited[log->count] = neighbor;
-    log->count++;
+static bool stop_after_first(AdjacencyListNode *neighbor, uint64_t weight, void *context) {
+    record_neighbor(neighbor, weight, context);
     return false;
 }
 
-static void test_directed_edges(void) {
-    AdjacencyList *graph = adjacency_list_create(4U, true);
+static bool record_graph_neighbor(size_t neighbor, uint64_t weight, void *context) {
+    struct GraphNeighborLog *log = context;
+
+    log->visited[log->count] = neighbor;
+    log->weights[log->count] = weight;
+    log->count++;
+    return true;
+}
+
+static void test_dynamic_nodes_preserve_payload_identity(void) {
+    int first_value = 10;
+    int second_value = 20;
+    int third_value = 30;
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *first = NULL;
+    AdjacencyListNode *second = NULL;
+    AdjacencyListNode *third = NULL;
+    AdjacencyListNode *node = NULL;
+    void *value = NULL;
 
     assert(graph != NULL);
-    assert(adjacency_list_vertex_count(graph) == 4U);
-    assert(adjacency_list_edge_count(graph) == 0U);
-    assert(adjacency_list_add_edge(graph, 0U, 1U));
-    assert(adjacency_list_add_edge(graph, 0U, 2U));
-    assert(adjacency_list_add_edge(graph, 3U, 0U));
-    assert(adjacency_list_edge_count(graph) == 3U);
-
-    assert(adjacency_list_has_edge(graph, 0U, 1U));
-    assert(!adjacency_list_has_edge(graph, 1U, 0U));
-    assert(adjacency_list_has_edge(graph, 3U, 0U));
-    assert(!adjacency_list_has_edge(graph, 0U, 3U));
+    assert(adjacency_list_node_count(graph) == 0U);
+    assert(adjacency_list_add_node(graph, &first_value, &first));
+    assert(adjacency_list_add_node(graph, &second_value, &second));
+    assert(adjacency_list_add_node(graph, &third_value, &third));
+    assert(adjacency_list_node_count(graph) == 3U);
+    assert(adjacency_list_node_at(graph, 0U, &node) && node == first);
+    assert(adjacency_list_node_at(graph, 1U, &node) && node == second);
+    assert(adjacency_list_node_at(graph, 2U, &node) && node == third);
+    assert(!adjacency_list_node_at(graph, 3U, &node));
+    assert(adjacency_list_node_value(second, &value) && value == &second_value);
+    assert(adjacency_list_node_value(third, &value) && value == &third_value);
     adjacency_list_destroy(graph);
 }
 
-static void test_undirected_edges(void) {
-    AdjacencyList *graph = adjacency_list_create(3U, false);
+static void test_directed_and_undirected_edges(void) {
+    int values[] = { 0, 1, 2 };
+    AdjacencyList *directed = adjacency_list_create(true);
+    AdjacencyList *undirected = adjacency_list_create(false);
+    AdjacencyListNode *a = NULL;
+    AdjacencyListNode *b = NULL;
+    AdjacencyListNode *c = NULL;
 
-    assert(graph != NULL);
-    assert(adjacency_list_add_edge(graph, 0U, 1U));
-    assert(adjacency_list_has_edge(graph, 0U, 1U));
-    assert(adjacency_list_has_edge(graph, 1U, 0U));
-    adjacency_list_destroy(graph);
+    assert(directed != NULL && undirected != NULL);
+    assert(adjacency_list_add_node(directed, &values[0], &a));
+    assert(adjacency_list_add_node(directed, &values[1], &b));
+    assert(adjacency_list_add_node(directed, &values[2], &c));
+    assert(adjacency_list_add_edge(directed, a, b, 7U));
+    assert(adjacency_list_add_edge(directed, a, c, 3U));
+    assert(adjacency_list_add_edge(directed, c, a, 1U));
+    assert(adjacency_list_edge_count(directed) == 3U);
+    assert(adjacency_list_has_edge(directed, a, b));
+    assert(!adjacency_list_has_edge(directed, b, a));
+    assert(adjacency_list_has_edge(directed, c, a));
+
+    assert(adjacency_list_add_node(undirected, &values[0], &a));
+    assert(adjacency_list_add_node(undirected, &values[1], &b));
+    assert(adjacency_list_add_edge(undirected, a, b, 9U));
+    assert(adjacency_list_has_edge(undirected, a, b));
+    assert(adjacency_list_has_edge(undirected, b, a));
+    adjacency_list_destroy(directed);
+    adjacency_list_destroy(undirected);
 }
 
 static void test_neighbor_iteration(void) {
-    AdjacencyList *graph = adjacency_list_create(4U, true);
+    int values[] = { 0, 1, 2, 3 };
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *nodes[4] = { NULL };
     struct NeighborLog log = { .count = 0U };
 
     assert(graph != NULL);
-    assert(adjacency_list_add_edge(graph, 1U, 0U));
-    assert(adjacency_list_add_edge(graph, 1U, 2U));
-    assert(adjacency_list_add_edge(graph, 1U, 3U));
-
-    assert(adjacency_list_neighbors(graph, 1U, record_neighbor, &log));
+    for (size_t index = 0U; index < 4U; index++) {
+        assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[0], 5U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[2], 8U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 2U));
+    assert(adjacency_list_neighbors(graph, nodes[1], record_neighbor, &log));
     assert(log.count == 3U);
+    assert(log.visited[0] == nodes[0] && log.weights[0] == 5U);
+    assert(log.visited[1] == nodes[2] && log.weights[1] == 8U);
+    assert(log.visited[2] == nodes[3] && log.weights[2] == 2U);
 
     log.count = 0U;
-    assert(!adjacency_list_neighbors(graph, 1U, stop_after_first, &log));
+    assert(!adjacency_list_neighbors(graph, nodes[1], stop_after_first, &log));
     assert(log.count == 1U);
-
     log.count = 0U;
-    assert(adjacency_list_neighbors(graph, 0U, record_neighbor, &log));
+    assert(adjacency_list_neighbors(graph, nodes[0], record_neighbor, &log));
     assert(log.count == 0U);
     adjacency_list_destroy(graph);
 }
 
-static void test_out_of_range_vertexes(void) {
-    AdjacencyList *graph = adjacency_list_create(2U, true);
+static void test_foreign_and_null_nodes_are_rejected(void) {
+    int first_value = 1;
+    int second_value = 2;
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyList *other = adjacency_list_create(true);
+    AdjacencyListNode *node = NULL;
+    AdjacencyListNode *foreign = NULL;
     struct NeighborLog log = { .count = 0U };
 
+    assert(graph != NULL && other != NULL);
+    assert(adjacency_list_add_node(graph, &first_value, &node));
+    assert(adjacency_list_add_node(other, &second_value, &foreign));
+    assert(!adjacency_list_add_edge(graph, node, foreign, 1U));
+    assert(!adjacency_list_add_edge(graph, NULL, node, 1U));
+    assert(!adjacency_list_has_edge(graph, node, foreign));
+    assert(!adjacency_list_neighbors(graph, foreign, record_neighbor, &log));
+    assert(!adjacency_list_add_node(NULL, &first_value, &node));
+    assert(adjacency_list_node_count(NULL) == 0U);
+    assert(adjacency_list_edge_count(NULL) == 0U);
+    adjacency_list_destroy(graph);
+    adjacency_list_destroy(other);
+}
+
+static void test_graph_view_maps_node_indexes(void) {
+    int values[] = { 0, 1, 2 };
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *nodes[3] = { NULL };
+    GraphView view = { 0 };
+    struct GraphNeighborLog log = { .count = 0U };
+
     assert(graph != NULL);
-    assert(!adjacency_list_add_edge(graph, 0U, 2U));
-    assert(!adjacency_list_add_edge(graph, 2U, 0U));
-    assert(!adjacency_list_has_edge(graph, 0U, 2U));
-    assert(!adjacency_list_neighbors(graph, 2U, record_neighbor, &log));
-    assert(adjacency_list_edge_count(graph) == 0U);
+    for (size_t index = 0U; index < 3U; index++) {
+        assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[2], 12U));
+    assert(adjacency_list_graph_view(graph, &view));
+    assert(graph_view_is_valid(&view));
+    assert(graph_view_vertex_count(&view) == 3U);
+    assert(graph_view_neighbors(&view, 0U, record_graph_neighbor, &log));
+    assert(log.count == 1U && log.visited[0] == 2U && log.weights[0] == 12U);
+    assert(!adjacency_list_graph_view(NULL, &view));
+    assert(!adjacency_list_graph_view(graph, NULL));
     adjacency_list_destroy(graph);
 }
 
-static void test_null_container(void) {
-    struct NeighborLog log = { .count = 0U };
-
-    assert(!adjacency_list_add_edge(NULL, 0U, 1U));
-    assert(!adjacency_list_has_edge(NULL, 0U, 1U));
-    assert(!adjacency_list_neighbors(NULL, 0U, record_neighbor, &log));
-    assert(adjacency_list_vertex_count(NULL) == 0U);
-    assert(adjacency_list_edge_count(NULL) == 0U);
-    adjacency_list_destroy(NULL);
-}
-
 int main(void) {
-    test_directed_edges();
-    test_undirected_edges();
+    test_dynamic_nodes_preserve_payload_identity();
+    test_directed_and_undirected_edges();
     test_neighbor_iteration();
-    test_out_of_range_vertexes();
-    test_null_container();
+    test_foreign_and_null_nodes_are_rejected();
+    test_graph_view_maps_node_indexes();
     return 0;
 }

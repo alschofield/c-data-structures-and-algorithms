@@ -49,7 +49,7 @@ struct HashTableContext {
 static bool populated_setup(void *context) {
     struct HashTableContext *hash_table_context = context;
 
-    hash_table_context->table = hash_table_create(key_hash, key_equals);
+    hash_table_context->table = hash_table_create(key_hash, key_equals, 10U);
     if (hash_table_context->table == NULL) {
         return false;
     }
@@ -75,7 +75,7 @@ static bool populated_setup(void *context) {
 static bool set_setup(void *context) {
     struct HashTableContext *hash_table_context = context;
 
-    hash_table_context->table = hash_table_create(key_hash, key_equals);
+    hash_table_context->table = hash_table_create(key_hash, key_equals, 10U);
     hash_table_context->next_index = 0U;
     return hash_table_context->table != NULL;
 }

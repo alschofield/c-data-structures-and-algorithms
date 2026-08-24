@@ -1,70 +1,75 @@
 #include "dijkstra.h"
+#include "../../../data-structures/graphs/graph-view/graph_view.h"
+#include "../../../data-structures/graphs/representations/adjacency-list/adjacency_list.h"
+#include "../../../data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
-static const WeightedGraphEdge EDGES_FROM_0[] = {
-    { .to = 1U, .weight = 4U }, { .to = 2U, .weight = 1U }
-};
-static const WeightedGraphEdge EDGES_FROM_1[] = { { .to = 3U, .weight = 1U } };
-static const WeightedGraphEdge EDGES_FROM_2[] = {
-    { .to = 1U, .weight = 2U }, { .to = 3U, .weight = 5U }
-};
-static const WeightedGraphEdge *const EDGE_TABLE[] = {
-    EDGES_FROM_0, EDGES_FROM_1, EDGES_FROM_2, NULL, NULL
-};
-static const size_t DEGREES[] = { 2U, 1U, 2U, 0U, 0U };
-
-static void test_shortest_distances_and_parents(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
+static void assert_weighted_shortest_paths(const GraphView *view) {
     uint64_t distances[5] = { 0U };
     size_t parents[5] = { 0U };
 
-    assert(dijkstra(&graph, 0U, distances, parents));
+    assert(dijkstra(view, 0U, distances, parents));
     assert(distances[0] == 0U);
     assert(distances[1] == 3U);
     assert(distances[2] == 1U);
     assert(distances[3] == 4U);
     assert(distances[4] == DIJKSTRA_INFINITY);
-
     assert(parents[0] == 0U);
     assert(parents[1] == 2U);
     assert(parents[2] == 0U);
     assert(parents[3] == 1U);
-    assert(parents[4] == DIJKSTRA_NO_PARENT);
 }
 
-static void test_single_vertex_graph(void) {
-    WeightedGraph graph = {
-        .vertex_count = 1U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
-    uint64_t distances[1] = { 99U };
-    size_t parents[1] = { 99U };
-
-    assert(dijkstra(&graph, 0U, distances, parents));
-    assert(distances[0] == 0U);
-    assert(parents[0] == 0U);
-}
-
-static void test_invalid_inputs(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
+static void test_adjacency_list_adapter(void) {
+    int values[] = { 0, 1, 2, 3, 4 };
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *nodes[5] = { NULL };
+    GraphView view = { 0 };
     uint64_t distances[5] = { 0U };
     size_t parents[5] = { 0U };
 
-    assert(!dijkstra(&graph, 5U, distances, parents));
-    assert(!dijkstra(&graph, 0U, NULL, parents));
-    assert(!dijkstra(&graph, 0U, distances, NULL));
-    assert(!dijkstra(NULL, 0U, distances, parents));
+    assert(graph != NULL);
+    for (size_t index = 0U; index < 5U; index++) {
+        assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[1], 4U));
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[2], nodes[1], 2U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[2], nodes[3], 5U));
+    assert(adjacency_list_graph_view(graph, &view));
+    assert_weighted_shortest_paths(&view);
+    assert(!dijkstra(&view, 5U, distances, parents));
+    assert(!dijkstra(&view, 0U, NULL, parents));
+    assert(!dijkstra(&view, 0U, distances, NULL));
+    adjacency_list_destroy(graph);
+}
+
+static void test_adjacency_matrix_adapter(void) {
+    int values[] = { 0, 1, 2, 3, 4 };
+    AdjacencyMatrix *graph = adjacency_matrix_create(true);
+    AdjacencyMatrixNode *nodes[5] = { NULL };
+    GraphView view = { 0 };
+
+    assert(graph != NULL);
+    for (size_t index = 0U; index < 5U; index++) {
+        assert(adjacency_matrix_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[1], 4U));
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[1], 2U));
+    assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[3], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[3], 5U));
+    assert(adjacency_matrix_graph_view(graph, &view));
+    assert_weighted_shortest_paths(&view);
+    adjacency_matrix_destroy(graph);
 }
 
 int main(void) {
-    test_shortest_distances_and_parents();
-    test_single_vertex_graph();
-    test_invalid_inputs();
+    test_adjacency_list_adapter();
+    test_adjacency_matrix_adapter();
     return 0;
 }

@@ -23,17 +23,17 @@ actual shortest path once the goal settles.
 ```c
 #define DIJKSTRA_INFINITY UINT64_MAX
 
-typedef struct WeightedGraph WeightedGraph;
+typedef struct GraphView GraphView;
 
-bool dijkstra(const WeightedGraph *graph, size_t source,
+bool dijkstra(const GraphView *graph, size_t source,
               uint64_t *out_distances, size_t *out_parents);
 ```
 
 The checked-in source is a failing stub; the tests define the expected
 behavior and pass only once the implementation is written.
-`WeightedGraph` is the non-negative-weight digraph this module
-defines alongside the algorithm. Unreachable vertexes report
-`DIJKSTRA_INFINITY`.
+`GraphView` is the representation-independent non-negative weighted graph
+interface from `data-structures/graphs/graph-view`. Unreachable vertexes
+report `DIJKSTRA_INFINITY`.
 
 ## Contract
 

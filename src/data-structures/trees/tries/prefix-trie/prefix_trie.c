@@ -216,10 +216,12 @@ bool prefix_trie_insert(PrefixTrie *trie, const char *key) {
         return false;
     }
 
+    // Rejects a missing C string.
     if (key == NULL) {
         return false;
     }
 
+    // Empty strings are valid prefixes but not valid stored keys in this API.
     if (*key == '\0') {
         return false;
     }

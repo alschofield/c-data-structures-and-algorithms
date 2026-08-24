@@ -1,20 +1,11 @@
 #include "a_star.h"
+#include "../../../data-structures/graphs/graph-view/graph_view.h"
+#include "../../../data-structures/graphs/representations/adjacency-list/adjacency_list.h"
+#include "../../../data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-
-static const WeightedGraphEdge EDGES_FROM_0[] = {
-    { .to = 1U, .weight = 4U }, { .to = 2U, .weight = 1U }
-};
-static const WeightedGraphEdge EDGES_FROM_1[] = { { .to = 3U, .weight = 1U } };
-static const WeightedGraphEdge EDGES_FROM_2[] = {
-    { .to = 1U, .weight = 2U }, { .to = 3U, .weight = 5U }
-};
-static const WeightedGraphEdge *const EDGE_TABLE[] = {
-    EDGES_FROM_0, EDGES_FROM_1, EDGES_FROM_2, NULL, NULL
-};
-static const size_t DEGREES[] = { 2U, 1U, 2U, 0U, 0U };
 
 static uint64_t zero_heuristic(size_t vertex, void *context) {
     (void)vertex;
@@ -28,81 +19,83 @@ static uint64_t table_heuristic(size_t vertex, void *context) {
     return table[vertex];
 }
 
-static void test_zero_heuristic_matches_dijkstra(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
-    size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
-    size_t path_length = 0U;
-
-    assert(a_star(&graph, 0U, 3U, zero_heuristic, NULL, path, &path_length));
-    assert(path_length == 4U);
-    assert(path[0] == 0U);
-    assert(path[1] == 2U);
-    assert(path[2] == 1U);
-    assert(path[3] == 3U);
-}
-
-static void test_admissible_heuristic_stays_optimal(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
+static void assert_weighted_shortest_path(const GraphView *view) {
     uint64_t remaining_costs[5] = { 4U, 1U, 3U, 0U, 0U };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
 
-    assert(a_star(&graph, 0U, 3U, table_heuristic, remaining_costs, path, &path_length));
+    assert(a_star(view, 0U, 3U, zero_heuristic, NULL, path, &path_length));
     assert(path_length == 4U);
     assert(path[0] == 0U);
     assert(path[1] == 2U);
     assert(path[2] == 1U);
     assert(path[3] == 3U);
-}
 
-static void test_source_equals_goal(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
-    size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
-    size_t path_length = 0U;
+    assert(a_star(view, 0U, 3U, table_heuristic, remaining_costs, path, &path_length));
+    assert(path_length == 4U);
+    assert(path[0] == 0U);
+    assert(path[1] == 2U);
+    assert(path[2] == 1U);
+    assert(path[3] == 3U);
 
-    assert(a_star(&graph, 2U, 2U, zero_heuristic, NULL, path, &path_length));
+    assert(a_star(view, 2U, 2U, zero_heuristic, NULL, path, &path_length));
     assert(path_length == 1U);
     assert(path[0] == 2U);
-}
 
-static void test_unreachable_goal_is_no_path(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
-    size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
-    size_t path_length = 99U;
-
-    assert(!a_star(&graph, 0U, 4U, zero_heuristic, NULL, path, &path_length));
-    assert(path[0] == 99U);
+    path_length = 99U;
+    assert(!a_star(view, 0U, 4U, zero_heuristic, NULL, path, &path_length));
     assert(path_length == 99U);
 }
 
-static void test_invalid_inputs(void) {
-    WeightedGraph graph = {
-        .vertex_count = 5U, .edges = EDGE_TABLE, .degrees = DEGREES
-    };
-    size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
-    size_t path_length = 99U;
+static void test_adjacency_list_adapter(void) {
+    int values[] = { 0, 1, 2, 3, 4 };
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *nodes[5] = { NULL };
+    GraphView view = { 0 };
+    size_t path[5] = { 0U };
+    size_t path_length = 0U;
 
-    assert(!a_star(&graph, 5U, 3U, zero_heuristic, NULL, path, &path_length));
-    assert(!a_star(&graph, 0U, 5U, zero_heuristic, NULL, path, &path_length));
-    assert(!a_star(&graph, 0U, 3U, NULL, NULL, path, &path_length));
-    assert(!a_star(&graph, 0U, 3U, zero_heuristic, NULL, NULL, &path_length));
-    assert(!a_star(&graph, 0U, 3U, zero_heuristic, NULL, path, NULL));
-    assert(!a_star(NULL, 0U, 3U, zero_heuristic, NULL, path, &path_length));
+    assert(graph != NULL);
+    for (size_t index = 0U; index < 5U; index++) {
+        assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[1], 4U));
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[2], nodes[1], 2U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[2], nodes[3], 5U));
+    assert(adjacency_list_graph_view(graph, &view));
+    assert_weighted_shortest_path(&view);
+    assert(!a_star(&view, 5U, 3U, zero_heuristic, NULL, path, &path_length));
+    assert(!a_star(&view, 0U, 5U, zero_heuristic, NULL, path, &path_length));
+    assert(!a_star(&view, 0U, 3U, NULL, NULL, path, &path_length));
+    assert(!a_star(&view, 0U, 3U, zero_heuristic, NULL, NULL, &path_length));
+    assert(!a_star(&view, 0U, 3U, zero_heuristic, NULL, path, NULL));
+    adjacency_list_destroy(graph);
+}
+
+static void test_adjacency_matrix_adapter(void) {
+    int values[] = { 0, 1, 2, 3, 4 };
+    AdjacencyMatrix *graph = adjacency_matrix_create(true);
+    AdjacencyMatrixNode *nodes[5] = { NULL };
+    GraphView view = { 0 };
+
+    assert(graph != NULL);
+    for (size_t index = 0U; index < 5U; index++) {
+        assert(adjacency_matrix_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[1], 4U));
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[1], 2U));
+    assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[3], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[3], 5U));
+    assert(adjacency_matrix_graph_view(graph, &view));
+    assert_weighted_shortest_path(&view);
+    adjacency_matrix_destroy(graph);
 }
 
 int main(void) {
-    test_zero_heuristic_matches_dijkstra();
-    test_admissible_heuristic_stays_optimal();
-    test_source_equals_goal();
-    test_unreachable_goal_is_no_path();
-    test_invalid_inputs();
+    test_adjacency_list_adapter();
+    test_adjacency_matrix_adapter();
     return 0;
 }

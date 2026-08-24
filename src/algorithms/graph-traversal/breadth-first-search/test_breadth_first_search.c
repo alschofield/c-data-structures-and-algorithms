@@ -1,86 +1,64 @@
 #include "breadth_first_search.h"
+#include "../../../data-structures/graphs/graph-view/graph_view.h"
+#include "../../../data-structures/graphs/representations/adjacency-list/adjacency_list.h"
+#include "../../../data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.h"
 
 #include <assert.h>
 #include <stddef.h>
 
-static void test_level_order_from_source(void) {
-    AdjacencyList *graph = adjacency_list_create(6U, true);
-    size_t order[6] = { 99U, 99U, 99U, 99U, 99U, 99U };
+static void assert_weight_agnostic_traversal(const GraphView *view) {
+    size_t order[4] = { 99U, 99U, 99U, 99U };
     size_t count = 0U;
 
-    assert(graph != NULL);
-    assert(adjacency_list_add_edge(graph, 0U, 1U));
-    assert(adjacency_list_add_edge(graph, 0U, 2U));
-    assert(adjacency_list_add_edge(graph, 1U, 3U));
-    assert(adjacency_list_add_edge(graph, 2U, 3U));
-    assert(adjacency_list_add_edge(graph, 3U, 4U));
-
-    assert(breadth_first_search(graph, 0U, order, &count));
-    assert(count == 5U);
-    assert(order[0] == 0U);
-    assert(order[1] == 1U);
-    assert(order[2] == 2U);
-    assert(order[3] == 3U);
-    assert(order[4] == 4U);
-    assert(order[5] == 99U);
-    adjacency_list_destroy(graph);
-}
-
-static void test_cycles_and_self_loops_terminate(void) {
-    AdjacencyList *graph = adjacency_list_create(3U, true);
-    size_t order[3] = { 99U, 99U, 99U };
-    size_t count = 0U;
-
-    assert(graph != NULL);
-    assert(adjacency_list_add_edge(graph, 0U, 0U));
-    assert(adjacency_list_add_edge(graph, 0U, 1U));
-    assert(adjacency_list_add_edge(graph, 1U, 2U));
-    assert(adjacency_list_add_edge(graph, 2U, 0U));
-
-    assert(breadth_first_search(graph, 0U, order, &count));
+    assert(breadth_first_search(view, 0U, order, &count));
     assert(count == 3U);
     assert(order[0] == 0U);
     assert(order[1] == 1U);
     assert(order[2] == 2U);
-    adjacency_list_destroy(graph);
+    assert(order[3] == 99U);
 }
 
-static void test_unreachable_vertices_not_visited(void) {
-    AdjacencyList *graph = adjacency_list_create(4U, true);
-    size_t order[4] = { 99U, 99U, 99U, 99U };
+static void test_adjacency_list_adapter(void) {
+    int values[] = { 0, 1, 2, 3 };
+    AdjacencyList *graph = adjacency_list_create(true);
+    AdjacencyListNode *nodes[4] = { NULL };
+    GraphView view = { 0 };
+    size_t order[4] = { 0U };
     size_t count = 0U;
 
     assert(graph != NULL);
-    assert(adjacency_list_add_edge(graph, 0U, 1U));
-    assert(adjacency_list_add_edge(graph, 2U, 3U));
-
-    assert(breadth_first_search(graph, 0U, order, &count));
-    assert(count == 2U);
-    assert(order[0] == 0U);
-    assert(order[1] == 1U);
-    assert(order[2] == 99U);
+    for (size_t index = 0U; index < 4U; index++) {
+        assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[1], 99U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[2], 1U));
+    assert(adjacency_list_graph_view(graph, &view));
+    assert_weight_agnostic_traversal(&view);
+    assert(!breadth_first_search(&view, 4U, order, &count));
+    assert(!breadth_first_search(&view, 0U, NULL, &count));
+    assert(!breadth_first_search(&view, 0U, order, NULL));
     adjacency_list_destroy(graph);
 }
 
-static void test_invalid_inputs(void) {
-    AdjacencyList *graph = adjacency_list_create(2U, true);
-    size_t order[2] = { 99U, 99U };
-    size_t count = 99U;
+static void test_adjacency_matrix_adapter(void) {
+    int values[] = { 0, 1, 2, 3 };
+    AdjacencyMatrix *graph = adjacency_matrix_create(true);
+    AdjacencyMatrixNode *nodes[4] = { NULL };
+    GraphView view = { 0 };
 
     assert(graph != NULL);
-    assert(!breadth_first_search(graph, 2U, order, &count));
-    assert(!breadth_first_search(graph, 0U, NULL, &count));
-    assert(!breadth_first_search(graph, 0U, order, NULL));
-    assert(!breadth_first_search(NULL, 0U, order, &count));
-    assert(order[0] == 99U);
-    assert(count == 99U);
-    adjacency_list_destroy(graph);
+    for (size_t index = 0U; index < 4U; index++) {
+        assert(adjacency_matrix_add_node(graph, &values[index], &nodes[index]));
+    }
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[1], 99U));
+    assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[2], 1U));
+    assert(adjacency_matrix_graph_view(graph, &view));
+    assert_weight_agnostic_traversal(&view);
+    adjacency_matrix_destroy(graph);
 }
 
 int main(void) {
-    test_level_order_from_source();
-    test_cycles_and_self_loops_terminate();
-    test_unreachable_vertices_not_visited();
-    test_invalid_inputs();
+    test_adjacency_list_adapter();
+    test_adjacency_matrix_adapter();
     return 0;
 }

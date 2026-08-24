@@ -18,18 +18,18 @@ the tests check directly.
 ## Required API
 
 ```c
-typedef struct WeightedGraph WeightedGraph;
+typedef struct GraphView GraphView;
 typedef uint64_t (*AStarHeuristicFn)(size_t vertex, void *context);
 
-bool a_star(const WeightedGraph *graph, size_t source, size_t goal,
+bool a_star(const GraphView *graph, size_t source, size_t goal,
             AStarHeuristicFn heuristic, void *context,
             size_t *out_path, size_t *out_path_length);
 ```
 
 The checked-in source is a failing stub; the tests define the expected
 behavior and pass only once the implementation is written.
-`WeightedGraph` is the non-negative-weight digraph this module
-defines alongside the algorithm.
+`GraphView` is the representation-independent non-negative weighted graph
+interface from `data-structures/graphs/graph-view`.
 
 ## Contract
 

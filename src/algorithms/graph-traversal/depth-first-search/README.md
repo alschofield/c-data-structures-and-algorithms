@@ -17,16 +17,17 @@ build on.
 ## Required API
 
 ```c
-typedef struct AdjacencyList AdjacencyList;
+typedef struct GraphView GraphView;
 
-bool depth_first_search(const AdjacencyList *graph, size_t source,
+bool depth_first_search(const GraphView *graph, size_t source,
                         size_t *out_order, size_t *out_count);
 ```
 
 The checked-in source is a failing stub; the tests define the expected
 behavior and pass only once the implementation is written.
-`AdjacencyList` is the graph from
-`data-structures/graphs/representations/adjacency-list`.
+`GraphView` is the representation-independent graph interface from
+`data-structures/graphs/graph-view`. DFS ignores edge weights; adjacency-list,
+adjacency-matrix, and imported graph adapters all use the same API.
 Discovery/finish-time variants extend the same shape.
 
 ## Contract
