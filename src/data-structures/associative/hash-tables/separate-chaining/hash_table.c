@@ -2,6 +2,7 @@
 #include "hash_table.h"
 // Declares malloc, calloc, and free.
 #include <stdlib.h>
+#include <stdint.h>
 
 // Defines one key-value entry in a bucket's collision chain.
 struct HashTableEntry {
@@ -28,7 +29,7 @@ struct HashTable {
 };
 
 // Allocates an empty table with caller-supplied key behavior.
-HashTable *hash_table_create(HashTableHashFn hash, HashTableEqualsFn equals) {
+HashTable *hash_table_create(HashTableHashFn hash, HashTableEqualsFn equals, size_t initial_capacity) {
     // Rejects a missing key-to-hash function.
     if (hash == NULL) {
         // Reports invalid configuration to the caller.
@@ -41,6 +42,10 @@ HashTable *hash_table_create(HashTableHashFn hash, HashTableEqualsFn equals) {
         return NULL;
     }
 
+    if (initial_capacity == 0U) {
+        return NULL;
+    }
+
     // Allocates the table wrapper before allocating its bucket array.
     HashTable *table = malloc(sizeof(HashTable));
     // Stops before accessing the wrapper when allocation fails.
@@ -49,8 +54,13 @@ HashTable *hash_table_create(HashTableHashFn hash, HashTableEqualsFn equals) {
         return NULL;
     }
 
-    // Allocates ten zeroed bucket-head pointers for empty collision chains.
-    table->buckets = calloc(10U, sizeof(*table->buckets));
+    if (initial_capacity > SIZE_MAX / sizeof(*table->buckets)) {
+        free(table);
+        return NULL;
+    }
+
+    // Allocates initial_capacity zeroed bucket-head pointers for empty collision chains.
+    table->buckets = calloc(initial_capacity, sizeof(*table->buckets));
     // Checks whether bucket-array allocation failed.
     if (table->buckets == NULL) {
         // Releases the already-allocated table wrapper.
@@ -62,7 +72,7 @@ HashTable *hash_table_create(HashTableHashFn hash, HashTableEqualsFn equals) {
     // Records that no key-value entries have been inserted yet.
     table->size = 0U;
     // Records the fixed initial bucket-array capacity.
-    table->capacity = 10U;
+    table->capacity = initial_capacity;
     // Stores the caller's key-to-hash function pointer.
     table->hash = hash;
     // Stores the caller's key-equality function pointer.
@@ -98,6 +108,104 @@ void hash_table_destroy(HashTable *table) {
     free(table->buckets);
     // Frees the HashTable structure.
     free(table);
+}
+
+bool hash_table_set_resizing(HashTable *table, void *key, void *value, void **out_previous_value) {
+    if (table == NULL) {
+        return false;
+    }
+
+    if (key == NULL) {
+        return false;
+    }
+
+    if (out_previous_value == NULL) {
+        return false;
+    }
+
+    // Starts at the collision-chain head selected by this key's hash.
+    HashTableEntry *temp = table->buckets[table->hash(key) % table->capacity];
+    // Searches existing entries for an equal key before inserting a new entry.
+    while(temp != NULL) {
+        if (table->equals(temp->key, key)) {
+            // Returns the replaced caller-owned value to the caller.
+            *out_previous_value = temp->value;
+            // Retains the first stored key pointer and replaces only its value.
+            temp->value = value;
+            // Reports that the existing entry was replaced.
+            return true;
+        }
+
+        // Advances until an equal key is found or the chain ends.
+        temp = temp->next;
+    }
+
+    // Allocates a new entry after confirming no equal key exists.
+    HashTableEntry *new_entry = malloc(sizeof(HashTableEntry));
+    if (new_entry == NULL) {
+        // Leaves the table and output pointer unchanged on allocation failure.
+        return false;
+    }
+
+    // couldnt find node and new node has been created so we can safely increase capacity if its needed and if
+    //      there is error then we can clear node
+
+    if (table->size >= table->capacity - (table->capacity / 4U + (table->capacity % 4U != 0U))) {
+        if (table->capacity > SIZE_MAX / 2U) {
+            free(new_entry);
+            return false;
+        }
+
+        size_t new_capacity = table->capacity * 2U;
+        if (new_capacity > SIZE_MAX / sizeof(*table->buckets)) {
+            free(new_entry);
+            return false;
+        }
+
+        HashTableEntry **buckets = calloc(new_capacity, sizeof(*table->buckets));
+        if (buckets == NULL) {
+            free(new_entry);
+            return false;
+        }
+
+        // re lay each entry into its new bucket based on the hash function
+        // loop through each bucket
+        // loop through each linked list
+        // place each item in its new bucket list based on the hash function
+        size_t n = 0U;
+        while(n != table->capacity) {
+            HashTableEntry *temp = table->buckets[n];
+            HashTableEntry *next = NULL;
+            while(temp != NULL) {
+                next = temp->next;
+                size_t new_index = table->hash(temp->key) % new_capacity;
+                HashTableEntry *bucket = buckets[new_index];
+                temp->next = bucket;
+                buckets[new_index] = temp;
+                temp = next;
+            }
+
+            n++;
+        }
+
+        table->capacity = new_capacity;
+        free(table->buckets);
+        table->buckets = buckets;
+    }
+
+    // Stores the caller-owned key and value pointers in the new entry.
+    new_entry->key = key;
+    new_entry->value = value;
+    // Prepends the entry because collision-chain order has no meaning.
+    new_entry->next = table->buckets[table->hash(key) % table->capacity];
+    // Makes the new entry the selected bucket's collision-chain head.
+    table->buckets[table->hash(key) % table->capacity] = new_entry;
+    // Reports that no prior value existed for the newly inserted key.
+    *out_previous_value = NULL;
+    // Counts the newly inserted key-value entry.
+    table->size++;
+    // Reports successful insertion.
+    return true;
 }
 
 // Inserts a new key-value pair or replaces an existing key's value.
@@ -295,6 +403,14 @@ size_t hash_table_size(const HashTable *table) {
 
     // Returns the constant-time entry count.
     return table->size;
+}
+
+size_t hash_table_capacity(const HashTable *table) {
+    if (table == NULL) {
+        return 0U;
+    }
+
+    return table->capacity;
 }
 
 // Reports whether a table contains no entries.
