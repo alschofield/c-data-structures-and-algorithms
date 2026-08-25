@@ -94,21 +94,86 @@ void adjacency_list_destroy(AdjacencyList *graph) {
     return;
 }
 
-// TODO: Grow nodes, allocate/initialize a node, and return it through out_node.
+// Adds one graph-owned node with a caller-owned payload value.
 bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNode **out_node) {
-    // Marks parameters as intentionally unused until node insertion is implemented.
-    (void)graph;
-    (void)value;
-    (void)out_node;
-    return false;
+    // Rejects a missing graph or output location.
+    if (graph == NULL) {
+        return false;
+    }
+
+    if (out_node == NULL) {
+        return false;
+    }
+
+    // Grows the node-pointer array only when every slot is occupied.
+    if (graph->node_count == graph->node_capacity) {
+        // Rejects a capacity that cannot double without overflowing size_t.
+        if (graph->node_capacity > SIZE_MAX / 2U) {
+            return false;
+        }
+
+        // Uses one initial slot, then doubles capacity for later additions.
+        size_t new_capacity = graph->node_capacity == 0U ? 1U : graph->node_capacity * 2U;
+        // Rejects a node-pointer count whose byte allocation would overflow.
+        if (new_capacity > SIZE_MAX / sizeof(*graph->nodes)) {
+            return false;
+        }
+
+        // Resizes through a temporary pointer so failure preserves the old array.
+        AdjacencyListNode **nodes = realloc(graph->nodes, sizeof(*graph->nodes) * new_capacity);
+        // Reports resize failure without changing graph fields.
+        if (nodes == NULL) {
+            return false;
+        }
+
+        // Publishes the successfully resized array and capacity.
+        graph->nodes = nodes;
+        graph->node_capacity = new_capacity;
+    }
+
+    // Allocates one graph-owned node after capacity is available.
+    AdjacencyListNode *node = malloc(sizeof(AdjacencyListNode));
+    // Reports node allocation failure without adding a logical node.
+    if (node == NULL) {
+        return false;
+    }
+
+    // Initializes payload, index, ownership, and empty edge storage.
+    node->value = value;
+    node->index = graph->node_count;
+    node->owner = graph;
+    node->edge_count = 0U;
+    node->edge_capacity = 0U;
+    node->edges = NULL;
+    
+    // Stores the node in the next dense index slot.
+    graph->nodes[graph->node_count] = node;
+    // Includes the new node in the graph's logical node count.
+    graph->node_count++;
+
+    // Returns the opaque node pointer to the caller.
+    *out_node = node;
+
+    // Reports successful node insertion.
+    return true;
 }
 
-// TODO: Validate node/out_value and return the caller-owned payload pointer.
+// Returns a node's caller-owned payload pointer.
 bool adjacency_list_node_value(const AdjacencyListNode *node, void **out_value) {
-    // Marks parameters as intentionally unused until value lookup is implemented.
-    (void)node;
-    (void)out_value;
-    return false;
+    // Rejects a missing node or output location.
+    if (node == NULL) {
+        return false;
+    }
+
+    if (out_value == NULL) {
+        return false;
+    }
+
+    // Copies the payload pointer without transferring ownership.
+    *out_value = node->value;
+
+    // Reports successful payload lookup.
+    return true;
 }
 
 // TODO: Validate graph/index/out_node and return the node at its dense index.
