@@ -31,9 +31,6 @@ size_t binary_heap_size(const BinaryHeap *heap);
 bool binary_heap_is_empty(const BinaryHeap *heap);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
-
 ## Contract
 
 - Implicit array layout: children of index `i` live at `2i + 1` and `2i + 2`,

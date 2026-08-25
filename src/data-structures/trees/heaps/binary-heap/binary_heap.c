@@ -121,8 +121,70 @@ bool binary_heap_push(BinaryHeap *heap, void *item) {
     return true;
 }
 
-// TODO: Return the root, move the final item to index zero, then sift down.
-bool binary_heap_pop(BinaryHeap *heap, void **out_item);
+// Returns the root, moves the final item to index zero, then sifts it down.
+bool binary_heap_pop(BinaryHeap *heap, void **out_item) {
+    // Rejects a missing heap.
+    if (heap == NULL) {
+        return false;
+    }
+
+    // Rejects a missing output location.
+    if (out_item == NULL) {
+        return false;
+    }
+
+    // Rejects removal from an empty heap.
+    if (heap->size == 0U) {
+        return false;
+    }
+
+    // Hands the root item to the caller before overwriting index zero.
+    *out_item = heap->items[0];
+    // Preserves complete-tree shape by promoting the final occupied item.
+    heap->items[0] = heap->items[heap->size - 1];
+    // Clears the now-unused final array slot.
+    heap->items[heap->size - 1] = NULL;
+
+    // Removes that final slot from the logical heap.
+    heap->size--;
+
+    // Holds one pointer while the replacement item swaps downward.
+    void *temp = NULL;
+    // Starts sifting from the replacement item at the root.
+    size_t n = 0U;
+    // Computes root child indexes before checking whether the left child exists.
+    size_t left_index = n * 2U + 1U;
+    size_t right_index = n * 2U + 2U;
+    // Continues only while the current item has at least a left child.
+    while(left_index < heap->size) {
+        // Starts with the left child as the best available child.
+        size_t child_index = left_index;
+        // Chooses the better child when a right child also exists.
+        if (right_index < heap->size) {
+            child_index = heap->compare(heap->items[left_index], heap->items[right_index]) <= 0 ? left_index : right_index;
+        }
+
+        // Swaps downward only when the chosen child should order before n.
+        if(heap->compare(heap->items[n], heap->items[child_index]) > 0) {
+            temp = heap->items[n];
+            heap->items[n] = heap->items[child_index];
+            heap->items[child_index] = temp;
+
+            // Continues from the replacement item's new child position.
+            n = child_index;
+
+            // Recomputes child indexes for the replacement's new position.
+            left_index = n * 2U + 1U;
+            right_index = n * 2U + 2U;
+        } else {
+            // Stops once the current parent-child heap order holds.
+            return true;
+        }
+    }
+
+    // Reports success after the replacement reaches a leaf.
+    return true;
+}
 
 // Returns the root item without changing size or heap order.
 bool binary_heap_peek(const BinaryHeap *heap, void **out_item) {

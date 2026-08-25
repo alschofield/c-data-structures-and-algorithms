@@ -315,6 +315,8 @@ The table is one story told seven ways: **the price of finding your data.**
   into the O(1) tier — but the middle stays a walk.
 - The BST turns the walk into a *guided descent* — each comparison discards
   half the remaining tree. Cost: ~4-5 ns per level, ~log n levels.
+- The binary heap keeps one priority answer ready at its root. Push and pop
+  repair one root-to-leaf path; peek reads index zero without traversal.
 - The hash table tries to skip the search entirely by *computing* the
   location. Done right it is the fastest lookup structure here; with 10 fixed
   buckets it quietly degenerates back into the linked list it was meant to
@@ -345,6 +347,24 @@ changes exact lookup, prefix lookup, or removal. That is the trie contract
 made visible: traversal follows characters, not the number of stored keys.
 Insertion rises slightly as the growing sparse child collections allocate and
 touch more memory, but it remains effectively constant for this key shape.
+
+## Binary Heap Benchmark
+
+The heap uses shuffled integer inserts, creating a min-heap through the same
+caller comparison contract used elsewhere. Push and pop each run 10,000
+operations per sample; peek repeatedly reads the existing minimum.
+
+| Operation | 10,000 items (ns/op) | Expected complexity |
+| --- | ---: | --- |
+| Push | 15.07 | O(log n) amortized |
+| Pop | 75.58 | O(log n) |
+| Peek | 1.61 | O(1) |
+
+`peek` is a direct root read. `push` sifts up only as far as the inserted item
+needs; `pop` is slower because it compares both children on each sift-down
+level to choose the next swap target. The small measured constants do not
+change the important rule: both mutating operations remain bounded by heap
+height, not by the total number of items.
 
 ## Algorithm Benchmarks
 
@@ -459,6 +479,7 @@ make benchmark NAME=data-structures/linear/linked/singly-linked-list BENCHMARK=s
 make benchmark NAME=data-structures/linear/linked/doubly-linked-list BENCHMARK=doubly_linked_list
 make benchmark NAME=data-structures/associative/hash-tables/separate-chaining BENCHMARK=hash_table
 make benchmark NAME=data-structures/trees/binary-search-trees/binary-search-tree BENCHMARK=binary_search_tree
+make benchmark NAME=data-structures/trees/heaps/binary-heap BENCHMARK=binary_heap
 make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_sort
 make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
 make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
@@ -485,10 +506,11 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Doubly linked list | `doubly_linked_list_benchmark.c` | push/pop front and back, get/insert/remove middle |
 | Hash table | `hash_table_benchmark.c` | set, get, contains, remove |
 | Binary search tree | `binary_search_tree_benchmark.c` | insert, find, contains, remove |
+| Binary heap | `binary_heap_benchmark.c` | push, pop, peek |
 | Bubble sort | `bubble_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Merge sort | `merge_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 
-Benchmarks exist for the twelve completed modules listed above.
+Benchmarks exist for the thirteen completed modules listed above.
