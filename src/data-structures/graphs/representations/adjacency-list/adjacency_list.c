@@ -105,10 +105,18 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
         return false;
     }
 
+    // Allocates one graph-owned node after capacity is available.
+    AdjacencyListNode *node = malloc(sizeof(AdjacencyListNode));
+    // Reports node allocation failure without adding a logical node.
+    if (node == NULL) {
+        return false;
+    }
+
     // Grows the node-pointer array only when every slot is occupied.
     if (graph->node_count == graph->node_capacity) {
         // Rejects a capacity that cannot double without overflowing size_t.
         if (graph->node_capacity > SIZE_MAX / 2U) {
+            free(node);
             return false;
         }
 
@@ -116,6 +124,7 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
         size_t new_capacity = graph->node_capacity == 0U ? 1U : graph->node_capacity * 2U;
         // Rejects a node-pointer count whose byte allocation would overflow.
         if (new_capacity > SIZE_MAX / sizeof(*graph->nodes)) {
+            free(node);
             return false;
         }
 
@@ -123,19 +132,13 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
         AdjacencyListNode **nodes = realloc(graph->nodes, sizeof(*graph->nodes) * new_capacity);
         // Reports resize failure without changing graph fields.
         if (nodes == NULL) {
+            free(node);
             return false;
         }
 
         // Publishes the successfully resized array and capacity.
         graph->nodes = nodes;
         graph->node_capacity = new_capacity;
-    }
-
-    // Allocates one graph-owned node after capacity is available.
-    AdjacencyListNode *node = malloc(sizeof(AdjacencyListNode));
-    // Reports node allocation failure without adding a logical node.
-    if (node == NULL) {
-        return false;
     }
 
     // Initializes payload, index, ownership, and empty edge storage.
@@ -179,38 +182,122 @@ bool adjacency_list_node_value(const AdjacencyListNode *node, void **out_value) 
 // TODO: Validate graph/index/out_node and return the node at its dense index.
 bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, AdjacencyListNode **out_node) {
     // Marks parameters as intentionally unused until index lookup is implemented.
-    (void)graph;
-    (void)index;
-    (void)out_node;
-    return false;
+    if (graph == NULL) {
+        return false;
+    }
+
+    if (index > graph->node_count) {
+        return false;
+    }
+
+    if (out_node == NULL) {
+        return false;
+    }
+
+    *out_node = graph->nodes[index];
+
+    return true;
 }
 
 // TODO: Validate owners, grow edge storage, store weight, and mirror undirected edges.
 bool adjacency_list_add_edge(AdjacencyList *graph, AdjacencyListNode *from, AdjacencyListNode *to, uint64_t weight) {
-    // Marks parameters as intentionally unused until edge insertion is implemented.
-    (void)graph;
-    (void)from;
-    (void)to;
-    (void)weight;
-    return false;
+    if (graph == NULL) {
+        return false;
+    }
+
+    if (from == NULL) {
+        return false;
+    }
+
+    if (to == NULL) {
+        return false;
+    }
+
+    Edge *edge = malloc(sizeof(*from->edges));
+    if (edge == NULL) {
+        return false;
+    }
+
+    edge->target = to;
+    edge->weight = weight;
+
+    if (from->edge_count == from->edge_capacity) {
+        if (from->edge_capacity > SIZE_MAX / 2U) {
+            free(edge);
+            return false;
+        }
+
+        size_t new_capacity = from->edge_count == 0U ? 1U : from->edge_count * 2;
+        if (new_capacity > SIZE_MAX / sizeof(*from->edges)) {
+            free(edge);
+            return false;
+        }
+
+        Edge **edges = realloc(from->edges, new_capacity);
+        if (edges == NULL) {
+            free(edge);
+            return false;
+        }
+
+        from->edges = edges;
+    }
+
+    from->edges[from->edge_count] = edge;
+    from->edge_count++;
+    graph->edge_count++;
+
+    return true;
 }
 
 // TODO: Validate owners and scan from's outgoing edges for to.
 bool adjacency_list_has_edge(const AdjacencyList *graph, const AdjacencyListNode *from, const AdjacencyListNode *to) {
-    // Marks parameters as intentionally unused until edge lookup is implemented.
-    (void)graph;
-    (void)from;
-    (void)to;
+    if (graph == NULL) {
+        return false;
+    }
+
+    if (from == NULL) {
+        return false;
+    }
+
+    if (to == NULL) {
+        return false;
+    }
+
+    size_t n = 0U;
+    while(n < from->edge_count) {
+        if (from->edges[n]->target == to) {
+            return true;
+        }
+
+        n++;
+    }
+
     return false;
 }
 
 // TODO: Visit every edge target/weight and stop when the visitor returns false.
 bool adjacency_list_neighbors(const AdjacencyList *graph, const AdjacencyListNode *node, AdjacencyListVisitFn visit, void *context) {
-    // Marks parameters as intentionally unused until neighbor iteration is implemented.
-    (void)graph;
-    (void)node;
-    (void)visit;
-    (void)context;
+    if (graph == NULL) {
+        return false;
+    }
+
+    if (node == NULL) {
+        return false;
+    }
+
+    if (visit == NULL) {
+        return false;
+    }
+
+    size_t n = 0U;
+    while(n < node->edge_count) {
+        if (!visit(node->edges[n]->target, node->edges[n]->weight, context)) {
+            return true;
+        }
+
+        n++;
+    }
+
     return false;
 }
 
@@ -237,9 +324,17 @@ size_t adjacency_list_edge_count(const AdjacencyList *graph) {
 // TODO: Fill out_view with callbacks that expose this graph through GraphView.
 bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) {
     // Rejects missing graph or output storage before adapter construction.
-    if (graph == NULL || out_view == NULL) {
+    if (graph == NULL) {
+        return false;
+    }
+        
+    if (out_view == NULL) {
         return false;
     }
 
-    return false;
+    out_view->context = graph;
+    out_view->neighbors = adjacency_list_neighbors;
+    out_view->vertex_count = adjacency_list_node_count;
+
+    return true;
 }
