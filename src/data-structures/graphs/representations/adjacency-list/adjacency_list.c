@@ -23,8 +23,8 @@ struct AdjacencyListNode {
     size_t edge_count;
     // Counts allocated edge-array slots.
     size_t edge_capacity;
-    // Points to the growable contiguous array of outgoing edge records.
-    struct Edge *edges;
+    // Points to the growable array of pointers to separately allocated edges.
+    Edge **edges;
 };
 
 // Defines the fields hidden from callers of the public API.
@@ -61,10 +61,37 @@ AdjacencyList *adjacency_list_create(bool directed) {
     return graph;
 }
 
-// TODO: Free every node edge array, every node, the node array, and graph.
+// Frees every graph-owned edge, node, node-pointer array, and graph wrapper.
 void adjacency_list_destroy(AdjacencyList *graph) {
-    // Marks graph as intentionally unused until destruction is implemented.
-    (void)graph;
+    // Treats a missing graph as a no-op.
+    if (graph == NULL) {
+        return;
+    }
+
+    // Holds each graph-owned node while its edge allocations are released.
+    AdjacencyListNode *temp = NULL;
+    size_t n = 0U;
+    while(n < graph->node_count) {
+        // Retrieves the next graph-owned node from the node-pointer array.
+        temp = graph->nodes[n];
+        size_t _n = 0U;
+        // Frees every separately allocated edge pointer stored by this node.
+        while(_n < temp->edge_count) {
+            free(temp->edges[_n]);
+            _n++;
+        }
+
+        // Frees the array that held the edge pointers, then the node itself.
+        free(temp->edges);
+        free(temp);
+        n++;
+    }
+
+    // Frees the node-pointer array and the graph wrapper.
+    free(graph->nodes);
+    free(graph);
+
+    return;
 }
 
 // TODO: Grow nodes, allocate/initialize a node, and return it through out_node.
