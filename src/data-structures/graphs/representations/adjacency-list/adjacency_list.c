@@ -6,13 +6,13 @@
 // Defines one outgoing weighted edge stored by a source node.
 struct Edge {
     // Points to the neighboring target node without owning it.
-    AdjacencyListNode *target;
+    Node *target;
     // Stores the nonnegative traversal cost of this edge.
     uint64_t weight;
 };
 
 // Defines one graph-owned node with a caller-owned payload.
-struct AdjacencyListNode {
+struct Node {
     // Points to caller-owned data; graph destruction never frees it.
     void *value;
     // Stores the stable dense index used by GraphView algorithms.
@@ -38,7 +38,7 @@ struct AdjacencyList {
     // Counts logical public edges; undirected reverse storage does not double it.
     size_t edge_count;
     // Points to the growable array of graph-owned node pointers.
-    AdjacencyListNode **nodes;
+    Node **nodes;
 };
 
 // Allocates an empty dynamic adjacency-list graph.
@@ -69,7 +69,7 @@ void adjacency_list_destroy(AdjacencyList *graph) {
     }
 
     // Holds each graph-owned node while its edge allocations are released.
-    AdjacencyListNode *temp = NULL;
+    Node *temp = NULL;
     size_t n = 0U;
     while(n < graph->node_count) {
         // Retrieves the next graph-owned node from the node-pointer array.
@@ -95,7 +95,7 @@ void adjacency_list_destroy(AdjacencyList *graph) {
 }
 
 // Adds one graph-owned node with a caller-owned payload value.
-bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNode **out_node) {
+bool adjacency_list_add_node(AdjacencyList *graph, void *value, Node **out_node) {
     // Rejects a missing graph or output location.
     if (graph == NULL) {
         return false;
@@ -106,7 +106,7 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
     }
 
     // Allocates one graph-owned node after capacity is available.
-    AdjacencyListNode *node = malloc(sizeof(AdjacencyListNode));
+    Node *node = malloc(sizeof(Node));
     // Reports node allocation failure without adding a logical node.
     if (node == NULL) {
         return false;
@@ -129,7 +129,7 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
         }
 
         // Resizes through a temporary pointer so failure preserves the old array.
-        AdjacencyListNode **nodes = realloc(graph->nodes, sizeof(*graph->nodes) * new_capacity);
+        Node **nodes = realloc(graph->nodes, sizeof(*graph->nodes) * new_capacity);
         // Reports resize failure without changing graph fields.
         if (nodes == NULL) {
             free(node);
@@ -162,7 +162,7 @@ bool adjacency_list_add_node(AdjacencyList *graph, void *value, AdjacencyListNod
 }
 
 // Returns a node's caller-owned payload pointer.
-bool adjacency_list_node_value(const AdjacencyListNode *node, void **out_value) {
+bool adjacency_list_node_value(const Node *node, void **out_value) {
     // Rejects a missing node or output location.
     if (node == NULL) {
         return false;
@@ -180,7 +180,7 @@ bool adjacency_list_node_value(const AdjacencyListNode *node, void **out_value) 
 }
 
 // TODO: Validate graph/index/out_node and return the node at its dense index.
-bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, AdjacencyListNode **out_node) {
+bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, Node **out_node) {
     // Marks parameters as intentionally unused until index lookup is implemented.
     if (graph == NULL) {
         return false;
@@ -200,7 +200,7 @@ bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, AdjacencyL
 }
 
 // TODO: Validate owners, grow edge storage, store weight, and mirror undirected edges.
-bool adjacency_list_add_edge(AdjacencyList *graph, AdjacencyListNode *from, AdjacencyListNode *to, uint64_t weight) {
+bool adjacency_list_add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_t weight) {
     if (graph == NULL) {
         return false;
     }
@@ -250,7 +250,7 @@ bool adjacency_list_add_edge(AdjacencyList *graph, AdjacencyListNode *from, Adja
 }
 
 // TODO: Validate owners and scan from's outgoing edges for to.
-bool adjacency_list_has_edge(const AdjacencyList *graph, const AdjacencyListNode *from, const AdjacencyListNode *to) {
+bool adjacency_list_has_edge(const AdjacencyList *graph, const Node *from, const Node *to) {
     if (graph == NULL) {
         return false;
     }
@@ -276,7 +276,7 @@ bool adjacency_list_has_edge(const AdjacencyList *graph, const AdjacencyListNode
 }
 
 // TODO: Visit every edge target/weight and stop when the visitor returns false.
-bool adjacency_list_neighbors(const AdjacencyList *graph, const AdjacencyListNode *node, AdjacencyListVisitFn visit, void *context) {
+bool adjacency_list_neighbors(const AdjacencyList *graph, const Node *node, AdjacencyListVisitFn visit, void *context) {
     if (graph == NULL) {
         return false;
     }
