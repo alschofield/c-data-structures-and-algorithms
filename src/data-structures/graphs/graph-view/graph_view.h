@@ -1,3 +1,6 @@
+#ifndef GRAPH_VIEW_H
+#define GRAPH_VIEW_H
+
 // Declares size_t.
 #include <stddef.h>
 // Declares bool.
@@ -30,3 +33,5 @@ bool graph_view_is_valid(const GraphView *view);
 size_t graph_view_vertex_count(const GraphView *view);
 // Validates and delegates weighted neighbor iteration to the backing graph.
 bool graph_view_neighbors(const GraphView *view, size_t vertex, GraphViewVisitFn visit, void *context);
+
+#endif

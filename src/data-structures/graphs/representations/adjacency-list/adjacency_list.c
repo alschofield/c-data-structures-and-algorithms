@@ -179,14 +179,15 @@ bool adjacency_list_node_value(const Node *node, void **out_value) {
     return true;
 }
 
-// TODO: Validate graph/index/out_node and return the node at its dense index.
+// Returns the graph-owned node at a dense internal index.
 bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, Node **out_node) {
-    // Marks parameters as intentionally unused until index lookup is implemented.
+    // Rejects a missing graph or output location.
     if (graph == NULL) {
         return false;
     }
 
-    if (index > graph->node_count) {
+    // Rejects an index outside the occupied node-pointer range.
+    if (index >= graph->node_count) {
         return false;
     }
 
@@ -194,9 +195,81 @@ bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, Node **out
         return false;
     }
 
+    // Copies the opaque node pointer to the caller without transferring ownership.
     *out_node = graph->nodes[index];
 
+    // Reports successful node lookup.
     return true;
+}
+
+bool add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_t weight, bool *inserted, uint64_t *previous_weight) {
+    Edge *edge = malloc(sizeof(Edge));
+    if (edge == NULL) {
+        return false;
+    }
+
+    edge->target = to;
+    edge->weight = weight;
+
+    size_t n = 0U;
+    while(n < from->edge_count) {
+        if (from->edges[n]->target == to) {
+            previous_weight = from->edges[n]->weight;
+            inserted = false;
+            free(from->edges[n]);
+            from->edges[n] = edge;
+            return true;
+        }
+
+        n++;
+    }
+
+    if (from->edge_count == from->edge_capacity) {
+        if (from->edge_capacity > SIZE_MAX / 2U) {
+            free(edge);
+            return false;
+        }
+
+        size_t new_capacity = from->edge_count == 0U ? 1U : from->edge_count * 2;
+        if (new_capacity > SIZE_MAX / sizeof(*from->edges)) {
+            free(edge);
+            return false;
+        }
+
+        Edge **edges = realloc(from->edges, sizeof(*from->edges) * new_capacity);
+        if (edges == NULL) {
+            free(edge);
+            return false;
+        }
+
+        from->edges = edges;
+    }
+
+    from->edges[from->edge_count] = edge;
+    from->edge_count++;
+    inserted = true;
+
+    return true;
+}
+
+bool rollback_edge(AdjacencyList *graph, Node *from, Node *to, bool *inserted, uint64_t *previous_weight) {
+    size_t n = 0U;
+    while(n < from->edge_count) {
+        if (from->edges[n]->target == to) {
+            if (inserted) {
+                free(from->edges[n]);
+                from->edges[n] = NULL;
+            } else {
+                from->edges[n]->weight = *previous_weight;
+            }
+
+            return true;
+        }
+
+        n++;
+    }
+
+    return false;
 }
 
 // TODO: Validate owners, grow edge storage, store weight, and mirror undirected edges.
@@ -213,44 +286,50 @@ bool adjacency_list_add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_
         return false;
     }
 
-    Edge *edge = malloc(sizeof(*from->edges));
-    if (edge == NULL) {
+    if (from->owner != graph) {
         return false;
     }
 
-    edge->target = to;
-    edge->weight = weight;
-
-    if (from->edge_count == from->edge_capacity) {
-        if (from->edge_capacity > SIZE_MAX / 2U) {
-            free(edge);
-            return false;
-        }
-
-        size_t new_capacity = from->edge_count == 0U ? 1U : from->edge_count * 2;
-        if (new_capacity > SIZE_MAX / sizeof(*from->edges)) {
-            free(edge);
-            return false;
-        }
-
-        Edge **edges = realloc(from->edges, new_capacity);
-        if (edges == NULL) {
-            free(edge);
-            return false;
-        }
-
-        from->edges = edges;
+    if (to->owner != graph) {
+        return false;
     }
 
-    from->edges[from->edge_count] = edge;
-    from->edge_count++;
-    graph->edge_count++;
+    bool inserted = false;
+    uint64_t previous_weight = 0U;
+    if (!graph->directed && from != to) {
+        if(!add_edge(graph, to, from, weight, &inserted, &previous_weight)) {
+            return false;
+        }
 
-    return true;
+        if(!add_edge(graph, from, to, weight, NULL, NULL)) {
+            rollback_edge(graph, to, from, &inserted, &previous_weight);
+            return false;
+        } else {
+            if (!inserted) {
+                from->edge_count++;
+                to->edge_count++;
+                graph->edge_count++;
+            }
+
+            return true;
+        }
+    } else {
+        if (add_edge(graph, from, to, weight, &inserted, &previous_weight)) {
+            if (!inserted) {
+                from->edge_count++;
+                graph->edge_count++;
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
-// TODO: Validate owners and scan from's outgoing edges for to.
+// Reports whether one graph-owned node has an edge to another.
 bool adjacency_list_has_edge(const AdjacencyList *graph, const Node *from, const Node *to) {
+    // Rejects a missing graph or node pointer.
     if (graph == NULL) {
         return false;
     }
@@ -263,20 +342,33 @@ bool adjacency_list_has_edge(const AdjacencyList *graph, const Node *from, const
         return false;
     }
 
+    // Rejects nodes that belong to another graph.
+    if (from->owner != graph) {
+        return false;
+    }
+
+    if (to->owner != graph) {
+        return false;
+    }
+
+    // Scans the source node's sparse outgoing edge collection.
     size_t n = 0U;
     while(n < from->edge_count) {
         if (from->edges[n]->target == to) {
+            // Reports the matching target edge immediately.
             return true;
         }
 
         n++;
     }
 
+    // Reports absence after scanning every outgoing edge.
     return false;
 }
 
-// TODO: Visit every edge target/weight and stop when the visitor returns false.
+// Visits one node's weighted outgoing edges in stored order.
 bool adjacency_list_neighbors(const AdjacencyList *graph, const Node *node, AdjacencyListVisitFn visit, void *context) {
+    // Rejects a missing graph, node, or visitor callback.
     if (graph == NULL) {
         return false;
     }
@@ -289,16 +381,24 @@ bool adjacency_list_neighbors(const AdjacencyList *graph, const Node *node, Adja
         return false;
     }
 
+    // Rejects a node that belongs to another graph.
+    if (node->owner != graph) {
+        return false;
+    }
+
+    // Visits each separately allocated edge record.
     size_t n = 0U;
     while(n < node->edge_count) {
         if (!visit(node->edges[n]->target, node->edges[n]->weight, context)) {
-            return true;
+            // Propagates the visitor's request to stop iteration.
+            return false;
         }
 
         n++;
     }
 
-    return false;
+    // Reports successful full neighbor iteration.
+    return true;
 }
 
 // Reports the number of graph-owned nodes.
