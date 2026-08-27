@@ -3,30 +3,6 @@
 // Declares malloc, realloc, and free.
 #include <stdlib.h>
 
-// Defines one outgoing weighted edge stored by a source node.
-struct Edge {
-    // Points to the neighboring target node without owning it.
-    Node *target;
-    // Stores the nonnegative traversal cost of this edge.
-    uint64_t weight;
-};
-
-// Defines one graph-owned node with a caller-owned payload.
-struct Node {
-    // Points to caller-owned data; graph destruction never frees it.
-    void *value;
-    // Stores the stable dense index used by GraphView algorithms.
-    size_t index;
-    // Identifies the graph that owns this node for foreign-node validation.
-    AdjacencyList *owner;
-    // Counts occupied edge-array slots.
-    size_t edge_count;
-    // Counts allocated edge-array slots.
-    size_t edge_capacity;
-    // Points to the growable array of pointers to separately allocated edges.
-    Edge **edges;
-};
-
 // Defines the fields hidden from callers of the public API.
 struct AdjacencyList {
     // Records whether each public edge also stores its reverse edge.
@@ -202,78 +178,96 @@ bool adjacency_list_node_at(const AdjacencyList *graph, size_t index, Node **out
     return true;
 }
 
-bool add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_t weight, bool *inserted, uint64_t *previous_weight) {
-    Edge *edge = malloc(sizeof(Edge));
+// Adds or updates one stored edge and records enough state to undo it.
+static bool add_directed_edge(Node *from, Node *to, uint64_t weight,
+                              bool *out_inserted, uint64_t *out_previous_weight) {
+    // Initializes rollback state for the new public edge attempt.
+    *out_inserted = false;
+    *out_previous_weight = 0U;
+
+    // Finds an existing edge before allocating replacement storage.
+    for (size_t index = 0U; index < from->edge_count; index++) {
+        // Updates the matching edge without changing node or graph counts.
+        if (from->edges[index]->target == to) {
+            *out_previous_weight = from->edges[index]->weight;
+            from->edges[index]->weight = weight;
+            return true;
+        }
+    }
+
+    // Allocates the separately owned edge record for a new connection.
+    Edge *edge = malloc(sizeof(*edge));
     if (edge == NULL) {
         return false;
     }
 
-    edge->target = to;
-    edge->weight = weight;
-
-    size_t n = 0U;
-    while(n < from->edge_count) {
-        if (from->edges[n]->target == to) {
-            previous_weight = from->edges[n]->weight;
-            inserted = false;
-            free(from->edges[n]);
-            from->edges[n] = edge;
-            return true;
-        }
-
-        n++;
-    }
-
+    // Grows the node's edge-pointer array only when it has no free slot.
     if (from->edge_count == from->edge_capacity) {
+        // Rejects a capacity that cannot double safely.
         if (from->edge_capacity > SIZE_MAX / 2U) {
             free(edge);
             return false;
         }
 
-        size_t new_capacity = from->edge_count == 0U ? 1U : from->edge_count * 2;
+        // Uses one initial slot and doubles capacity after that.
+        size_t new_capacity = from->edge_capacity == 0U ? 1U : from->edge_capacity * 2U;
+        // Rejects an allocation whose byte size would overflow.
         if (new_capacity > SIZE_MAX / sizeof(*from->edges)) {
             free(edge);
             return false;
         }
 
+        // Preserves the old allocation if resizing fails.
         Edge **edges = realloc(from->edges, sizeof(*from->edges) * new_capacity);
         if (edges == NULL) {
             free(edge);
             return false;
         }
 
+        // Publishes the resized pointer array and its new capacity.
         from->edges = edges;
+        from->edge_capacity = new_capacity;
     }
 
+    // Initializes the record after all allocations have succeeded.
+    edge->target = to;
+    edge->weight = weight;
+    // Appends the new edge and exposes it to normal neighbor iteration.
     from->edges[from->edge_count] = edge;
     from->edge_count++;
-    inserted = true;
-
+    // Tells the caller that rollback must remove this record.
+    *out_inserted = true;
     return true;
 }
 
-bool rollback_edge(AdjacencyList *graph, Node *from, Node *to, bool *inserted, uint64_t *previous_weight) {
-    size_t n = 0U;
-    while(n < from->edge_count) {
-        if (from->edges[n]->target == to) {
-            if (inserted) {
-                free(from->edges[n]);
-                from->edges[n] = NULL;
-            } else {
-                from->edges[n]->weight = *previous_weight;
-            }
-
-            return true;
+// Restores the source node to its state before add_directed_edge succeeded.
+static void rollback_directed_edge(Node *from, Node *to, bool inserted,
+                                   uint64_t previous_weight) {
+    // Searches the source node for the directed edge being undone.
+    for (size_t index = 0U; index < from->edge_count; index++) {
+        if (from->edges[index]->target != to) {
+            continue;
         }
 
-        n++;
-    }
+        // Restores the previous weight when the operation updated an edge.
+        if (!inserted) {
+            from->edges[index]->weight = previous_weight;
+            return;
+        }
 
-    return false;
+        // Removes a newly appended edge without leaving a gap in the array.
+        size_t last_index = from->edge_count - 1U;
+        free(from->edges[index]);
+        from->edges[index] = from->edges[last_index];
+        from->edges[last_index] = NULL;
+        from->edge_count--;
+        return;
+    }
 }
 
-// TODO: Validate owners, grow edge storage, store weight, and mirror undirected edges.
+// Adds one logical edge, storing its reverse direction when the graph is undirected.
 bool adjacency_list_add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_t weight) {
+    // Rejects a missing graph or endpoint before reading ownership fields.
     if (graph == NULL) {
         return false;
     }
@@ -294,37 +288,36 @@ bool adjacency_list_add_edge(AdjacencyList *graph, Node *from, Node *to, uint64_
         return false;
     }
 
-    bool inserted = false;
-    uint64_t previous_weight = 0U;
-    if (!graph->directed && from != to) {
-        if(!add_edge(graph, to, from, weight, &inserted, &previous_weight)) {
-            return false;
-        }
-
-        if(!add_edge(graph, from, to, weight, NULL, NULL)) {
-            rollback_edge(graph, to, from, &inserted, &previous_weight);
-            return false;
-        } else {
-            if (!inserted) {
-                from->edge_count++;
-                to->edge_count++;
-                graph->edge_count++;
-            }
-
-            return true;
-        }
-    } else {
-        if (add_edge(graph, from, to, weight, &inserted, &previous_weight)) {
-            if (!inserted) {
-                from->edge_count++;
-                graph->edge_count++;
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+    // Adds or updates the requested direction before considering a reverse edge.
+    bool forward_inserted = false;
+    uint64_t forward_previous_weight = 0U;
+    if (!add_directed_edge(from, to, weight, &forward_inserted, &forward_previous_weight)) {
+        return false;
     }
+
+    // Directed edges and self-loops require only one stored edge record.
+    if (graph->directed || from == to) {
+        if (forward_inserted) {
+            graph->edge_count++;
+        }
+        return true;
+    }
+
+    // Adds or updates the matching reverse edge for an undirected graph.
+    bool reverse_inserted = false;
+    uint64_t reverse_previous_weight = 0U;
+    if (!add_directed_edge(to, from, weight, &reverse_inserted, &reverse_previous_weight)) {
+        // Restores the first direction so a failed public call changes nothing.
+        rollback_directed_edge(from, to, forward_inserted, forward_previous_weight);
+        return false;
+    }
+
+    // Counts two stored directions as one logical undirected edge.
+    if (forward_inserted && reverse_inserted) {
+        graph->edge_count++;
+    }
+
+    return true;
 }
 
 // Reports whether one graph-owned node has an edge to another.
@@ -421,7 +414,44 @@ size_t adjacency_list_edge_count(const AdjacencyList *graph) {
     return graph->edge_count;
 }
 
-// TODO: Fill out_view with callbacks that expose this graph through GraphView.
+// Reports the concrete graph's node count through the GraphView callback type.
+static size_t graph_view_compatible_vertex_count(const void *graph_context) {
+    // Treats a missing context as an empty graph.
+    if (graph_context == NULL) {
+        return 0U;
+    }
+
+    // Restores the concrete type erased by the generic GraphView context.
+    const AdjacencyList *graph = graph_context;
+
+    // Reuses the representation's public count operation.
+    return adjacency_list_node_count(graph);
+}
+
+// Adapts dense Node lookup to the GraphView callback type.
+static bool graph_view_compatible_node_at(const void *graph_context, size_t index,
+                                          Node **out_node) {
+    const AdjacencyList *graph = graph_context;
+
+    return adjacency_list_node_at(graph, index, out_node);
+}
+
+// Reuses concrete neighbor iteration through the GraphView callback type.
+static bool graph_view_compatible_neighbors(const void *graph_context, const Node *node,
+                                             GraphViewVisitFn visit, void *context) {
+    // Rejects a missing GraphView backing context.
+    if (graph_context == NULL) {
+        return false;
+    }
+
+    // Restores the concrete type erased by the generic GraphView context.
+    const AdjacencyList *graph = graph_context;
+
+    // Lets the concrete API validate node ownership and visit each neighbor.
+    return adjacency_list_neighbors(graph, node, visit, context);
+}
+
+// Fills a non-owning GraphView that exposes this adjacency-list graph.
 bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) {
     // Rejects missing graph or output storage before adapter construction.
     if (graph == NULL) {
@@ -433,8 +463,9 @@ bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) 
     }
 
     out_view->context = graph;
-    out_view->neighbors = adjacency_list_neighbors;
-    out_view->vertex_count = adjacency_list_node_count;
+    out_view->neighbors = graph_view_compatible_neighbors;
+    out_view->vertex_count = graph_view_compatible_vertex_count;
+    out_view->node_at = graph_view_compatible_node_at;
 
     return true;
 }

@@ -3,8 +3,6 @@
 
 #include "../../graph-view/graph_view.h"
 
-typedef struct Edge Edge;
-typedef struct Node Node;
 typedef struct AdjacencyMatrix AdjacencyMatrix;
 typedef bool (*AdjacencyMatrixVisitFn)(Node *neighbor, uint64_t weight, void *context);
 

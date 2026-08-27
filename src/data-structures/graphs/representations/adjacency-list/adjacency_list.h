@@ -4,8 +4,6 @@
 
 #include "../../graph-view/graph_view.h"
 
-typedef struct Edge Edge;
-typedef struct Node Node;
 typedef struct AdjacencyList AdjacencyList;
 typedef bool (*AdjacencyListVisitFn)(Node *neighbor, uint64_t weight, void *context);
 

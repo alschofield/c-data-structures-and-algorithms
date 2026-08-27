@@ -49,6 +49,16 @@ behavior and pass only once the implementation is written.
 - The tracked set count starts at n and decreases by exactly one per
   effective union.
 
+## GraphView Integration
+
+Union-find remains representation-independent and stores only dense integer
+elements; it does not own or depend on a GraphView. Graph algorithms map a
+GraphView Node to its stable `Node.index`, then pass that index to union-find.
+Kruskal uses `graph_view_vertex_count` to size the disjoint set and
+`graph_view_node_at` plus neighbor iteration to enumerate graph edges. This
+keeps union-find reusable for non-graph grouping problems while letting graph
+algorithms use either adjacency-list or adjacency-matrix views.
+
 ## Complexity Targets
 
 - `find`, `union`, `connected`: amortized O(alpha(n)) with path compression

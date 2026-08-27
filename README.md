@@ -27,6 +27,7 @@ src/algorithms/sorting/comparison/{quick,heap}-sort
 src/algorithms/sorting/non-comparison/{counting,radix}-sort
 src/algorithms/graph-traversal/{breadth-first-search,depth-first-search}
 src/algorithms/shortest-paths/{dijkstra,a-star}
+src/algorithms/minimum-spanning-trees/kruskal
 ```
 
 Entries not labelled complete are empty learning scaffolds: their README
@@ -77,6 +78,7 @@ README defines its exact contract and tradeoffs.
 | Explore graph depth, cycle/topology groundwork | Depth-first search | Stack/recursion plus visited set | You need fewest-hop paths |
 | Cheapest paths with nonnegative weights | Dijkstra | Min-priority queue; no negative edges | Negative weights or a strongly goal-directed search |
 | Cheapest path toward a known goal | A* | Admissible heuristic | No useful heuristic exists; use Dijkstra instead |
+| Minimum-cost forest for an undirected weighted graph | Kruskal | Sortable edge set plus union-find | You need directed paths or cannot materialize/sort edges |
 
 ## Commands
 

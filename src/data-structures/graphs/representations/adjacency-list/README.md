@@ -60,8 +60,8 @@ behavior and pass only once the implementation is written.
 - `add_edge(from, to, weight)` appends a nonnegative weighted edge to from's
   list; the directed/undirected policy is fixed at creation, and undirected
   graphs store matching weighted edges in both directions consistently.
-- Duplicate edge policy is explicit: either reject duplicates or document
-  multigraph behavior; `has_edge` scans only u's list.
+- Duplicate edge policy updates the existing edge weight without increasing the
+  logical edge count; `has_edge` scans only u's list.
 - Neighbor iteration visits exactly a node's out-edges, each once, with target
   node pointers and weights, in a deterministic order.
 - Self-loops are permitted unless documented otherwise.
@@ -69,9 +69,8 @@ behavior and pass only once the implementation is written.
   never frees caller data values.
 - BFS and DFS ignore weight; Dijkstra and A* consume it. An unweighted edge
   uses weight `1U`.
-- `adjacency_list_graph_view` fills a non-owning GraphView adapter that maps
-  each internal node index to weighted neighbor indexes, letting algorithms
-  traverse this representation without depending on its fields.
+- `adjacency_list_graph_view` fills a non-owning GraphView adapter that exposes
+  shared Node pointers and weighted neighbors without exposing graph fields.
 
 ## Complexity Targets
 

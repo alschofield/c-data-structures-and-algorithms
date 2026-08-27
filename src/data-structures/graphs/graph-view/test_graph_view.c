@@ -5,18 +5,19 @@
 #include <stdint.h>
 
 struct TestEdge {
-    size_t neighbor;
+    Node *neighbor;
     uint64_t weight;
 };
 
 struct TestGraph {
+    Node **nodes;
     const struct TestEdge *edges;
     size_t edge_count;
     size_t vertex_count;
 };
 
 struct VisitLog {
-    size_t neighbors[4];
+    Node *neighbors[4];
     uint64_t weights[4];
     size_t count;
 };
@@ -27,11 +28,22 @@ static size_t test_vertex_count(const void *context) {
     return graph->vertex_count;
 }
 
-static bool test_neighbors(const void *context, size_t vertex,
+static bool test_node_at(const void *context, size_t index, Node **out_node) {
+    const struct TestGraph *graph = context;
+
+    if (index >= graph->vertex_count || out_node == NULL) {
+        return false;
+    }
+
+    *out_node = graph->nodes[index];
+    return true;
+}
+
+static bool test_neighbors(const void *context, const Node *node,
                            GraphViewVisitFn visit, void *visit_context) {
     const struct TestGraph *graph = context;
 
-    if (vertex >= graph->vertex_count) {
+    if (node->index >= graph->vertex_count) {
         return false;
     }
     for (size_t index = 0U; index < graph->edge_count; ++index) {
@@ -43,7 +55,7 @@ static bool test_neighbors(const void *context, size_t vertex,
     return true;
 }
 
-static bool record_edge(size_t neighbor, uint64_t weight, void *context) {
+static bool record_edge(Node *neighbor, uint64_t weight, void *context) {
     struct VisitLog *log = context;
 
     log->neighbors[log->count] = neighbor;
@@ -52,7 +64,7 @@ static bool record_edge(size_t neighbor, uint64_t weight, void *context) {
     return true;
 }
 
-static bool stop_after_first(size_t neighbor, uint64_t weight, void *context) {
+static bool stop_after_first(Node *neighbor, uint64_t weight, void *context) {
     struct VisitLog *log = context;
 
     log->neighbors[log->count] = neighbor;
@@ -62,48 +74,64 @@ static bool stop_after_first(size_t neighbor, uint64_t weight, void *context) {
 }
 
 static void test_valid_custom_adapter(void) {
-    static const struct TestEdge edges[] = { { .neighbor = 1U, .weight = 4U },
-                                             { .neighbor = 2U, .weight = 1U } };
-    struct TestGraph graph = { .edges = edges, .edge_count = 2U, .vertex_count = 3U };
+    static Node nodes[] = { { .index = 0U }, { .index = 1U }, { .index = 2U } };
+    static Node *node_pointers[] = { &nodes[0], &nodes[1], &nodes[2] };
+    static const struct TestEdge edges[] = { { .neighbor = &nodes[1], .weight = 4U },
+                                             { .neighbor = &nodes[2], .weight = 1U } };
+    struct TestGraph graph = { .nodes = node_pointers, .edges = edges, .edge_count = 2U,
+                               .vertex_count = 3U };
     GraphView view = { .context = &graph, .vertex_count = test_vertex_count,
-                       .neighbors = test_neighbors };
+                       .node_at = test_node_at, .neighbors = test_neighbors };
     struct VisitLog log = { .count = 0U };
+    Node *node = NULL;
 
     assert(graph_view_is_valid(&view));
     assert(graph_view_vertex_count(&view) == 3U);
-    assert(graph_view_neighbors(&view, 0U, record_edge, &log));
+    assert(graph_view_node_at(&view, 0U, &node) && node == &nodes[0]);
+    assert(graph_view_node_at(&view, 2U, &node) && node == &nodes[2]);
+    assert(!graph_view_node_at(&view, 3U, &node));
+    assert(graph_view_neighbors(&view, &nodes[0], record_edge, &log));
     assert(log.count == 2U);
-    assert(log.neighbors[0] == 1U);
+    assert(log.neighbors[0] == &nodes[1]);
     assert(log.weights[0] == 4U);
-    assert(log.neighbors[1] == 2U);
+    assert(log.neighbors[1] == &nodes[2]);
     assert(log.weights[1] == 1U);
 }
 
 static void test_invalid_views(void) {
     GraphView missing_context = { .context = NULL, .vertex_count = test_vertex_count,
-                                  .neighbors = test_neighbors };
+                                   .node_at = test_node_at, .neighbors = test_neighbors };
     GraphView missing_vertex_count = { .context = &missing_context,
-                                       .vertex_count = NULL, .neighbors = test_neighbors };
+                                        .vertex_count = NULL, .node_at = test_node_at,
+                                        .neighbors = test_neighbors };
+    GraphView missing_node_at = { .context = &missing_context,
+                                  .vertex_count = test_vertex_count, .node_at = NULL,
+                                  .neighbors = test_neighbors };
     GraphView missing_neighbors = { .context = &missing_context,
-                                    .vertex_count = test_vertex_count, .neighbors = NULL };
+                                     .vertex_count = test_vertex_count, .node_at = test_node_at,
+                                     .neighbors = NULL };
 
     assert(!graph_view_is_valid(NULL));
     assert(!graph_view_is_valid(&missing_context));
     assert(!graph_view_is_valid(&missing_vertex_count));
+    assert(!graph_view_is_valid(&missing_node_at));
     assert(!graph_view_is_valid(&missing_neighbors));
     assert(graph_view_vertex_count(NULL) == 0U);
-    assert(!graph_view_neighbors(NULL, 0U, record_edge, NULL));
+    assert(!graph_view_neighbors(NULL, NULL, record_edge, NULL));
 }
 
 static void test_visitor_can_stop_iteration(void) {
-    static const struct TestEdge edges[] = { { .neighbor = 1U, .weight = 1U },
-                                             { .neighbor = 2U, .weight = 1U } };
-    struct TestGraph graph = { .edges = edges, .edge_count = 2U, .vertex_count = 3U };
+    static Node nodes[] = { { .index = 0U }, { .index = 1U }, { .index = 2U } };
+    static Node *node_pointers[] = { &nodes[0], &nodes[1], &nodes[2] };
+    static const struct TestEdge edges[] = { { .neighbor = &nodes[1], .weight = 1U },
+                                             { .neighbor = &nodes[2], .weight = 1U } };
+    struct TestGraph graph = { .nodes = node_pointers, .edges = edges, .edge_count = 2U,
+                               .vertex_count = 3U };
     GraphView view = { .context = &graph, .vertex_count = test_vertex_count,
-                       .neighbors = test_neighbors };
+                       .node_at = test_node_at, .neighbors = test_neighbors };
     struct VisitLog log = { .count = 0U };
 
-    assert(!graph_view_neighbors(&view, 0U, stop_after_first, &log));
+    assert(!graph_view_neighbors(&view, &nodes[0], stop_after_first, &log));
     assert(log.count == 1U);
 }
 

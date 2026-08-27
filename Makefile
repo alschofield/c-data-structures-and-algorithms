@@ -17,7 +17,11 @@ endif
 # Graph algorithms consume GraphView adapters from both graph representations.
 EXTRA_SOURCES :=
 ifneq ($(filter $(NAME),algorithms/graph-traversal/breadth-first-search algorithms/graph-traversal/depth-first-search algorithms/shortest-paths/dijkstra algorithms/shortest-paths/a-star),)
-EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c
+	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c
+endif
+
+ifeq ($(NAME),algorithms/minimum-spanning-trees/kruskal)
+	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c
 endif
 
 ifneq ($(filter $(NAME),data-structures/graphs/representations/adjacency-list data-structures/graphs/representations/adjacency-matrix),)

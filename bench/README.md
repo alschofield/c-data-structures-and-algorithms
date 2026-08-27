@@ -29,9 +29,23 @@ Timing uses `QueryPerformanceCounter` on Windows and
 
 ## Results at 10,000 Items
 
-Default sample shape: 21 samples x 10,000 operations (both linked lists:
-2,000, because their traversal costs would otherwise dominate the suite's
-runtime).
+Default sample shape: 21 samples x 10,000 operations (both linked lists and
+the adjacency list: 2,000, because their traversal costs would otherwise
+dominate the suite's runtime; adjacency matrix: 1,000, to keep dense matrix
+allocation practical).
+
+## Graph Results
+
+At 1,000 distinct targets per sample, adjacency-matrix setup constructs the
+graph and its dense matrix outside the timed operation loop. These figures
+therefore measure direct matrix-cell operations rather than O(N^2) capacity
+growth.
+
+| Structure / operation | Median ns/op | Expected complexity |
+| --- | ---: | --- |
+| Adjacency matrix has edge | 2.30 | O(1) |
+| Adjacency matrix remove edge | 2.90 | O(1) |
+| Adjacency matrix insert edge | 8.50 | O(1) |
 
 | Structure / operation | Median ns/op | Expected complexity |
 | --- | ---: | --- |
