@@ -107,19 +107,91 @@ bool union_find_find(UnionFind *set, size_t element, size_t *out_representative)
 
     // Walks immediate parent links until reaching a self-parented root.
     size_t index = element;
+    size_t root = element;
     while(index != set->parents[index]) {
         index = set->parents[index];
+        root = set->parents[index];
     }
 
     // Returns the root representative index.
     *out_representative = set->parents[index];
 
-    // TODO: Repoint traversed elements directly at the root for path compression.
+    // Walks the original chain again and repoints every visited element at the root.
+    index = element;
+    while (index != set->parents[index]) {
+        // Preserves the current element before following its original parent link.
+        size_t prev = index;
+        // Advances before the saved element's parent is overwritten.
+        index = set->parents[index];
+        // Flattens this segment of the tree for future representative lookups.
+        set->parents[prev] = root;
+    }
+
+    // Reports successful representative lookup and path compression.
     return true;
 }
 
-// TODO: Merge roots by rank, report whether a merge occurred, and update groups.
-bool union_find_union(UnionFind *set, size_t a, size_t b, bool *out_merged);
+// Merges two disjoint root sets by rank and reports whether they changed.
+bool union_find_union(UnionFind *set, size_t a, size_t b, bool *out_merged) {
+    // Rejects a missing union-find.
+    if (set == NULL) {
+        return false;
+    }
+
+    // Rejects an out-of-range first element.
+    if (a >= set->capacity) {
+        return false;
+    }
+
+    // Rejects an out-of-range second element.
+    if (b >= set->capacity) {
+        return false;
+    }
+
+    // Rejects a missing caller-owned merge-result location.
+    if (out_merged == NULL) {
+        return false;
+    }
+
+    // Holds each input set's root representative after path compression.
+    size_t a_root = a;
+    size_t b_root = b;
+
+    // Resolves and compresses the first element's parent chain.
+    if (!union_find_find(set, a, &a_root)) {
+        return false;
+    }
+
+    // Resolves and compresses the second element's parent chain.
+    if (!union_find_find(set, b, &b_root)){
+        return false;
+    }
+
+    // Reports a redundant union without changing rank or group count.
+    if (a_root == b_root) {
+        *out_merged = false;
+        return true;
+    }
+
+    // Attaches the lower-rank root beneath the higher-rank root.
+    if (set->ranks[a_root] > set->ranks[b_root]){
+        set->parents[b_root] = a_root;
+    } else if (set->ranks[a_root] < set->ranks[b_root]) {
+        set->parents[a_root] = b_root;
+    } else {
+        // Uses the first root as a deterministic tie winner.
+        set->parents[b_root] = a_root;
+        // Increases rank because equal-height trees became one level taller.
+        set->ranks[a_root]++;
+    }
+
+    // Records that two previously separate sets became one.
+    set->groups--;
+    *out_merged = true;
+
+    // Reports successful merge processing.
+    return true;
+}
 
 // Reports whether two valid elements reach the same root representative.
 bool union_find_connected(UnionFind *set, size_t a, size_t b, bool *out_connected) {
@@ -143,20 +215,19 @@ bool union_find_connected(UnionFind *set, size_t a, size_t b, bool *out_connecte
         return false;
     }
 
-    // Walks each element to its self-parented root.
-    size_t a_index = a;
-    size_t b_index = b;
+    size_t out_a = 0U;
+    size_t out_b = 0U;
 
-    while(a_index != set->parents[a_index]) {
-        a_index = set->parents[a_index];
+    if (!union_find_find(set, a, &out_a)) {
+        return false;
     }
 
-    while(b_index != set->parents[b_index]) {
-        b_index = set->parents[b_index];
+    if (!union_find_find(set, b, &out_b)) {
+        return false;
     }
 
     // Compares roots to determine whether both elements share one set.
-    *out_connected = set->parents[a_index] == set->parents[b_index];
+    *out_connected = out_a == out_b;
 
     // Reports that the connectivity query completed successfully.
     return true;

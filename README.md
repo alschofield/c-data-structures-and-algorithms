@@ -93,9 +93,10 @@ make benchmark-test
 ```
 
 Stack, queue, dynamic array, singly and doubly linked lists, separate-chaining
-hash table, binary search tree, binary heap, prefix trie, and bubble, selection,
-insertion, and merge sort have benchmark sources. The dependency-free harness reports
-repeated-sample timing; it is not a complexity proof. See
+hash table, binary search tree, binary heap, prefix trie, union-find, adjacency
+list/matrix, and bubble, selection, insertion, merge, and heap sort have
+benchmark sources. The dependency-free harness reports repeated-sample timing;
+it is not a complexity proof. See
 [bench/README.md](bench/README.md) for full results, scaling comparisons, and
 analysis of why each structure performs the way it does.
 

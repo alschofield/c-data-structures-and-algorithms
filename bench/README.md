@@ -49,6 +49,9 @@ growth.
 
 | Structure / operation | Median ns/op | Expected complexity |
 | --- | ---: | --- |
+| Union-find find | 2.69 | O(alpha(n)) amortized |
+| Union-find connected | 3.23 | O(alpha(n)) amortized |
+| Union-find union | 3.32 | O(alpha(n)) amortized |
 | Queue dequeue | 3.30 | O(1) |
 | Dynamic array append | 5.87 | O(1) amortized |
 | Stack pop | 7.22 | O(1) |
@@ -483,6 +486,20 @@ stops missing. Reverse input is no worse than sorted — reversal produces two
 descending halves whose merges are trivially lopsided, unlike the quadratic
 sorts where reversal is the worst case.
 
+### Heap sort: predictable without extra storage
+
+At 10,000 items, heap sort completed whole sorts with these medians:
+
+| Input shape | Median time | Expected complexity |
+| --- | ---: | --- |
+| Shuffled | 0.745 ms | O(n log n) |
+| Sorted | 0.508 ms | O(n log n) |
+| Reverse-sorted | 0.528 ms | O(n log n) |
+
+Heap sort does more swaps and pointer movement than merge sort, but its
+bottom-up heap construction and extraction phase require no auxiliary item
+buffer. Input order changes constant factors, not its O(n log n) guarantee.
+
 ## Reproducing
 
 ```bash
@@ -498,7 +515,11 @@ make benchmark NAME=algorithms/sorting/comparison/bubble-sort BENCHMARK=bubble_s
 make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selection_sort
 make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
 make benchmark NAME=algorithms/sorting/comparison/merge-sort BENCHMARK=merge_sort
+make benchmark NAME=algorithms/sorting/comparison/heap-sort BENCHMARK=heap_sort
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
+make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
+make benchmark NAME=data-structures/graphs/representations/adjacency-list BENCHMARK=adjacency_list
+make benchmark NAME=data-structures/graphs/representations/adjacency-matrix BENCHMARK=adjacency_matrix
 
 # Scaling experiments: rerun any benchmark at a different size.
 make benchmark NAME=... BENCHMARK=... BENCHMARK_ITEM_COUNT=1000
@@ -525,6 +546,10 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Selection sort | `selection_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Merge sort | `merge_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Heap sort | `heap_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
+| Union-find | `union_find_benchmark.c` | union, find, connected |
+| Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
+| Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the thirteen completed modules listed above.
+Benchmarks exist for the seventeen completed modules listed above.
