@@ -20,8 +20,8 @@ bool linear_search(void *const *items, size_t count, const void *key,
                    LinearSearchCompareFn compare, size_t *out_index);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
+The checked-in implementation performs a first-match sequential scan without
+modifying caller-owned items.
 
 ## Contract
 
@@ -39,3 +39,14 @@ behavior and pass only once the implementation is written.
 - Average: O(n)
 - Worst: O(n) (target absent or last)
 - Space: O(1)
+
+## Verification
+
+```text
+make test NAME=algorithms/searching/linear-search
+make benchmark NAME=algorithms/searching/linear-search BENCHMARK=linear_search
+```
+
+At 2,000 items per sample on this development machine, measured medians were
+3.40 ns/op for a first-item match, 1,016.35 ns/op for a middle match,
+2,007.30 ns/op for a last-item match, and 2,050.10 ns/op for a missing key.

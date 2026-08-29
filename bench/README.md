@@ -546,6 +546,20 @@ Radix sort performs the same four least-to-most-significant byte passes for
 every input. Unlike comparison sorts, input order does not change its
 asymptotic work; these measurements vary with allocation and memory behavior.
 
+### Linear search: match position is the cost
+
+At 2,000 items, linear search produced these per-query medians:
+
+| Match position | Median ns/op | Expected complexity |
+| --- | ---: | --- |
+| First item | 3.40 | O(1) best case |
+| Middle item | 1,016.35 | O(n) |
+| Last item | 2,007.30 | O(n) |
+| Missing item | 2,050.10 | O(n) |
+
+The near-linear cost increase is the algorithm made visible: a missing key
+must compare against every item, while a first-item match returns immediately.
+
 ## Reproducing
 
 ```bash
@@ -565,6 +579,7 @@ make benchmark NAME=algorithms/sorting/comparison/heap-sort BENCHMARK=heap_sort
 make benchmark NAME=algorithms/sorting/comparison/quick-sort BENCHMARK=quick_sort
 make benchmark NAME=algorithms/sorting/non-comparison/counting-sort BENCHMARK=counting_sort
 make benchmark NAME=algorithms/sorting/non-comparison/radix-sort BENCHMARK=radix_sort
+make benchmark NAME=algorithms/searching/linear-search BENCHMARK=linear_search
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -600,10 +615,11 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Quick sort | `quick_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Counting sort | `counting_sort_benchmark.c` | whole sort at compact and wide key ranges |
 | Radix sort | `radix_sort_benchmark.c` | whole sort on shuffled, sorted, and reverse input |
+| Linear search | `linear_search_benchmark.c` | first, middle, last, and missing key lookups |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the twenty-one completed modules listed above.
+Benchmarks exist for the twenty-two completed modules listed above.

@@ -18,7 +18,8 @@ src/data-structures/trees/binary-search-trees/binary-search-tree complete
 src/data-structures/trees/tries/prefix-trie                      complete
 src/data-structures/trees/heaps/binary-heap                       complete
 src/data-structures/graphs/{graph-view,representations/{adjacency-list,adjacency-matrix},disjoint-sets/union-find} complete
-src/algorithms/searching/{linear-search,binary-search}
+src/algorithms/searching/linear-search                           complete
+src/algorithms/searching/binary-search
 src/algorithms/sorting/comparison/bubble-sort                  complete
 src/algorithms/sorting/comparison/selection-sort               complete
 src/algorithms/sorting/comparison/insertion-sort               complete
@@ -97,7 +98,7 @@ make benchmark-test
 Stack, queue, dynamic array, singly and doubly linked lists, separate-chaining
 hash table, binary search tree, binary heap, prefix trie, GraphView, union-find,
 adjacency list/matrix, and bubble, selection, insertion, merge, heap, quick,
-counting, and radix sort have
+counting, radix sort, and linear search have
 benchmark sources. The dependency-free harness reports repeated-sample timing;
 it is not a complexity proof. See
 [bench/README.md](bench/README.md) for full results, scaling comparisons, and

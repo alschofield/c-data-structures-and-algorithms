@@ -60,6 +60,8 @@ static void test_invalid_inputs(void) {
 
     assert(!linear_search(items, 0U, &key, compare_ints, &out_index));
     assert(!linear_search(NULL, 1U, &key, compare_ints, &out_index));
+    assert(!linear_search(items, 1U, NULL, compare_ints, &out_index));
+    assert(!linear_search(items, 1U, &key, NULL, &out_index));
     assert(!linear_search(items, 1U, &key, compare_ints, NULL));
     assert(out_index == 99U);
 }
