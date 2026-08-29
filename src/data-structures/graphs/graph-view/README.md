@@ -83,3 +83,14 @@ bool graph_view_neighbors(const GraphView *view, const Node *node,
 - `graph_view_is_valid`, `graph_view_vertex_count`, `graph_view_node_at`: O(1)
 - `graph_view_neighbors`: the backing representation's neighbor-iteration cost
 - Space: O(1) for the view itself
+
+## Verification
+
+```text
+make test NAME=data-structures/graphs/graph-view
+make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
+```
+
+At 10,000 operations per sample on this development machine, GraphView wrapper
+medians were 3.28 ns/op for node count, 3.15 ns/op for dense Node lookup, and
+3.07 ns/op for one-neighbor delegation.

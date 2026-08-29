@@ -43,6 +43,9 @@ growth.
 
 | Structure / operation | Median ns/op | Expected complexity |
 | --- | ---: | --- |
+| GraphView neighbors | 3.07 | O(1) wrapper plus adapter cost |
+| GraphView node at | 3.15 | O(1) |
+| GraphView vertex count | 3.28 | O(1) |
 | Adjacency matrix has edge | 2.30 | O(1) |
 | Adjacency matrix remove edge | 2.90 | O(1) |
 | Adjacency matrix insert edge | 8.50 | O(1) |
@@ -500,6 +503,49 @@ Heap sort does more swaps and pointer movement than merge sort, but its
 bottom-up heap construction and extraction phase require no auxiliary item
 buffer. Input order changes constant factors, not its O(n log n) guarantee.
 
+### Quick sort: balanced midpoint partitions
+
+At 10,000 items, quicksort completed whole sorts with these medians:
+
+| Input shape | Median time | Expected complexity |
+| --- | ---: | --- |
+| Shuffled | 0.628 ms | O(n log n) average |
+| Sorted | 0.171 ms | O(n log n) with midpoint pivot |
+| Reverse-sorted | 0.176 ms | O(n log n) with midpoint pivot |
+
+The saved midpoint pivot avoids the immediate first/last-pivot pathology on
+sorted and reverse input. Three-way partitioning also skips recursion over
+equal values, while still retaining quicksort's adversarial O(n^2) worst case.
+
+### Counting sort: the key-range tradeoff
+
+At 10,000 items, counting sort produced these whole-sort medians:
+
+| Key range | Median time | Expected complexity |
+| --- | ---: | --- |
+| 256 values | 0.011 ms | O(n + k) |
+| 65,536 values | 0.044 ms | O(n + k) |
+
+Both inputs contain the same number of items. The fourfold difference is the
+cost of initializing and prefix-summing the wider counts array, which is why
+counting sort is excellent for compact integer ranges but unsuitable for huge
+sparse ranges.
+
+### Radix sort: fixed-width byte passes
+
+At 10,000 full-width `uint32_t` values, radix sort completed four stable byte
+passes with these whole-sort medians:
+
+| Input shape | Median time | Expected complexity |
+| --- | ---: | --- |
+| Shuffled | 0.295 ms | O(4(n + 256)) |
+| Sorted | 0.495 ms | O(4(n + 256)) |
+| Reverse-sorted | 0.212 ms | O(4(n + 256)) |
+
+Radix sort performs the same four least-to-most-significant byte passes for
+every input. Unlike comparison sorts, input order does not change its
+asymptotic work; these measurements vary with allocation and memory behavior.
+
 ## Reproducing
 
 ```bash
@@ -516,7 +562,11 @@ make benchmark NAME=algorithms/sorting/comparison/selection-sort BENCHMARK=selec
 make benchmark NAME=algorithms/sorting/comparison/insertion-sort BENCHMARK=insertion_sort
 make benchmark NAME=algorithms/sorting/comparison/merge-sort BENCHMARK=merge_sort
 make benchmark NAME=algorithms/sorting/comparison/heap-sort BENCHMARK=heap_sort
+make benchmark NAME=algorithms/sorting/comparison/quick-sort BENCHMARK=quick_sort
+make benchmark NAME=algorithms/sorting/non-comparison/counting-sort BENCHMARK=counting_sort
+make benchmark NAME=algorithms/sorting/non-comparison/radix-sort BENCHMARK=radix_sort
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
+make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
 make benchmark NAME=data-structures/graphs/representations/adjacency-list BENCHMARK=adjacency_list
 make benchmark NAME=data-structures/graphs/representations/adjacency-matrix BENCHMARK=adjacency_matrix
@@ -547,9 +597,13 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Insertion sort | `insertion_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Merge sort | `merge_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
 | Heap sort | `heap_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Quick sort | `quick_sort_benchmark.c` | whole sort on sorted, shuffled, and reverse input |
+| Counting sort | `counting_sort_benchmark.c` | whole sort at compact and wide key ranges |
+| Radix sort | `radix_sort_benchmark.c` | whole sort on shuffled, sorted, and reverse input |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
+| GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the seventeen completed modules listed above.
+Benchmarks exist for the twenty-one completed modules listed above.

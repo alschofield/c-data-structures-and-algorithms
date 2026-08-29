@@ -47,8 +47,8 @@ size_t adjacency_list_edge_count(const AdjacencyList *graph);
 bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
+The checked-in implementation supports dynamic caller-valued Nodes, weighted
+directed or undirected edges, and GraphView adaptation.
 
 ## Contract
 
