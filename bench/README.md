@@ -560,6 +560,28 @@ At 2,000 items, linear search produced these per-query medians:
 The near-linear cost increase is the algorithm made visible: a missing key
 must compare against every item, while a first-item match returns immediately.
 
+### Binary search: range halving dominates position
+
+At 10,000 items, recursive binary search produced these per-query medians:
+
+| Key position | Median ns/op | Expected complexity |
+| --- | ---: | --- |
+| Midpoint | 27.55 | O(1) best case |
+| First item | 27.81 | O(log n) |
+| Last item | 18.25 | O(log n) |
+| Missing item | 28.04 | O(log n) |
+
+Every non-midpoint query narrows the candidate window by half on each
+comparison. The tiny differences between positions are constant-factor effects,
+not the linear scan cost visible in linear search.
+
+### Breadth-first search: FIFO frontier traversal
+
+At a 2,000-Node directed adjacency-list chain, full GraphView-backed BFS
+traversal measured 0.016 ms per traversal. Graph construction is outside the
+timed loop; the measurement includes queue, visited-state, visitor, and
+GraphView neighbor-delegation work.
+
 ## Reproducing
 
 ```bash
@@ -580,6 +602,8 @@ make benchmark NAME=algorithms/sorting/comparison/quick-sort BENCHMARK=quick_sor
 make benchmark NAME=algorithms/sorting/non-comparison/counting-sort BENCHMARK=counting_sort
 make benchmark NAME=algorithms/sorting/non-comparison/radix-sort BENCHMARK=radix_sort
 make benchmark NAME=algorithms/searching/linear-search BENCHMARK=linear_search
+make benchmark NAME=algorithms/searching/binary-search BENCHMARK=binary_search
+make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -616,10 +640,12 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Counting sort | `counting_sort_benchmark.c` | whole sort at compact and wide key ranges |
 | Radix sort | `radix_sort_benchmark.c` | whole sort on shuffled, sorted, and reverse input |
 | Linear search | `linear_search_benchmark.c` | first, middle, last, and missing key lookups |
+| Binary search | `binary_search_benchmark.c` | midpoint, first, last, and missing key lookups |
+| Breadth-first search | `breadth_first_search_benchmark.c` | full GraphView traversal of an adjacency-list chain |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the twenty-two completed modules listed above.
+Benchmarks exist for the twenty-four completed modules listed above.

@@ -17,10 +17,10 @@ build on.
 ## Required API
 
 ```c
-typedef struct GraphView GraphView;
+typedef bool (*DepthFirstSearchVisitFn)(Node *node, void *context);
 
-bool depth_first_search(const GraphView *graph, size_t source,
-                        size_t *out_order, size_t *out_count);
+bool depth_first_search(const GraphView *graph, Node *source,
+                        DepthFirstSearchVisitFn visit, void *context);
 ```
 
 The checked-in source is a failing stub; the tests define the expected
@@ -34,6 +34,9 @@ Discovery/finish-time variants extend the same shape.
 
 - Visits every vertex reachable from the source exactly once; a visited set
   is mandatory to terminate on cyclic graphs.
+- Invokes `visit` in depth-first discovery order. A `false` visitor result
+  stops traversal immediately; caller context owns optional found Node, order,
+  count, discovery, and finish outputs.
 - The recursive and explicit-stack forms must both be understood; recursion
   depth is O(V) in the worst case, so deep graphs favor the explicit stack.
 - Discovery/finish ordering must be consistent with DFS semantics: a vertex

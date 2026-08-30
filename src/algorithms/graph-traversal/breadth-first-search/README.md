@@ -18,14 +18,14 @@ repeatedly through different neighbors.
 ## Required API
 
 ```c
-typedef struct GraphView GraphView;
+typedef bool (*BreadthFirstSearchVisitFn)(Node *node, void *context);
 
-bool breadth_first_search(const GraphView *graph, size_t source,
-                          size_t *out_order, size_t *out_count);
+bool breadth_first_search(const GraphView *graph, Node *source,
+                          BreadthFirstSearchVisitFn visit, void *context);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
+The checked-in implementation uses the workspace FIFO queue plus dense visited
+tracking to traverse GraphView adapters without modifying their graphs.
 `GraphView` is the representation-independent graph interface from
 `data-structures/graphs/graph-view`. BFS ignores edge weights; adjacency-list,
 adjacency-matrix, and imported graph adapters all use the same API. Distance
@@ -35,6 +35,9 @@ and parent-tracking variants extend the same shape.
 
 - Uses a FIFO queue as the frontier; the queue discipline is what produces
   level order.
+- Invokes `visit` in breadth-first discovery order. A `false` visitor result
+  stops traversal immediately; caller context owns optional found Node, order,
+  count, distance, and parent outputs.
 - A vertex is marked visited when enqueued, not when dequeued; otherwise the
   same vertex can enter the queue multiple times.
 - Visits every vertex reachable from the source exactly once; unreachable
@@ -49,3 +52,14 @@ and parent-tracking variants extend the same shape.
 
 - Time: O(V + E) with an adjacency list
 - Space: O(V) for the visited set, queue, and parent array
+
+## Verification
+
+```text
+make test NAME=algorithms/graph-traversal/breadth-first-search
+make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
+```
+
+At a 2,000-Node directed adjacency-list chain on this development machine,
+the full GraphView-backed traversal measured 0.016 ms per traversal. Graph
+construction is outside the timed loop.

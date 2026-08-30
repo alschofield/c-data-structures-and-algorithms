@@ -20,6 +20,10 @@ ifneq ($(filter $(NAME),algorithms/graph-traversal/breadth-first-search algorith
 	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c
 endif
 
+ifeq ($(NAME),algorithms/graph-traversal/breadth-first-search)
+	EXTRA_SOURCES += src/data-structures/linear/queues/queue/queue.c
+endif
+
 ifeq ($(NAME),algorithms/minimum-spanning-trees/kruskal)
 	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c
 endif
@@ -57,7 +61,7 @@ test:
 	$(BUILD_DIR)/test_$(MODULE)
 benchmark:
 	$(CREATE_BUILD_DIR)
-	$(CC) $(BENCH_CFLAGS) $(if $(BENCHMARK_ITEM_COUNT),-DBENCHMARK_ITEM_COUNT=$(BENCHMARK_ITEM_COUNT)) $(BENCH_DIR)/benchmark.c $(BENCH_DIR)/$(BENCHMARK)_benchmark.c $(MODULE_DIR)/$(MODULE).c -o $(BUILD_DIR)/benchmark_$(MODULE)
+	$(CC) $(BENCH_CFLAGS) $(if $(BENCHMARK_ITEM_COUNT),-DBENCHMARK_ITEM_COUNT=$(BENCHMARK_ITEM_COUNT)) $(BENCH_DIR)/benchmark.c $(BENCH_DIR)/$(BENCHMARK)_benchmark.c $(MODULE_DIR)/$(MODULE).c $(EXTRA_SOURCES) -o $(BUILD_DIR)/benchmark_$(MODULE)
 	$(BUILD_DIR)/benchmark_$(MODULE)
 endif
 
