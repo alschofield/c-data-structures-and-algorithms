@@ -42,3 +42,15 @@ bool singly_linked_list_is_empty(const SinglyLinkedList *list);
 - `push_front`, `pop_front`, `size`, `is_empty`: O(1)
 - `push_back`, `pop_back`, `get`, `insert`, `remove`: O(n)
 - Space: O(n) nodes, one pointer of overhead per node
+
+## Optional GraphView Wrapper
+
+A singly linked list can expose an optional read-only GraphView wrapper where
+each list Node maps to one adapter-owned GraphView Node and each `next` link is
+a directed unweighted edge. BFS/DFS over this wrapper is equivalent to walking
+the list, so the wrapper is primarily useful for uniform traversal experiments
+and GraphView benchmark coverage.
+
+- The wrapper owns dense Node-index mapping and borrows list structure only.
+- List mutation invalidates wrapper relationships and is disallowed while the
+  wrapper is in use.

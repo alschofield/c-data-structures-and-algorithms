@@ -23,14 +23,14 @@ bool queue_enqueue_neighbor(Node *node, uint64_t weight, void *context) {
     (void)(weight);
 
     // Restores the queue and discovered-state context for this neighbor visit.
-    BreadthFirstSearchQueueContext *context_ = context;
+    BreadthFirstSearchQueueContext *bfs_queue_context = context;
 
     // Enqueues every reachable Node at most once, including on cyclic graphs.
-    if (!context_->queued[node->index]) {
+    if (!bfs_queue_context->queued[node->index]) {
         // Marks discovery before enqueue so alternate edges cannot duplicate it.
-        context_->queued[node->index] = true;
+        bfs_queue_context->queued[node->index] = true;
         // Appends the discovered Node to the FIFO BFS frontier.
-        if (!queue_enqueue(context_->queue, node)) {
+        if (!queue_enqueue(bfs_queue_context->queue, node)) {
             return false;
         }
     }

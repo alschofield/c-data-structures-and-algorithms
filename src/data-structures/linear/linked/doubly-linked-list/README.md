@@ -49,3 +49,15 @@ bool doubly_linked_list_is_empty(const DoublyLinkedList *list);
 - `get`, `insert`, `remove` by index: O(n), at most n/2 traversal steps from
   the nearer end
 - Space: O(n) nodes, two pointers of overhead per node
+
+## Optional GraphView Wrapper
+
+A doubly linked list can expose an optional read-only GraphView wrapper where
+each list Node maps to one adapter-owned GraphView Node and `next`/`prev` links
+become directed unweighted edges. The resulting graph is cyclic, making it a
+useful visited-set test for BFS/DFS rather than a replacement for direct list
+operations.
+
+- The wrapper owns dense Node-index mapping and borrows list structure only.
+- List mutation invalidates wrapper relationships and is disallowed while the
+  wrapper is in use.

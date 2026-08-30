@@ -53,6 +53,19 @@ size_t prefix_trie_size(const PrefixTrie *trie);
 - Space: O(total characters across stored keys) nodes in the worst case;
   shared prefixes share nodes
 
+## Optional GraphView Wrapper
+
+A trie can expose an optional read-only GraphView wrapper: each trie Node maps
+to one adapter-owned GraphView Node, and each character-child link becomes a
+directed unweighted edge. This enables BFS/DFS analysis of prefix branching
+without changing key lookup behavior.
+
+- The wrapper owns dense Node-index mapping and borrows trie structure only.
+- The trie must not mutate while its wrapper is in use, because insert/remove
+  can create or prune mapped structural nodes.
+- A wrapper benchmark should distinguish wrapper construction from traversal of
+  a fixed trie shape.
+
 ## Source Material
 
 - https://www.youtube.com/watch?v=OLPebSpTISE

@@ -61,5 +61,6 @@ make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=br
 ```
 
 At a 2,000-Node directed adjacency-list chain on this development machine,
-the full GraphView-backed traversal measured 0.016 ms per traversal. Graph
-construction is outside the timed loop.
+the full GraphView-backed traversal measured 0.016 ms per traversal. A
+1,000-Node adjacency-matrix chain measured 0.854 ms because every visited Node
+scans its full matrix row. Graph construction is outside the timed loop.

@@ -577,10 +577,15 @@ not the linear scan cost visible in linear search.
 
 ### Breadth-first search: FIFO frontier traversal
 
-At a 2,000-Node directed adjacency-list chain, full GraphView-backed BFS
-traversal measured 0.016 ms per traversal. Graph construction is outside the
-timed loop; the measurement includes queue, visited-state, visitor, and
-GraphView neighbor-delegation work.
+| Graph representation | Traversal shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node directed chain | 0.016 ms |
+| Adjacency matrix | 1,000-Node directed chain | 0.854 ms |
+
+Graph construction is outside the timed loop; the measurement includes queue,
+visited-state, visitor, and GraphView neighbor-delegation work. The matrix
+scan is substantially slower because every visited Node examines its full row,
+while the list traverses only its stored outgoing edge.
 
 ## Reproducing
 
@@ -641,7 +646,7 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Radix sort | `radix_sort_benchmark.c` | whole sort on shuffled, sorted, and reverse input |
 | Linear search | `linear_search_benchmark.c` | first, middle, last, and missing key lookups |
 | Binary search | `binary_search_benchmark.c` | midpoint, first, last, and missing key lookups |
-| Breadth-first search | `breadth_first_search_benchmark.c` | full GraphView traversal of an adjacency-list chain |
+| Breadth-first search | `breadth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |

@@ -51,3 +51,17 @@ bool binary_search_tree_is_empty(const BinarySearchTree *tree);
 - This unbalanced BST: worst case O(n)
 - `in_order`: O(n)
 - Space: O(n) nodes plus O(height) working space for traversal/removal
+
+## Optional GraphView Wrapper
+
+A BST can expose an optional read-only GraphView wrapper: each tree Node maps
+to one adapter-owned GraphView Node, and directed unweighted edges map from a
+parent to its existing left and right children. This makes BFS/DFS level-order
+and depth-first analysis available without changing BST lookup semantics.
+
+- The wrapper owns Node handles and dense-index mapping; it never changes BST
+  nodes or caller-owned values.
+- The BST must not mutate while its wrapper is in use, because inserts/removes
+  can invalidate mapped structural relationships.
+- A wrapper benchmark should measure complete traversal of a fixed tree shape;
+  it must report adapter setup separately from traversal work.

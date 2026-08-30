@@ -53,3 +53,18 @@ bool binary_heap_is_empty(const BinaryHeap *heap);
 - `peek`, `size`, `is_empty`: O(1)
 - Build from n items via bottom-up heapify: O(n)
 - Space: O(n) contiguous, no per-element pointer overhead
+
+## Optional GraphView Wrapper
+
+A binary heap can expose an optional read-only GraphView wrapper over its
+implicit tree: array position `i` maps to one adapter-owned GraphView Node, and
+existing child positions `2i + 1` and `2i + 2` become directed unweighted
+edges. This is for structure visualization or traversal experiments, not heap
+priority operations.
+
+- The wrapper owns dense Node-index mapping; it does not expose or mutate the
+  heap's backing array.
+- Heap mutation invalidates the wrapper relationship mapping, so the heap must
+  remain unchanged while its wrapper is in use.
+- A wrapper benchmark should measure traversal of a fixed heap independently
+  from heap push/pop operations.
