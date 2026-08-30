@@ -23,14 +23,12 @@ actual shortest path once the goal settles.
 ```c
 #define DIJKSTRA_INFINITY UINT64_MAX
 
-typedef struct GraphView GraphView;
-
 bool dijkstra(const GraphView *graph, Node *source,
-              uint64_t *out_distances, size_t *out_parents);
+               uint64_t *out_distances, size_t *out_parents);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
+The checked-in implementation uses a min-heap of tentative path proposals,
+stale-entry skipping, and caller-owned dense distance/parent arrays.
 `GraphView` is the representation-independent non-negative weighted graph
 interface from `data-structures/graphs/graph-view`. Unreachable vertexes
 report `DIJKSTRA_INFINITY`.
@@ -48,6 +46,9 @@ report `DIJKSTRA_INFINITY`.
 - Unreachable vertices report an explicit infinite distance, never a garbage
   value.
 - Parent links must reconstruct an actual shortest path from the source.
+- `out_distances[node->index]` is `DIJKSTRA_INFINITY` for unreachable Nodes.
+  `out_parents[node->index]` is `SIZE_MAX` for unreachable Nodes and source's
+  own index for the source Node.
 - Correct on graphs with cycles, parallel edges, and self-loops; an invalid
   source vertex is rejected cleanly.
 
@@ -55,3 +56,18 @@ report `DIJKSTRA_INFINITY`.
 
 - Time: O((V + E) log V) with a binary heap
 - Space: O(V) for distances, parents, and the heap
+
+## Verification
+
+```text
+make test NAME=algorithms/shortest-paths/dijkstra
+make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
+```
+
+| Graph representation | Traversal shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node unit-weight chain | 0.077 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain | 1.026 ms |
+
+Graph construction is outside the timed loop. The matrix workload is slower
+because every settled Node scans its full matrix row.

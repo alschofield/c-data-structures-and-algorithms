@@ -619,6 +619,17 @@ the matrix scan is slower because each visited Node examines its full row. The
 early target is last in neighbor enumeration, so it is pushed last and popped
 first by the LIFO DFS stack.
 
+### Dijkstra: weighted min-heap shortest paths
+
+| Graph representation | Traversal shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node unit-weight chain | 0.077 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain | 1.026 ms |
+
+Graph construction is outside the timed loop. The benchmark includes tentative
+heap proposals, stale-entry checks, settled-state tracking, and all reachable
+shortest-path output updates. The matrix cost reflects full-row neighbor scans.
+
 ## Reproducing
 
 ```bash
@@ -642,6 +653,7 @@ make benchmark NAME=algorithms/searching/linear-search BENCHMARK=linear_search
 make benchmark NAME=algorithms/searching/binary-search BENCHMARK=binary_search
 make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
 make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=depth_first_search
+make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -681,10 +693,11 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Binary search | `binary_search_benchmark.c` | midpoint, first, last, and missing key lookups |
 | Breadth-first search | `breadth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
 | Depth-first search | `depth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
+| Dijkstra | `dijkstra_benchmark.c` | full weighted shortest paths through adjacency-list and matrix chains |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the twenty-five completed modules listed above.
+Benchmarks exist for the twenty-six completed modules listed above.

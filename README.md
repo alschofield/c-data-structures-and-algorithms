@@ -28,7 +28,8 @@ src/algorithms/sorting/comparison/heap-sort                     complete
 src/algorithms/sorting/non-comparison/counting-sort             complete
 src/algorithms/sorting/non-comparison/radix-sort                complete
 src/algorithms/graph-traversal/{breadth-first-search,depth-first-search} complete
-src/algorithms/shortest-paths/{dijkstra,a-star}
+src/algorithms/shortest-paths/dijkstra                           complete
+src/algorithms/shortest-paths/a-star
 src/algorithms/minimum-spanning-trees/kruskal
 ```
 
@@ -97,7 +98,7 @@ make benchmark-test
 Stack, queue, dynamic array, singly and doubly linked lists, separate-chaining
 hash table, binary search tree, binary heap, prefix trie, GraphView, union-find,
 adjacency list/matrix, and bubble, selection, insertion, merge, heap, quick,
-counting, radix sort, linear/binary search, and breadth/depth-first search have
+counting, radix sort, linear/binary search, breadth/depth-first search, and Dijkstra have
 benchmark sources. The dependency-free harness reports repeated-sample timing;
 it is not a complexity proof. See
 [bench/README.md](bench/README.md) for full results, scaling comparisons, and
