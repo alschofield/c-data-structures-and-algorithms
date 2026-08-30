@@ -27,10 +27,11 @@ static void assert_weight_agnostic_traversal(const GraphView *view, Node *nodes[
     struct VisitLog log = { .count = 0U };
 
     assert(depth_first_search(view, nodes[0], record_visit, &log));
-    assert(log.count == 3U);
+    assert(log.count == 4U);
     assert(log.order[0] == nodes[0]);
-    assert(log.order[1] == nodes[1]);
-    assert(log.order[2] == nodes[2]);
+    assert(log.order[1] == nodes[2]);
+    assert(log.order[2] == nodes[1]);
+    assert(log.order[3] == nodes[3]);
 
     log.count = 0U;
     assert(!depth_first_search(view, nodes[0], stop_after_first, &log));
@@ -50,7 +51,8 @@ static void test_adjacency_list_adapter(void) {
         assert(adjacency_list_add_node(graph, &values[index], &nodes[index]));
     }
     assert(adjacency_list_add_edge(graph, nodes[0], nodes[1], 99U));
-    assert(adjacency_list_add_edge(graph, nodes[1], nodes[2], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 1U));
     assert(adjacency_list_graph_view(graph, &view));
     assert_weight_agnostic_traversal(&view, nodes);
     adjacency_list_destroy(graph);
@@ -67,7 +69,8 @@ static void test_adjacency_matrix_adapter(void) {
         assert(adjacency_matrix_add_node(graph, &values[index], &nodes[index]));
     }
     assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[1], 99U));
-    assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[2], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[0], nodes[2], 1U));
+    assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[3], 1U));
     assert(adjacency_matrix_graph_view(graph, &view));
     assert_weight_agnostic_traversal(&view, nodes);
     adjacency_matrix_destroy(graph);

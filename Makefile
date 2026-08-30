@@ -24,6 +24,10 @@ ifeq ($(NAME),algorithms/graph-traversal/breadth-first-search)
 	EXTRA_SOURCES += src/data-structures/linear/queues/queue/queue.c
 endif
 
+ifeq ($(NAME),algorithms/graph-traversal/depth-first-search)
+	EXTRA_SOURCES += src/data-structures/linear/stacks/stack/stack.c
+endif
+
 ifeq ($(NAME),algorithms/minimum-spanning-trees/kruskal)
 	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c
 endif

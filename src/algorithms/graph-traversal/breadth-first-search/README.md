@@ -60,7 +60,13 @@ make test NAME=algorithms/graph-traversal/breadth-first-search
 make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
 ```
 
-At a 2,000-Node directed adjacency-list chain on this development machine,
-the full GraphView-backed traversal measured 0.016 ms per traversal. A
-1,000-Node adjacency-matrix chain measured 0.854 ms because every visited Node
-scans its full matrix row. Graph construction is outside the timed loop.
+| Workload | Adjacency list | Adjacency matrix |
+| --- | ---: | ---: |
+| Full chain traversal | 0.020 ms / 2,000 Nodes | 0.886 ms / 1,000 Nodes |
+| Shallow first-enqueued target early exit | 0.0003 ms / 2 visits | 0.0019 ms / 2 visits |
+
+The early-stop workload places the target as the source's first-enqueued
+neighbor and a deep distraction branch second. BFS reaches the target after
+visiting only source and target; DFS with the same neighbor order would follow
+the later-pushed deep branch first. Graph construction is outside the timed
+loop.

@@ -27,6 +27,21 @@ benchmarks at fixed sizes can only be *consistent* with it.
 Timing uses `QueryPerformanceCounter` on Windows and
 `clock_gettime(CLOCK_MONOTONIC)` on POSIX.
 
+## Benchmark Design
+
+Each completed module should have evidence for both baseline operation cost and
+the workloads where its structural choice matters. Benchmarks therefore prefer:
+
+1. Full workloads that establish ordinary traversal, sort, lookup, or mutation cost.
+2. Contrasting inputs that expose relevant strengths and weaknesses: compact versus
+   wide key ranges, shallow versus deep targets, sparse versus dense graphs, or
+   favorable versus unfavorable search positions.
+3. Setup outside the timed region when measuring the operation itself; setup cost is
+   described separately when it is relevant to the design tradeoff.
+
+These measurements are decision aids, not portable speed claims or substitutes
+for asymptotic analysis.
+
 ## Results at 10,000 Items
 
 Default sample shape: 21 samples x 10,000 operations (both linked lists and
@@ -579,13 +594,30 @@ not the linear scan cost visible in linear search.
 
 | Graph representation | Traversal shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node directed chain | 0.016 ms |
-| Adjacency matrix | 1,000-Node directed chain | 0.854 ms |
+| Adjacency list | 2,000-Node directed chain | 0.020 ms |
+| Adjacency matrix | 1,000-Node directed chain | 0.886 ms |
+| Adjacency list | shallow target early exit / 2 visits | 0.0003 ms |
+| Adjacency matrix | shallow target early exit / 2 visits | 0.0019 ms |
 
 Graph construction is outside the timed loop; the measurement includes queue,
 visited-state, visitor, and GraphView neighbor-delegation work. The matrix
 scan is substantially slower because every visited Node examines its full row,
 while the list traverses only its stored outgoing edge.
+
+### Depth-first search: LIFO frontier traversal
+
+| Graph representation | Traversal shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node directed chain | 0.015 ms |
+| Adjacency matrix | 1,000-Node directed chain | 0.834 ms |
+| Adjacency list | deep target early exit / 3 visits | 0.0005 ms |
+| Adjacency matrix | deep target early exit / 3 visits | 0.0025 ms |
+
+Graph construction is outside the timed loop; the measurement includes stack,
+visited-state, visitor, and GraphView neighbor-delegation work. As with BFS,
+the matrix scan is slower because each visited Node examines its full row. The
+early target is last in neighbor enumeration, so it is pushed last and popped
+first by the LIFO DFS stack.
 
 ## Reproducing
 
@@ -609,6 +641,7 @@ make benchmark NAME=algorithms/sorting/non-comparison/radix-sort BENCHMARK=radix
 make benchmark NAME=algorithms/searching/linear-search BENCHMARK=linear_search
 make benchmark NAME=algorithms/searching/binary-search BENCHMARK=binary_search
 make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
+make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=depth_first_search
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -647,10 +680,11 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Linear search | `linear_search_benchmark.c` | first, middle, last, and missing key lookups |
 | Binary search | `binary_search_benchmark.c` | midpoint, first, last, and missing key lookups |
 | Breadth-first search | `breadth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
+| Depth-first search | `depth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the twenty-four completed modules listed above.
+Benchmarks exist for the twenty-five completed modules listed above.

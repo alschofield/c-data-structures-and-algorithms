@@ -23,8 +23,8 @@ bool depth_first_search(const GraphView *graph, Node *source,
                         DepthFirstSearchVisitFn visit, void *context);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
+The checked-in implementation uses the workspace LIFO stack plus dense visited
+tracking to traverse GraphView adapters without modifying their graphs.
 `GraphView` is the representation-independent graph interface from
 `data-structures/graphs/graph-view`. DFS ignores edge weights; adjacency-list,
 adjacency-matrix, and imported graph adapters all use the same API.
@@ -50,3 +50,20 @@ Discovery/finish-time variants extend the same shape.
 
 - Time: O(V + E) with an adjacency list
 - Space: O(V) for the visited set plus recursion/stack depth up to O(V)
+
+## Verification
+
+```text
+make test NAME=algorithms/graph-traversal/depth-first-search
+make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=depth_first_search
+```
+
+| Workload | Adjacency list | Adjacency matrix |
+| --- | ---: | ---: |
+| Full chain traversal | 0.015 ms / 2,000 Nodes | 0.834 ms / 1,000 Nodes |
+| Deep last-enumerated target early exit | 0.0005 ms / 3 visits | 0.0025 ms / 3 visits |
+
+The early-stop workload places a wide distraction branch first and the target
+branch last in neighbor enumeration. The LIFO stack pops the last-enumerated
+deep branch first, reaching its target after source, branch root, and target.
+Graph construction is outside the timed loop.

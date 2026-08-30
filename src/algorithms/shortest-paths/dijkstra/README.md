@@ -25,7 +25,7 @@ actual shortest path once the goal settles.
 
 typedef struct GraphView GraphView;
 
-bool dijkstra(const GraphView *graph, size_t source,
+bool dijkstra(const GraphView *graph, Node *source,
               uint64_t *out_distances, size_t *out_parents);
 ```
 
