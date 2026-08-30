@@ -9,6 +9,7 @@ struct DijkstraNode {
 struct DijkstraHeapContext {
     BinaryHeap *heap;
     uint64_t *distances;
+    Node **parents;
 };
 
 int compare(const void *left, const void *right) {
@@ -27,11 +28,12 @@ bool heap_push_neighbors(Node *node, uint64_t weight, void *context) {
     // idk how correct this is but it should be something like this
     uint64_t new_distance = djik_heap_context->distances[node->index] + weight;
     if (new_distance > djik_heap_context->distances[node->index]) {
+        djik_heap_context->parents[node->index] = node;
+        djik_heap_context->distances[node->index] = new_distance;
+
         if (!binary_heap_push(djik_heap_context->heap, &(DijkstraNode){ .node = node, .total_distance = new_distance })) {
             return false;
         }
-
-        djik_heap_context->distances[node->index] = new_distance;
     }
 
     return true;
@@ -66,30 +68,61 @@ bool dijkstra(const GraphView *graph, Node *source, uint64_t *out_distances, siz
         return false;
     }
 
-    uint64_t *distances = malloc(sizeof(int) * count);
-    if (distances == NULL) {
+    bool *settled = malloc(sizeof(bool) * count);
+    if (settled == NULL) {
         return false;
     }
 
     size_t n = 0U;
+    while(n < count) {
+        settled[n] = false;
+        n++;
+    }
+
+    uint64_t *distances = malloc(sizeof(int) * count);
+    if (distances == NULL) {
+        free(settled);
+        return false;
+    }
+
+    n = 0U;
     while (n < count) {
         distances[n] = DIJKSTRA_INFINITY;
         n++;
     }
 
+    Node **parents = malloc(sizeof(Node) * count);
+    if (parents == NULL) {
+        free(settled);
+        free(distances);
+        return false;
+    }
+
+    n = 0U;
+    while(n < count) {
+        parents[n] = NULL;
+        n++;
+    }
+
     BinaryHeap *heap = binary_heap_create(compare);
     if (heap == NULL) {
+        free(settled);
         free(distances);
+        free(parents);
         return false;
     }
 
     if (!binary_heap_push(heap, &(DijkstraNode){ .node = source, .total_distance = 0 })) {
+        free(settled);
         free(distances);
+        free(parents);
         binary_heap_destroy(heap);
         return false;
     }
 
+    settled[source->index] = true;
     distances[source->index] = 0;
+    parents[source->index] = source;
 
     void *node_void = NULL;
     out_node = NULL;
@@ -99,24 +132,31 @@ bool dijkstra(const GraphView *graph, Node *source, uint64_t *out_distances, siz
         node_void = NULL;
 
         if (!binary_heap_pop(heap, node_void)) {
+            free(settled);
             free(distances);
+            free(parents);
             binary_heap_destroy(heap);
             return false;
         }
 
         out_node = node_void;
+        settled[out_node->index] = true;
 
-        if (!graph_view_neighbors(graph, out_node, heap_push_neighbors, &(DijkstraHeapContext){ .heap = heap, .distances = distances })) {
+        if (!graph_view_neighbors(graph, out_node, heap_push_neighbors, &(DijkstraHeapContext){ .heap = heap, .parents = parents, .distances = distances })) {
+            free(settled);
             free(distances);
+            free(parents);
             binary_heap_destroy(heap);
             return false;
         }
     }
 
     *out_distances = distances;
-    // *out_parents = what exactly?
+    *out_parents = parents;
 
+    free(settled);
     free(distances);
+    free(parents);
     binary_heap_destroy(heap);
 
     return true;
