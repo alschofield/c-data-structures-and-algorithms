@@ -642,6 +642,18 @@ the Dijkstra-equivalent baseline, including A-star's heap proposals,
 stale-entry checks, source-to-goal parent reconstruction, and output-capacity
 validation. The matrix workload again pays for a full row scan per expansion.
 
+### Kruskal: sorted-edge minimum spanning forests
+
+| Graph representation | Forest shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node descending-weight chain | 0.089 ms |
+| Adjacency matrix | 1,000-Node descending-weight chain | 1.096 ms |
+
+Graph construction is outside the timed loop. Distinct descending weights make
+candidate sorting meaningful; each run includes canonical undirected-edge
+collection, quicksort pointer ordering, union-find cycle rejection, and output
+copying. Matrix neighbor enumeration scans every row, producing the larger cost.
+
 ## Reproducing
 
 ```bash
@@ -667,6 +679,7 @@ make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=br
 make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=depth_first_search
 make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
 make benchmark NAME=algorithms/shortest-paths/a-star BENCHMARK=a_star
+make benchmark NAME=algorithms/minimum-spanning-trees/kruskal BENCHMARK=kruskal
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -708,10 +721,11 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Depth-first search | `depth_first_search_benchmark.c` | full GraphView traversal of adjacency-list and matrix chains |
 | Dijkstra | `dijkstra_benchmark.c` | full weighted shortest paths through adjacency-list and matrix chains |
 | A-star | `a_star_benchmark.c` | full source-to-goal paths through adjacency-list and matrix chains |
+| Kruskal | `kruskal_benchmark.c` | complete minimum spanning forests through adjacency-list and matrix chains |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |
 | Adjacency list | `adjacency_list_benchmark.c` | edge insert, update, lookup |
 | Adjacency matrix | `adjacency_matrix_benchmark.c` | edge insert, lookup, removal |
 
-Benchmarks exist for the twenty-seven completed modules listed above.
+Benchmarks exist for the twenty-eight completed modules listed above.

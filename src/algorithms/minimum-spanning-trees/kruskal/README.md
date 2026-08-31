@@ -35,9 +35,6 @@ bool kruskal_minimum_spanning_forest(
 );
 ```
 
-The checked-in source is a learning scaffold. The contract test becomes
-buildable after the public declaration and implementation are written.
-
 ## Contract
 
 - Input must be an undirected GraphView with matching weights in both stored
@@ -58,3 +55,20 @@ buildable after the public declaration and implementation are written.
 
 - Time: O(E log E + E alpha(V)) for edge sorting and union-find
 - Space: O(E + V) for collected edges, output, and union-find
+
+## Verification
+
+```text
+make test NAME=algorithms/minimum-spanning-trees/kruskal
+make benchmark NAME=algorithms/minimum-spanning-trees/kruskal BENCHMARK=kruskal
+```
+
+| Graph representation | Forest shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node descending-weight chain | 0.089 ms |
+| Adjacency matrix | 1,000-Node descending-weight chain | 1.096 ms |
+
+Graph construction is outside the timed loop. Distinct descending weights make
+the benchmark include real candidate-edge sorting, union-find cycle detection,
+and selected-edge output copying. The matrix workload is slower because every
+Node enumeration scans its full matrix row.

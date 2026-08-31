@@ -33,7 +33,7 @@ ifneq ($(filter $(NAME),algorithms/shortest-paths/dijkstra algorithms/shortest-p
 endif
 
 ifeq ($(NAME),algorithms/minimum-spanning-trees/kruskal)
-	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c
+	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c src/algorithms/sorting/comparison/quick-sort/quick_sort.c
 endif
 
 ifneq ($(filter $(NAME),data-structures/graphs/representations/adjacency-list data-structures/graphs/representations/adjacency-matrix),)

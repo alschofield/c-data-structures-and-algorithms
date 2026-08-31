@@ -522,6 +522,12 @@ static bool adjacency_matrix_view_neighbors(const void *context, const Node *nod
     return adjacency_matrix_neighbors(graph, node, visit, visit_context);
 }
 
+static bool adjacency_matrix_is_directed(const void *context) {
+    const AdjacencyMatrix *graph = context;
+
+    return graph->directed;
+}
+
 // Fills a non-owning GraphView adapter for this adjacency-matrix graph.
 bool adjacency_matrix_graph_view(const AdjacencyMatrix *graph, GraphView *out_view) {
     // Rejects a missing backing graph.
@@ -542,6 +548,7 @@ bool adjacency_matrix_graph_view(const AdjacencyMatrix *graph, GraphView *out_vi
     out_view->vertex_count = adjacency_matrix_view_vertex_count;
     // Supplies the representation-specific dense Node lookup adapter.
     out_view->node_at = adjacency_matrix_view_node_at;
+    out_view->is_directed = adjacency_matrix_is_directed;
 
     // Reports successful GraphView construction.
     return true;

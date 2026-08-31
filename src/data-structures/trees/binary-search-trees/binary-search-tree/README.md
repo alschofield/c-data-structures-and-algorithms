@@ -52,16 +52,17 @@ bool binary_search_tree_is_empty(const BinarySearchTree *tree);
 - `in_order`: O(n)
 - Space: O(n) nodes plus O(height) working space for traversal/removal
 
-## Optional GraphView Wrapper
+## Optional GraphView Adapter
 
-A BST can expose an optional read-only GraphView wrapper: each tree Node maps
-to one adapter-owned GraphView Node, and directed unweighted edges map from a
-parent to its existing left and right children. This makes BFS/DFS level-order
-and depth-first analysis available without changing BST lookup semantics.
+A BST can expose a read-only directed GraphView: each native tree Node embeds a
+stable GraphView Node handle, and native `left`/`right` links become directed
+unit-weight edges. Adapter initialization assigns dense indexes without copying
+links into `Edge` arrays; `node_at` structurally traverses the tree and retains
+its native lookup cost. This makes BFS/DFS level-order and depth-first analysis
+available without changing BST lookup semantics.
 
-- The wrapper owns Node handles and dense-index mapping; it never changes BST
-  nodes or caller-owned values.
-- The BST must not mutate while its wrapper is in use, because inserts/removes
-  can invalidate mapped structural relationships.
-- A wrapper benchmark should measure complete traversal of a fixed tree shape;
-  it must report adapter setup separately from traversal work.
+- `vertex_count` returns the stored Node count; `is_directed` returns `true`.
+- `neighbors` follows only existing native `left` and `right` links.
+- Inserts/removes are disallowed while the GraphView is used because they can
+  invalidate embedded handles and dense indexes.
+- Benchmark adapter initialization separately from complete traversal.

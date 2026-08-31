@@ -50,14 +50,16 @@ bool doubly_linked_list_is_empty(const DoublyLinkedList *list);
   the nearer end
 - Space: O(n) nodes, two pointers of overhead per node
 
-## Optional GraphView Wrapper
+## Optional GraphView Adapter
 
-A doubly linked list can expose an optional read-only GraphView wrapper where
-each list Node maps to one adapter-owned GraphView Node and `next`/`prev` links
-become directed unweighted edges. The resulting graph is cyclic, making it a
-useful visited-set test for BFS/DFS rather than a replacement for direct list
-operations.
+A doubly linked list can expose a read-only directed GraphView: each native
+list Node embeds a stable GraphView Node handle, and existing native `next` and
+`prev` links become up to two directed unit-weight edges. The graph is cyclic,
+so BFS/DFS use their normal visited state; it is not an undirected graph and
+Kruskal rejects it.
 
-- The wrapper owns dense Node-index mapping and borrows list structure only.
-- List mutation invalidates wrapper relationships and is disallowed while the
-  wrapper is in use.
+- `vertex_count` returns list size; `is_directed` returns `true`.
+- `node_at` walks from the nearer end to retain native doubly linked-list
+  lookup cost, while `neighbors` follows native links directly.
+- List mutation is disallowed while the GraphView is used because it can
+  invalidate embedded handles and dense indexes.

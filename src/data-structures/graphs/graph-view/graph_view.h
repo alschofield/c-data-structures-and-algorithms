@@ -34,6 +34,8 @@ typedef struct GraphView GraphView;
 typedef bool (*GraphViewVisitFn)(Node *neighbor, uint64_t weight, void *context);
 // Reports the node count of a backing graph.
 typedef size_t (*GraphViewVertexCountFn)(const void *graph_context);
+// Reports the directed status of a backing graph.
+typedef bool (*GraphViewIsDirectedFn)(const void *graph_context);
 // Returns one backing graph Node by its dense internal index.
 typedef bool (*GraphViewNodeAtFn)(const void *graph_context, size_t index,
                                   Node **out_node);
@@ -51,6 +53,8 @@ struct GraphView {
     GraphViewNodeAtFn node_at;
     // Iterates weighted neighbors through the backing graph representation.
     GraphViewNeighborsFn neighbors;
+    // Reports the directed status of a backing graph.
+    GraphViewIsDirectedFn is_directed;
 };
 
 // Checks that every field required to use a GraphView is present.
@@ -62,5 +66,7 @@ bool graph_view_node_at(const GraphView *view, size_t index, Node **out_node);
 // Validates and delegates weighted neighbor iteration to the backing graph.
 bool graph_view_neighbors(const GraphView *view, const Node *node,
                           GraphViewVisitFn visit, void *context);
+// Reports the directed status of a backing graph.
+bool graph_view_is_directed(const GraphView *view);
 
 #endif

@@ -27,8 +27,20 @@ bool graph_view_is_valid(const GraphView *view) {
         return false;
     }
 
+    if (view->is_directed == NULL) {
+        return false;
+    }
+
     // Reports a fully usable adapter.
     return true;
+}
+
+bool graph_view_is_directed(const GraphView *view) {
+    if (!graph_view_is_valid(view)) {
+        return false;
+    }
+
+    return view->is_directed(view->context);
 }
 
 // Returns the backing graph's dense node count.

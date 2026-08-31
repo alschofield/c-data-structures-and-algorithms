@@ -451,6 +451,12 @@ static bool graph_view_compatible_neighbors(const void *graph_context, const Nod
     return adjacency_list_neighbors(graph, node, visit, context);
 }
 
+static bool adjacency_list_is_directed(const void *context) {
+    const AdjacencyList *graph = context;
+
+    return graph->directed;
+}
+
 // Fills a non-owning GraphView that exposes this adjacency-list graph.
 bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) {
     // Rejects missing graph or output storage before adapter construction.
@@ -466,6 +472,7 @@ bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) 
     out_view->neighbors = graph_view_compatible_neighbors;
     out_view->vertex_count = graph_view_compatible_vertex_count;
     out_view->node_at = graph_view_compatible_node_at;
+    out_view->is_directed = adjacency_list_is_directed;
 
     return true;
 }
