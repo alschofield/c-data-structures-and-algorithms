@@ -28,7 +28,7 @@ ifeq ($(NAME),algorithms/graph-traversal/depth-first-search)
 	EXTRA_SOURCES += src/data-structures/linear/stacks/stack/stack.c
 endif
 
-ifeq ($(NAME),algorithms/shortest-paths/dijkstra)
+ifneq ($(filter $(NAME),algorithms/shortest-paths/dijkstra algorithms/shortest-paths/a-star),)
 	EXTRA_SOURCES += src/data-structures/trees/heaps/binary-heap/binary_heap.c
 endif
 

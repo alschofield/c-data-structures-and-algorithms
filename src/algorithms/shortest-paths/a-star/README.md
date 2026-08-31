@@ -21,15 +21,19 @@ the tests check directly.
 typedef struct GraphView GraphView;
 typedef uint64_t (*AStarHeuristicFn)(size_t vertex, void *context);
 
-bool a_star(const GraphView *graph, size_t source, size_t goal,
+bool a_star(const GraphView *graph, Node *source, Node *goal,
             AStarHeuristicFn heuristic, void *context,
-            size_t *out_path, size_t *out_path_length);
+            size_t *out_path, size_t out_path_capacity,
+            size_t *out_path_length);
 ```
 
-The checked-in source is a failing stub; the tests define the expected
-behavior and pass only once the implementation is written.
 `GraphView` is the representation-independent non-negative weighted graph
 interface from `data-structures/graphs/graph-view`.
+
+`source` and `goal` are graph-owned Nodes, matching Dijkstra's source
+boundary. `out_path` contains their dense Node indexes in source-to-goal
+order, and `out_path_length` receives the number of written indexes.
+`out_path_capacity` is the number of writable `size_t` entries in `out_path`.
 
 ## Contract
 
@@ -46,6 +50,9 @@ interface from `data-structures/graphs/graph-view`.
   frontier empties.
 - Parent links must reconstruct the returned path; unreachable goals are an
   explicit no-path result.
+- Returns `false` without writing output when `out_path_capacity` cannot hold
+  the complete route. A simple path can contain at most the graph's vertex
+  count entries.
 
 ## Complexity Targets
 
@@ -53,3 +60,20 @@ interface from `data-structures/graphs/graph-view`.
   heuristic gives no pruning); a strong admissible heuristic prunes most of
   the graph in practice
 - Space: O(V) for scores, parents, and the frontier
+
+## Verification
+
+```text
+make test NAME=algorithms/shortest-paths/a-star
+make benchmark NAME=algorithms/shortest-paths/a-star BENCHMARK=a_star
+```
+
+| Graph representation | Path shape | Median time |
+| --- | --- | ---: |
+| Adjacency list | 2,000-Node unit-weight chain, `h(n) = 0` | 0.093 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain, `h(n) = 0` | 1.236 ms |
+
+Graph construction is outside the timed loop. The zero heuristic establishes
+the Dijkstra-equivalent baseline; each run includes heap proposals, stale-entry
+checks, source-to-goal parent reconstruction, and output-capacity validation.
+The matrix workload is slower because each expanded Node scans its full row.
