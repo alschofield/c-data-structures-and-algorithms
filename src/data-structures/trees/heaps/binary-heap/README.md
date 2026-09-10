@@ -56,14 +56,14 @@ bool binary_heap_is_empty(const BinaryHeap *heap);
 
 ## Optional GraphView Adapter
 
-A binary heap can expose a read-only directed GraphView over its implicit tree:
-each occupied array slot carries a stable GraphView Node handle, and child
-positions `2i + 1` and `2i + 2` become directed unit-weight edges. `node_at`
-uses direct slot lookup, while `neighbors` computes child indexes rather than
-materializing graph edges. This is for structure visualization or traversal
-experiments, not heap priority operations.
+A binary heap exposes a read-only directed GraphView over its implicit tree:
+each occupied array slot is its dense index, and child positions `2i + 1` and
+`2i + 2` become directed unit-weight edges. `node_at` uses direct slot lookup,
+while `neighbors` computes child indexes rather than materializing graph edges.
+This is for structure visualization or traversal experiments, not heap priority
+operations.
 
 - `vertex_count` returns heap size; `is_directed` returns `true`.
 - Heap mutation is disallowed while the GraphView is used because sifting and
-  resizing can move items and invalidate slot handles.
+  resizing can change slot-index meaning.
 - Benchmark a fixed heap traversal separately from heap push/pop operations.

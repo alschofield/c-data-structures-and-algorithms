@@ -55,17 +55,15 @@ size_t prefix_trie_size(const PrefixTrie *trie);
 
 ## Optional GraphView Adapter
 
-A trie can expose a read-only directed GraphView: each native trie Node embeds
-a stable GraphView Node handle, and each native character-child link becomes a
-directed unit-weight edge. Adapter initialization assigns dense indexes without
-copying child links into `Edge` arrays; `node_at` structurally traverses the
-trie and retains its native lookup cost.
+A trie exposes a read-only directed GraphView with pre-order positions as dense
+indexes. Native character-child links become directed unit-weight edges;
+`node_at` structurally traverses the trie without a Node or edge map.
 
 - `vertex_count` counts structural trie Nodes, not only stored complete keys;
   `is_directed` returns `true`.
 - `neighbors` iterates the native sparse child collection directly.
 - Insert/remove operations are disallowed while the GraphView is used because
-  they can create or prune embedded handles and dense indexes.
+  they can change dense index meaning.
 - Benchmark adapter initialization separately from traversal of a fixed trie.
 
 ## Source Material

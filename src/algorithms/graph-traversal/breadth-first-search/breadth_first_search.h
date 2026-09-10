@@ -1,10 +1,12 @@
-// Declares GraphView and shared Node handles.
+// Declares GraphView, bool, and size_t.
 #include "../../../data-structures/graphs/graph-view/graph_view.h"
 
-// Visits one discovered Node and returns false to stop traversal early.
-typedef bool (*BreadthFirstSearchVisitFn)(Node *node, void *context);
+// Visits one discovered dense node index and returns false to stop traversal.
+typedef bool (*BreadthFirstSearchVisitFn)(size_t node_index, void *context);
 
+// Names private FIFO frontier state used by neighbor enumeration.
 typedef struct BreadthFirstSearchQueueContext BreadthFirstSearchQueueContext;
 
-// Traverses Nodes reachable from source in breadth-first discovery order.
-bool breadth_first_search(const GraphView *graph, Node *source, BreadthFirstSearchVisitFn visit, void *context);
+// Traverses indexes reachable from source in breadth-first discovery order.
+bool breadth_first_search(const GraphView *graph, size_t source,
+                          BreadthFirstSearchVisitFn visit, void *context);

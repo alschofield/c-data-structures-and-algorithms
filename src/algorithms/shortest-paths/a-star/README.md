@@ -21,7 +21,7 @@ the tests check directly.
 typedef struct GraphView GraphView;
 typedef uint64_t (*AStarHeuristicFn)(size_t vertex, void *context);
 
-bool a_star(const GraphView *graph, Node *source, Node *goal,
+bool a_star(const GraphView *graph, size_t source, size_t goal,
             AStarHeuristicFn heuristic, void *context,
             size_t *out_path, size_t out_path_capacity,
             size_t *out_path_length);
@@ -70,8 +70,8 @@ make benchmark NAME=algorithms/shortest-paths/a-star BENCHMARK=a_star
 
 | Graph representation | Path shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node unit-weight chain, `h(n) = 0` | 0.093 ms |
-| Adjacency matrix | 1,000-Node unit-weight chain, `h(n) = 0` | 1.236 ms |
+| Adjacency list | 2,000-Node unit-weight chain, `h(n) = 0` | 0.109 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain, `h(n) = 0` | 1.426 ms |
 
 Graph construction is outside the timed loop. The zero heuristic establishes
 the Dijkstra-equivalent baseline; each run includes heap proposals, stale-entry

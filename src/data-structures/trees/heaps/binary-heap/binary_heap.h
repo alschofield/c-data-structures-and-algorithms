@@ -2,6 +2,8 @@
 #include <stdbool.h>
 // Declares size_t.
 #include <stddef.h>
+// Declares GraphView.
+#include "../../../graphs/graph-view/graph_view.h"
 
 // Names the opaque binary heap.
 typedef struct BinaryHeap BinaryHeap;
@@ -22,3 +24,5 @@ bool binary_heap_peek(const BinaryHeap *heap, void **out_item);
 size_t binary_heap_size(const BinaryHeap *heap);
 // Reports whether the heap contains no items.
 bool binary_heap_is_empty(const BinaryHeap *heap);
+// Fills a non-owning direct GraphView adapter for the heap's implicit tree.
+bool binary_heap_graph_view(const BinaryHeap *heap, GraphView *out_view);

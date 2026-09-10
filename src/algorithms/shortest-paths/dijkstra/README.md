@@ -23,7 +23,7 @@ actual shortest path once the goal settles.
 ```c
 #define DIJKSTRA_INFINITY UINT64_MAX
 
-bool dijkstra(const GraphView *graph, Node *source,
+bool dijkstra(const GraphView *graph, size_t source,
                uint64_t *out_distances, size_t *out_parents);
 ```
 
@@ -66,8 +66,8 @@ make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
 
 | Graph representation | Traversal shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node unit-weight chain | 0.077 ms |
-| Adjacency matrix | 1,000-Node unit-weight chain | 1.026 ms |
+| Adjacency list | 2,000-Node unit-weight chain | 0.084 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain | 1.150 ms |
 
 Graph construction is outside the timed loop. The matrix workload is slower
 because every settled Node scans its full matrix row.

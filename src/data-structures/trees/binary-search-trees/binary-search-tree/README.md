@@ -54,15 +54,14 @@ bool binary_search_tree_is_empty(const BinarySearchTree *tree);
 
 ## Optional GraphView Adapter
 
-A BST can expose a read-only directed GraphView: each native tree Node embeds a
-stable GraphView Node handle, and native `left`/`right` links become directed
-unit-weight edges. Adapter initialization assigns dense indexes without copying
-links into `Edge` arrays; `node_at` structurally traverses the tree and retains
-its native lookup cost. This makes BFS/DFS level-order and depth-first analysis
+A BST exposes a read-only directed GraphView with in-order positions as dense
+indexes. Native `left`/`right` links become directed unit-weight edges;
+`node_at` structurally traverses the tree without a Node or edge map. This
+makes BFS/DFS level-order and depth-first analysis
 available without changing BST lookup semantics.
 
 - `vertex_count` returns the stored Node count; `is_directed` returns `true`.
 - `neighbors` follows only existing native `left` and `right` links.
 - Inserts/removes are disallowed while the GraphView is used because they can
-  invalidate embedded handles and dense indexes.
+  change dense index meaning.
 - Benchmark adapter initialization separately from complete traversal.

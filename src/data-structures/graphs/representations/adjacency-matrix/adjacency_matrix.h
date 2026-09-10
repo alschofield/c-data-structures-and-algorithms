@@ -3,6 +3,7 @@
 // Declares size_t.
 #include <stddef.h>
 
+#include "../../graph-node/graph_node.h"
 #include "../../graph-view/graph_view.h"
 
 // Names the opaque adjacency-matrix graph.

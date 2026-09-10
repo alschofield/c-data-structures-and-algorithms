@@ -2,6 +2,8 @@
 #include <stdbool.h>
 // Declares size_t.
 #include <stddef.h>
+// Declares GraphView.
+#include "../../../graphs/graph-view/graph_view.h"
 
 // Names the private BST node type.
 typedef struct Node Node;
@@ -34,3 +36,6 @@ bool binary_search_tree_in_order(const BinarySearchTree *tree, BinarySearchTreeV
 size_t binary_search_tree_size(const BinarySearchTree *tree);
 // Reports whether the tree contains no items.
 bool binary_search_tree_is_empty(const BinarySearchTree *tree);
+// Fills a non-owning direct GraphView adapter for this tree.
+bool binary_search_tree_graph_view(const BinarySearchTree *tree,
+                                   GraphView *out_view);

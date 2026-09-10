@@ -19,7 +19,7 @@ build on.
 ```c
 typedef bool (*DepthFirstSearchVisitFn)(Node *node, void *context);
 
-bool depth_first_search(const GraphView *graph, Node *source,
+bool depth_first_search(const GraphView *graph, size_t source,
                         DepthFirstSearchVisitFn visit, void *context);
 ```
 
@@ -60,10 +60,8 @@ make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=dept
 
 | Workload | Adjacency list | Adjacency matrix |
 | --- | ---: | ---: |
-| Full chain traversal | 0.015 ms / 2,000 Nodes | 0.834 ms / 1,000 Nodes |
-| Deep last-enumerated target early exit | 0.0005 ms / 3 visits | 0.0025 ms / 3 visits |
+| Full chain traversal | 0.026 ms / 2,000 Nodes | 1.162 ms / 1,000 Nodes |
 
-The early-stop workload places a wide distraction branch first and the target
-branch last in neighbor enumeration. The LIFO stack pops the last-enumerated
-deep branch first, reaching its target after source, branch root, and target.
-Graph construction is outside the timed loop.
+Graph construction is outside the timed loop. The matrix workload is slower
+because each visited index scans its full matrix row, while the list traverses
+only stored outgoing edges.

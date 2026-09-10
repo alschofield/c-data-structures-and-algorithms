@@ -1,366 +1,57 @@
-// Provides the reusable benchmark API.
 #include "benchmark.h"
-// Provides the public BFS API.
 #include "../src/algorithms/graph-traversal/breadth-first-search/breadth_first_search.h"
-// Provides the adjacency-list GraphView adapter used by this benchmark.
 #include "../src/data-structures/graphs/representations/adjacency-list/adjacency_list.h"
-// Provides the adjacency-matrix GraphView adapter used by this benchmark.
 #include "../src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.h"
 
-// Limits setup and full traversal samples to a practical graph size.
 #ifndef BENCHMARK_ITEM_COUNT
 #define BENCHMARK_ITEM_COUNT 2000U
 #endif
 
-// Defines the number of reachable Nodes visited by each timed BFS operation.
 enum { ITEM_COUNT = BENCHMARK_ITEM_COUNT };
-// Keeps dense matrix setup practical while still traversing a substantial graph.
 enum { MATRIX_ITEM_COUNT = 1000U };
 
-// Stores state shared by breadth-first-search benchmark samples.
-struct BreadthFirstSearchContext {
-    // Owns the adjacency-list graph built before each sample.
-    AdjacencyList *graph;
-    // Stores caller-owned Node payload values.
-    int values[ITEM_COUNT];
-    // Stores graph-owned Node handles in traversal order.
-    Node *nodes[ITEM_COUNT];
-    // Holds the representation-independent graph adapter.
-    GraphView view;
-    // Counts Nodes visited during the timed BFS operation.
-    size_t visited_count;
-    // Selects the early-stop target graph instead of the full-traversal chain.
-    bool early_exit;
-    // Identifies the shallow target Node in an early-stop workload.
-    Node *target;
-    // Records whether the visitor stopped on the requested target.
-    bool found;
-};
+struct ListContext { AdjacencyList *graph; int values[ITEM_COUNT]; Node *nodes[ITEM_COUNT]; GraphView view; size_t visited; };
+struct MatrixContext { AdjacencyMatrix *graph; int values[MATRIX_ITEM_COUNT]; Node *nodes[MATRIX_ITEM_COUNT]; GraphView view; size_t visited; };
 
-// Stores state shared by adjacency-matrix BFS benchmark samples.
-struct MatrixBreadthFirstSearchContext {
-    // Owns the adjacency-matrix graph built before each sample.
-    AdjacencyMatrix *graph;
-    // Stores caller-owned Node payload values.
-    int values[MATRIX_ITEM_COUNT];
-    // Stores graph-owned Node handles in traversal order.
-    Node *nodes[MATRIX_ITEM_COUNT];
-    // Holds the representation-independent graph adapter.
-    GraphView view;
-    // Counts Nodes visited during the timed BFS operation.
-    size_t visited_count;
-    // Selects the early-stop target graph instead of the full-traversal chain.
-    bool early_exit;
-    // Identifies the shallow target Node in an early-stop workload.
-    Node *target;
-    // Records whether the visitor stopped on the requested target.
-    bool found;
-};
+static bool visit_list(size_t index, void *context) { (void)index; ((struct ListContext *)context)->visited++; return true; }
+static bool visit_matrix(size_t index, void *context) { (void)index; ((struct MatrixContext *)context)->visited++; return true; }
 
-// Records each Node visited by BFS without requesting an early stop.
-static bool record_visit(Node *node, void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    if (node == NULL) {
-        return false;
-    }
-
-    bfs_context->visited_count++;
+static bool list_setup(void *context) {
+    struct ListContext *state = context;
+    state->graph = adjacency_list_create(true);
+    if (state->graph == NULL) return false;
+    for (size_t i = 0U; i < ITEM_COUNT; i++) if (!adjacency_list_add_node(state->graph, &state->values[i], &state->nodes[i])) return false;
+    for (size_t i = 0U; i + 1U < ITEM_COUNT; i++) if (!adjacency_list_add_edge(state->graph, state->nodes[i], state->nodes[i + 1U], 1U)) return false;
+    if (!adjacency_list_graph_view(state->graph, &state->view)) return false;
+    state->visited = 0U;
     return true;
 }
-
-// Stops immediately when BFS discovers the shallow target Node.
-static bool find_list_target(Node *node, void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    bfs_context->visited_count++;
-    if (node == bfs_context->target) {
-        bfs_context->found = true;
-        return false;
-    }
-
-    return true;
-}
-
-// Records each Node visited by matrix-backed BFS without early stopping.
-static bool record_matrix_visit(Node *node, void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    if (node == NULL) {
-        return false;
-    }
-
-    bfs_context->visited_count++;
-    return true;
-}
-
-// Stops immediately when matrix-backed BFS discovers the shallow target Node.
-static bool find_matrix_target(Node *node, void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    bfs_context->visited_count++;
-    if (node == bfs_context->target) {
-        bfs_context->found = true;
-        return false;
-    }
-
-    return true;
-}
-
-// Builds a directed chain GraphView outside the timed traversal operation.
-static bool setup(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    bfs_context->graph = adjacency_list_create(true);
-    if (bfs_context->graph == NULL) {
-        return false;
-    }
-
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
-        if (!adjacency_list_add_node(
-                bfs_context->graph,
-                &bfs_context->values[index],
-                &bfs_context->nodes[index]
-            )) {
-            adjacency_list_destroy(bfs_context->graph);
-            bfs_context->graph = NULL;
-            return false;
-        }
-    }
-
-    if (bfs_context->early_exit) {
-        // Enqueues shallow target first, then a deep branch DFS would follow.
-        if (!adjacency_list_add_edge(bfs_context->graph, bfs_context->nodes[0], bfs_context->nodes[1], 1U) ||
-            !adjacency_list_add_edge(bfs_context->graph, bfs_context->nodes[0], bfs_context->nodes[2], 1U)) {
-            adjacency_list_destroy(bfs_context->graph);
-            bfs_context->graph = NULL;
-            return false;
-        }
-        for (size_t index = 2U; index + 1U < ITEM_COUNT; index++) {
-            if (!adjacency_list_add_edge(bfs_context->graph, bfs_context->nodes[index], bfs_context->nodes[index + 1U], 1U)) {
-                adjacency_list_destroy(bfs_context->graph);
-                bfs_context->graph = NULL;
-                return false;
-            }
-        }
-        bfs_context->target = bfs_context->nodes[1];
-    } else {
-        for (size_t index = 0U; index + 1U < ITEM_COUNT; index++) {
-            if (!adjacency_list_add_edge(bfs_context->graph, bfs_context->nodes[index], bfs_context->nodes[index + 1U], 1U)) {
-                adjacency_list_destroy(bfs_context->graph);
-                bfs_context->graph = NULL;
-                return false;
-            }
-        }
-    }
-
-    if (!adjacency_list_graph_view(bfs_context->graph, &bfs_context->view)) {
-        adjacency_list_destroy(bfs_context->graph);
-        bfs_context->graph = NULL;
-        return false;
-    }
-
-    bfs_context->visited_count = 0U;
-    bfs_context->found = false;
-    return true;
-}
-
-// Traverses the complete reachable chain as one timed BFS operation.
-static bool breadth_first_search_operation(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    return breadth_first_search(
-        &bfs_context->view,
-        bfs_context->nodes[0],
-        record_visit,
-        bfs_context
-    );
-}
-
-// Confirms BFS visited every Node in the reachable chain exactly once.
-static bool verify(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    return bfs_context->visited_count == ITEM_COUNT;
-}
-
-// Confirms the shallow target stopped BFS after source and target visits.
-static bool early_verify(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    return bfs_context->found && bfs_context->visited_count == 2U;
-}
-
-// Releases the graph created for one benchmark sample.
-static void teardown(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    adjacency_list_destroy(bfs_context->graph);
-    bfs_context->graph = NULL;
-}
-
-// Builds a directed adjacency-matrix chain outside the timed traversal operation.
 static bool matrix_setup(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    bfs_context->graph = adjacency_matrix_create(true);
-    if (bfs_context->graph == NULL) {
-        return false;
-    }
-
-    for (size_t index = 0U; index < MATRIX_ITEM_COUNT; index++) {
-        if (!adjacency_matrix_add_node(
-                bfs_context->graph,
-                &bfs_context->values[index],
-                &bfs_context->nodes[index]
-            )) {
-            adjacency_matrix_destroy(bfs_context->graph);
-            bfs_context->graph = NULL;
-            return false;
-        }
-    }
-
-    if (bfs_context->early_exit) {
-        if (!adjacency_matrix_add_edge(bfs_context->graph, bfs_context->nodes[0], bfs_context->nodes[1], 1U) ||
-            !adjacency_matrix_add_edge(bfs_context->graph, bfs_context->nodes[0], bfs_context->nodes[2], 1U)) {
-            adjacency_matrix_destroy(bfs_context->graph);
-            bfs_context->graph = NULL;
-            return false;
-        }
-        for (size_t index = 2U; index + 1U < MATRIX_ITEM_COUNT; index++) {
-            if (!adjacency_matrix_add_edge(bfs_context->graph, bfs_context->nodes[index], bfs_context->nodes[index + 1U], 1U)) {
-                adjacency_matrix_destroy(bfs_context->graph);
-                bfs_context->graph = NULL;
-                return false;
-            }
-        }
-        bfs_context->target = bfs_context->nodes[1];
-    } else {
-        for (size_t index = 0U; index + 1U < MATRIX_ITEM_COUNT; index++) {
-            if (!adjacency_matrix_add_edge(bfs_context->graph, bfs_context->nodes[index], bfs_context->nodes[index + 1U], 1U)) {
-                adjacency_matrix_destroy(bfs_context->graph);
-                bfs_context->graph = NULL;
-                return false;
-            }
-        }
-    }
-
-    if (!adjacency_matrix_graph_view(bfs_context->graph, &bfs_context->view)) {
-        adjacency_matrix_destroy(bfs_context->graph);
-        bfs_context->graph = NULL;
-        return false;
-    }
-
-    bfs_context->visited_count = 0U;
-    bfs_context->found = false;
+    struct MatrixContext *state = context;
+    state->graph = adjacency_matrix_create(true);
+    if (state->graph == NULL) return false;
+    for (size_t i = 0U; i < MATRIX_ITEM_COUNT; i++) if (!adjacency_matrix_add_node(state->graph, &state->values[i], &state->nodes[i])) return false;
+    for (size_t i = 0U; i + 1U < MATRIX_ITEM_COUNT; i++) if (!adjacency_matrix_add_edge(state->graph, state->nodes[i], state->nodes[i + 1U], 1U)) return false;
+    if (!adjacency_matrix_graph_view(state->graph, &state->view)) return false;
+    state->visited = 0U;
     return true;
 }
-
-// Traverses the complete matrix-backed chain as one timed BFS operation.
-static bool matrix_breadth_first_search_operation(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    return breadth_first_search(
-        &bfs_context->view,
-        bfs_context->nodes[0],
-        record_matrix_visit,
-        bfs_context
-    );
-}
-
-// Confirms BFS visited every Node in the reachable matrix chain exactly once.
-static bool matrix_verify(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    return bfs_context->visited_count == MATRIX_ITEM_COUNT;
-}
-
-// Confirms the shallow target stopped matrix-backed BFS after two visits.
-static bool matrix_early_verify(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    return bfs_context->found && bfs_context->visited_count == 2U;
-}
-
-// Releases the matrix graph created for one benchmark sample.
-static void matrix_teardown(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    adjacency_matrix_destroy(bfs_context->graph);
-    bfs_context->graph = NULL;
-}
-
-// Traverses the list early-stop graph until the target visitor stops BFS.
-static bool list_early_exit_operation(void *context) {
-    struct BreadthFirstSearchContext *bfs_context = context;
-
-    return !breadth_first_search(&bfs_context->view, bfs_context->nodes[0], find_list_target, bfs_context) && bfs_context->found;
-}
-
-// Traverses the matrix early-stop graph until the target visitor stops BFS.
-static bool matrix_early_exit_operation(void *context) {
-    struct MatrixBreadthFirstSearchContext *bfs_context = context;
-
-    return !breadth_first_search(&bfs_context->view, bfs_context->nodes[0], find_matrix_target, bfs_context) && bfs_context->found;
-}
-
-// Runs and prints one configured BFS benchmark.
-static bool run_benchmark(const BenchmarkConfig *config) {
-    BenchmarkResult result;
-
-    if (!benchmark_run(config, &result)) {
-        return false;
-    }
-
-    benchmark_print_result(&result);
-    return true;
-}
+static bool list_operation(void *context) { struct ListContext *state = context; return breadth_first_search(&state->view, 0U, visit_list, state); }
+static bool matrix_operation(void *context) { struct MatrixContext *state = context; return breadth_first_search(&state->view, 0U, visit_matrix, state); }
+static bool list_verify(void *context) { return ((struct ListContext *)context)->visited == ITEM_COUNT; }
+static bool matrix_verify(void *context) { return ((struct MatrixContext *)context)->visited == MATRIX_ITEM_COUNT; }
+static void list_teardown(void *context) { struct ListContext *state = context; adjacency_list_destroy(state->graph); state->graph = NULL; }
+static void matrix_teardown(void *context) { struct MatrixContext *state = context; adjacency_matrix_destroy(state->graph); state->graph = NULL; }
+static bool run(const BenchmarkConfig *config) { BenchmarkResult result; if (!benchmark_run(config, &result)) return false; benchmark_print_result(&result); return true; }
 
 int main(void) {
-    static struct BreadthFirstSearchContext bfs_context;
-    static struct MatrixBreadthFirstSearchContext matrix_bfs_context;
-    BenchmarkConfig config = {
-        .name = "Breadth-first search 2000-node chain",
-        .warmup_iterations = 1U,
-        .sample_count = 21U,
-        .iterations_per_sample = 1U,
-        .setup = setup,
-        .operation = breadth_first_search_operation,
-        .verify = verify,
-        .teardown = teardown,
-        .context = &bfs_context
-    };
-
-    for (size_t index = 0U; index < ITEM_COUNT; index++) {
-        bfs_context.values[index] = (int)index;
-    }
-
-    if (!run_benchmark(&config)) {
-        return 1;
-    }
-
-    bfs_context.early_exit = true;
-    config.name = "Breadth-first search shallow target early exit (list)";
-    config.operation = list_early_exit_operation;
-    config.verify = early_verify;
-    if (!run_benchmark(&config)) {
-        return 1;
-    }
-
-    matrix_bfs_context.early_exit = false;
+    static struct ListContext list;
+    static struct MatrixContext matrix;
+    for (size_t i = 0U; i < ITEM_COUNT; i++) list.values[i] = (int)i;
+    for (size_t i = 0U; i < MATRIX_ITEM_COUNT; i++) matrix.values[i] = (int)i;
+    BenchmarkConfig config = { .name = "Breadth-first search 2000-node list chain", .warmup_iterations = 1U, .sample_count = 21U, .iterations_per_sample = 1U, .setup = list_setup, .operation = list_operation, .verify = list_verify, .teardown = list_teardown, .context = &list };
+    if (!run(&config)) return 1;
     config.name = "Breadth-first search 1000-node matrix chain";
-    config.context = &matrix_bfs_context;
-    config.setup = matrix_setup;
-    config.operation = matrix_breadth_first_search_operation;
-    config.verify = matrix_verify;
-    config.teardown = matrix_teardown;
-    if (!run_benchmark(&config)) {
-        return 1;
-    }
-
-    matrix_bfs_context.early_exit = true;
-    config.name = "Breadth-first search shallow target early exit (matrix)";
-    config.operation = matrix_early_exit_operation;
-    config.verify = matrix_early_verify;
-    return run_benchmark(&config) ? 0 : 1;
+    config.setup = matrix_setup; config.operation = matrix_operation; config.verify = matrix_verify; config.teardown = matrix_teardown; config.context = &matrix;
+    return run(&config) ? 0 : 1;
 }

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 // Declares size_t.
 #include <stddef.h>
+// Declares GraphView.
+#include "../../../graphs/graph-view/graph_view.h"
 
 // Names the private doubly linked-list node type.
 typedef struct Node Node;
@@ -30,3 +32,6 @@ bool doubly_linked_list_remove(DoublyLinkedList *list, size_t index, void **out_
 size_t doubly_linked_list_size(const DoublyLinkedList *list);
 // Reports whether the list contains no items.
 bool doubly_linked_list_is_empty(const DoublyLinkedList *list);
+// Fills a non-owning direct GraphView adapter for this list.
+bool doubly_linked_list_graph_view(const DoublyLinkedList *list,
+                                   GraphView *out_view);

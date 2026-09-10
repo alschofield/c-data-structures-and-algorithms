@@ -5,6 +5,7 @@
 // Declares uint64_t.
 #include <stdint.h>
 
+#include "../../graph-node/graph_node.h"
 #include "../../graph-view/graph_view.h"
 
 // Names the opaque adjacency-list graph.

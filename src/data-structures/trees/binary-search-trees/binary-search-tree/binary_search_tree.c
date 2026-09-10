@@ -557,3 +557,108 @@ bool binary_search_tree_is_empty(const BinarySearchTree *tree) {
     // Uses the constant-time value count to report emptiness.
     return tree->size == 0U;
 }
+
+// Finds one tree Node by its in-order dense GraphView index.
+static const Node *binary_search_tree_node_at(const Node *node,
+                                              size_t *current,
+                                              size_t target) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    const Node *left = binary_search_tree_node_at(node->left, current, target);
+    if (left != NULL) {
+        return left;
+    }
+    if (*current == target) {
+        return node;
+    }
+    (*current)++;
+    return binary_search_tree_node_at(node->right, current, target);
+}
+
+// Finds the in-order dense index of one native tree Node.
+static bool binary_search_tree_index_of(const Node *node, const Node *target,
+                                        size_t *current, size_t *out_index) {
+    if (node == NULL) {
+        return false;
+    }
+    if (binary_search_tree_index_of(node->left, target, current, out_index)) {
+        return true;
+    }
+    if (node == target) {
+        *out_index = *current;
+        return true;
+    }
+    (*current)++;
+    return binary_search_tree_index_of(node->right, target, current, out_index);
+}
+
+// Reports the tree size through the GraphView callback type.
+static size_t binary_search_tree_graph_view_vertex_count(const void *context) {
+    return binary_search_tree_size(context);
+}
+
+// Validates lookup by performing native in-order traversal.
+static bool binary_search_tree_graph_view_node_at(const void *context,
+                                                   size_t index) {
+    const BinarySearchTree *tree = context;
+    size_t current = 0U;
+
+    return tree != NULL && binary_search_tree_node_at(tree->root, &current, index) != NULL;
+}
+
+// Follows native child links as directed unit-weight GraphView edges.
+static bool binary_search_tree_graph_view_neighbors(const void *context,
+                                                    size_t index,
+                                                    GraphViewVisitFn visit,
+                                                    void *visit_context) {
+    const BinarySearchTree *tree = context;
+    if (tree == NULL || visit == NULL) {
+        return false;
+    }
+
+    size_t current = 0U;
+    const Node *node = binary_search_tree_node_at(tree->root, &current, index);
+    if (node == NULL) {
+        return false;
+    }
+
+    if (node->left != NULL) {
+        current = 0U;
+        size_t left_index = 0U;
+        if (!binary_search_tree_index_of(tree->root, node->left, &current, &left_index) ||
+            !visit(left_index, 1U, visit_context)) {
+            return false;
+        }
+    }
+    if (node->right != NULL) {
+        current = 0U;
+        size_t right_index = 0U;
+        if (!binary_search_tree_index_of(tree->root, node->right, &current, &right_index) ||
+            !visit(right_index, 1U, visit_context)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Reports parent-to-child tree links as directed.
+static bool binary_search_tree_graph_view_is_directed(const void *context) {
+    return context != NULL;
+}
+
+// Fills a non-owning direct GraphView adapter for this binary search tree.
+bool binary_search_tree_graph_view(const BinarySearchTree *tree,
+                                   GraphView *out_view) {
+    if (tree == NULL || out_view == NULL) {
+        return false;
+    }
+
+    out_view->context = tree;
+    out_view->vertex_count = binary_search_tree_graph_view_vertex_count;
+    out_view->node_at = binary_search_tree_graph_view_node_at;
+    out_view->neighbors = binary_search_tree_graph_view_neighbors;
+    out_view->is_directed = binary_search_tree_graph_view_is_directed;
+    return true;
+}

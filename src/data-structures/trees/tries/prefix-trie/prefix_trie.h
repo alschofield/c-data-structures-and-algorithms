@@ -2,6 +2,8 @@
 #include <stdbool.h>
 // Declares size_t.
 #include <stddef.h>
+// Declares GraphView.
+#include "../../../graphs/graph-view/graph_view.h"
 
 // Names the private trie-node type.
 typedef struct Node Node;
@@ -22,3 +24,5 @@ bool prefix_trie_starts_with(const PrefixTrie *trie, const char *prefix);
 bool prefix_trie_remove(PrefixTrie *trie, const char *key);
 // Returns the number of stored complete keys.
 size_t prefix_trie_size(const PrefixTrie *trie);
+// Fills a non-owning direct GraphView adapter for this trie.
+bool prefix_trie_graph_view(const PrefixTrie *trie, GraphView *out_view);

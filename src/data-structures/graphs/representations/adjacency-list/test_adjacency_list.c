@@ -12,7 +12,7 @@ struct NeighborLog {
 };
 
 struct GraphNeighborLog {
-    Node *visited[8];
+    size_t visited[8];
     uint64_t weights[8];
     size_t count;
 };
@@ -31,7 +31,7 @@ static bool stop_after_first(Node *neighbor, uint64_t weight, void *context) {
     return false;
 }
 
-static bool record_graph_neighbor(Node *neighbor, uint64_t weight, void *context) {
+static bool record_graph_neighbor(size_t neighbor, uint64_t weight, void *context) {
     struct GraphNeighborLog *log = context;
 
     log->visited[log->count] = neighbor;
@@ -189,7 +189,6 @@ static void test_graph_view_maps_node_indexes(void) {
     Node *nodes[3] = { NULL };
     GraphView view = { 0 };
     struct GraphNeighborLog log = { .count = 0U };
-    Node *node = NULL;
 
     assert(graph != NULL);
     for (size_t index = 0U; index < 3U; index++) {
@@ -199,10 +198,10 @@ static void test_graph_view_maps_node_indexes(void) {
     assert(adjacency_list_graph_view(graph, &view));
     assert(graph_view_is_valid(&view));
     assert(graph_view_vertex_count(&view) == 3U);
-    assert(graph_view_node_at(&view, 1U, &node) && node == nodes[1]);
-    assert(!graph_view_node_at(&view, 3U, &node));
-    assert(graph_view_neighbors(&view, nodes[0], record_graph_neighbor, &log));
-    assert(log.count == 1U && log.visited[0] == nodes[2] && log.weights[0] == 12U);
+    assert(graph_view_node_at(&view, 1U));
+    assert(!graph_view_node_at(&view, 3U));
+    assert(graph_view_neighbors(&view, 0U, record_graph_neighbor, &log));
+    assert(log.count == 1U && log.visited[0] == 2U && log.weights[0] == 12U);
     assert(!adjacency_list_graph_view(NULL, &view));
     assert(!adjacency_list_graph_view(graph, NULL));
     adjacency_list_destroy(graph);

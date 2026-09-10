@@ -54,15 +54,10 @@ size_t graph_view_vertex_count(const GraphView *view) {
     return view->vertex_count(view->context);
 }
 
-// Validates and delegates dense Node lookup to the backing graph.
-bool graph_view_node_at(const GraphView *view, size_t index, Node **out_node) {
+// Validates and delegates dense index lookup to the backing graph.
+bool graph_view_node_at(const GraphView *view, size_t index) {
     // Rejects a missing or incomplete adapter.
     if (!graph_view_is_valid(view)) {
-        return false;
-    }
-
-    // Rejects a missing caller-owned output location.
-    if (out_node == NULL) {
         return false;
     }
 
@@ -71,20 +66,20 @@ bool graph_view_node_at(const GraphView *view, size_t index, Node **out_node) {
         return false;
     }
 
-    // Lets the concrete adapter return the graph-owned Node handle.
-    return view->node_at(view->context, index, out_node);
+    // Lets the concrete adapter perform its native index lookup.
+    return view->node_at(view->context, index);
 }
 
 // Validates and delegates weighted neighbor iteration to the backing graph.
-bool graph_view_neighbors(const GraphView *view, const Node *node,
-                          GraphViewVisitFn visit, void *context) {
+bool graph_view_neighbors(const GraphView *view, size_t index,
+                           GraphViewVisitFn visit, void *context) {
     // Rejects a missing or incomplete adapter.
     if (!graph_view_is_valid(view)) {
         return false;
     }
 
-    // Rejects a missing node or visitor callback.
-    if (node == NULL) {
+    // Rejects an index outside the backing graph's active node range.
+    if (index >= graph_view_vertex_count(view)) {
         return false;
     }
 
@@ -93,5 +88,5 @@ bool graph_view_neighbors(const GraphView *view, const Node *node,
     }
 
     // Lets the concrete graph enumerate neighbors and propagate visitor stop.
-    return view->neighbors(view->context, node, visit, context);
+    return view->neighbors(view->context, index, visit, context);
 }

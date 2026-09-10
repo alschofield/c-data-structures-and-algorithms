@@ -127,11 +127,41 @@ static void test_null_container(void) {
     singly_linked_list_destroy(NULL);
 }
 
+struct GraphLog { size_t indexes[3]; size_t count; };
+
+static bool record_graph_index(size_t index, uint64_t weight, void *context) {
+    (void)weight;
+    struct GraphLog *log = context;
+    log->indexes[log->count++] = index;
+    return true;
+}
+
+static void test_graph_view_adapter(void) {
+    int values[] = { 1, 2, 3 };
+    SinglyLinkedList *list = singly_linked_list_create();
+    GraphView view = { 0 };
+    struct GraphLog log = { 0 };
+
+    assert(list != NULL);
+    for (size_t index = 0U; index < 3U; index++) assert(singly_linked_list_push_back(list, &values[index]));
+    assert(singly_linked_list_graph_view(list, &view));
+    assert(graph_view_is_valid(&view) && graph_view_is_directed(&view));
+    assert(graph_view_vertex_count(&view) == 3U);
+    assert(graph_view_node_at(&view, 2U));
+    assert(!graph_view_node_at(&view, 3U));
+    assert(graph_view_neighbors(&view, 1U, record_graph_index, &log));
+    assert(log.count == 1U && log.indexes[0] == 2U);
+    assert(graph_view_neighbors(&view, 2U, record_graph_index, &log));
+    assert(log.count == 1U);
+    singly_linked_list_destroy(list);
+}
+
 int main(void) {
     test_empty_list();
     test_insert_remove_and_generic_values();
     test_large_list_and_reuse();
     test_index_boundaries();
     test_null_container();
+    test_graph_view_adapter();
     return 0;
 }

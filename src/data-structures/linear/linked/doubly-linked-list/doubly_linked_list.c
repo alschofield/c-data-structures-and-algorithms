@@ -461,3 +461,74 @@ bool doubly_linked_list_is_empty(const DoublyLinkedList *list) {
     // Compares the tracked node count against zero.
     return list->size == 0U;
 }
+
+// Locates one native list Node by walking from the nearer end.
+static const Node *doubly_linked_list_node_at(const DoublyLinkedList *list,
+                                              size_t index) {
+    if (list == NULL || index >= list->size) {
+        return NULL;
+    }
+
+    if (index < list->size / 2U) {
+        const Node *node = list->first;
+        for (size_t current = 0U; current < index; current++) {
+            node = node->next;
+        }
+        return node;
+    }
+
+    const Node *node = list->last;
+    for (size_t current = list->size - 1U; current > index; current--) {
+        node = node->prev;
+    }
+    return node;
+}
+
+// Reports the list size through the GraphView callback type.
+static size_t doubly_linked_list_graph_view_vertex_count(const void *context) {
+    return doubly_linked_list_size(context);
+}
+
+// Validates lookup by performing the native nearer-end list walk.
+static bool doubly_linked_list_graph_view_node_at(const void *context,
+                                                   size_t index) {
+    return doubly_linked_list_node_at(context, index) != NULL;
+}
+
+// Follows native next and previous links as directed unit-weight edges.
+static bool doubly_linked_list_graph_view_neighbors(const void *context,
+                                                    size_t index,
+                                                    GraphViewVisitFn visit,
+                                                    void *visit_context) {
+    const Node *node = doubly_linked_list_node_at(context, index);
+    if (node == NULL || visit == NULL) {
+        return false;
+    }
+    if (node->next != NULL && !visit(index + 1U, 1U, visit_context)) {
+        return false;
+    }
+    if (node->prev != NULL && !visit(index - 1U, 1U, visit_context)) {
+        return false;
+    }
+    return true;
+}
+
+// Reports next and previous arcs as a directed cyclic graph.
+static bool doubly_linked_list_graph_view_is_directed(const void *context) {
+    return context != NULL;
+}
+
+// Fills a non-owning direct GraphView adapter for this doubly linked list.
+bool doubly_linked_list_graph_view(const DoublyLinkedList *list,
+                                   GraphView *out_view) {
+    if (list == NULL || out_view == NULL) {
+        return false;
+    }
+
+    out_view->context = list;
+    out_view->vertex_count = doubly_linked_list_graph_view_vertex_count;
+    out_view->node_at = doubly_linked_list_graph_view_node_at;
+    out_view->neighbors = doubly_linked_list_graph_view_neighbors;
+    out_view->is_directed = doubly_linked_list_graph_view_is_directed;
+    return true;
+}

@@ -146,10 +146,36 @@ static void test_null_container(void) {
     binary_search_tree_destroy(NULL);
 }
 
+struct GraphLog { size_t indexes[2]; size_t count; };
+
+static bool record_graph_index(size_t index, uint64_t weight, void *context) {
+    (void)weight;
+    struct GraphLog *log = context;
+    log->indexes[log->count++] = index;
+    return true;
+}
+
+static void test_graph_view_adapter(void) {
+    BinarySearchTree *tree = binary_search_tree_create(record_compare);
+    struct Record records[] = { { .id = 2 }, { .id = 1 }, { .id = 3 } };
+    GraphView view = { 0 };
+    struct GraphLog log = { 0 };
+
+    assert(tree != NULL);
+    for (size_t index = 0U; index < 3U; index++) assert(binary_search_tree_insert(tree, &records[index]));
+    assert(binary_search_tree_graph_view(tree, &view));
+    assert(graph_view_is_valid(&view) && graph_view_is_directed(&view));
+    assert(graph_view_vertex_count(&view) == 3U && graph_view_node_at(&view, 1U));
+    assert(graph_view_neighbors(&view, 1U, record_graph_index, &log));
+    assert(log.count == 2U && log.indexes[0] == 0U && log.indexes[1] == 2U);
+    binary_search_tree_destroy(tree);
+}
+
 int main(void) {
     test_creation_and_empty_tree();
     test_insert_find_and_in_order_traversal();
     test_leaf_one_child_two_children_and_root_removal();
     test_null_container();
+    test_graph_view_adapter();
     return 0;
 }

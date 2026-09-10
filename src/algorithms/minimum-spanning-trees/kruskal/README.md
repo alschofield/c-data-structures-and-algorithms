@@ -12,17 +12,17 @@ is accepted and the sets merge; otherwise the edge would close a cycle and is
 skipped. The result is a minimum spanning forest: one minimum spanning tree per
 connected component.
 
-GraphView supplies the representation-independent graph access. `node_at`
-enumerates dense Nodes, neighbor iteration exposes weighted edges, and each
-Node's stable `index` becomes its union-find element. An undirected edge appears
-twice through GraphView, so Kruskal considers only one canonical direction.
+GraphView supplies representation-independent indexed graph access. `node_at`
+validates dense indexes, neighbor iteration exposes weighted edges, and each
+index becomes its union-find element. An undirected edge appears twice through
+GraphView, so Kruskal considers only one canonical direction.
 
 ## Required API
 
 ```c
 typedef struct KruskalEdge {
-    Node *from;
-    Node *to;
+    size_t from;
+    size_t to;
     uint64_t weight;
 } KruskalEdge;
 
@@ -65,8 +65,8 @@ make benchmark NAME=algorithms/minimum-spanning-trees/kruskal BENCHMARK=kruskal
 
 | Graph representation | Forest shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node descending-weight chain | 0.089 ms |
-| Adjacency matrix | 1,000-Node descending-weight chain | 1.096 ms |
+| Adjacency list | 2,000-Node descending-weight chain | 0.110 ms |
+| Adjacency matrix | 1,000-Node descending-weight chain | 0.981 ms |
 
 Graph construction is outside the timed loop. Distinct descending weights make
 the benchmark include real candidate-edge sorting, union-find cycle detection,

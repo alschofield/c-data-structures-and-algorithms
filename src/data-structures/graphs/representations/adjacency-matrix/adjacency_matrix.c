@@ -505,21 +505,47 @@ static size_t adjacency_matrix_view_vertex_count(const void *context) {
     return adjacency_matrix_node_count(graph);
 }
 
-// Adapts dense Node lookup to the GraphView callback type.
-static bool adjacency_matrix_view_node_at(const void *context, size_t index,
-                                          Node **out_node) {
+// Validates dense index lookup through the GraphView callback type.
+static bool adjacency_matrix_view_node_at(const void *context, size_t index) {
     const AdjacencyMatrix *graph = context;
+    Node *node = NULL;
 
-    return adjacency_matrix_node_at(graph, index, out_node);
+    return adjacency_matrix_node_at(graph, index, &node);
 }
 
-// Adapts adjacency-matrix neighbor iteration to GraphView's callback type.
-static bool adjacency_matrix_view_neighbors(const void *context, const Node *node, GraphViewVisitFn visit, void *visit_context) {
+// Carries an index-based GraphView visitor through Node-based matrix iteration.
+struct GraphViewVisitContext {
+    GraphViewVisitFn visit;
+    void *context;
+};
+
+// Converts one graph-native neighbor to its dense GraphView index.
+static bool adjacency_matrix_view_visit(Node *neighbor, uint64_t weight,
+                                       void *context) {
+    struct GraphViewVisitContext *visit_context = context;
+
+    return visit_context->visit(neighbor->index, weight, visit_context->context);
+}
+
+// Adapts adjacency-matrix neighbor iteration to GraphView's index callback type.
+static bool adjacency_matrix_view_neighbors(const void *context, size_t index,
+                                            GraphViewVisitFn visit, void *visit_context) {
     // Restores the concrete graph type erased by GraphView.
     const AdjacencyMatrix *graph = context;
+    Node *node = NULL;
 
-    // Delegates validation and neighbor scanning to the concrete operation.
-    return adjacency_matrix_neighbors(graph, node, visit, visit_context);
+    // Resolves the graph-native Node only inside this representation adapter.
+    if (!adjacency_matrix_node_at(graph, index, &node)) {
+        return false;
+    }
+
+    // Delegates native scanning and converts each neighbor to its dense index.
+    return adjacency_matrix_neighbors(
+        graph,
+        node,
+        adjacency_matrix_view_visit,
+        &(struct GraphViewVisitContext) { .visit = visit, .context = visit_context }
+    );
 }
 
 static bool adjacency_matrix_is_directed(const void *context) {

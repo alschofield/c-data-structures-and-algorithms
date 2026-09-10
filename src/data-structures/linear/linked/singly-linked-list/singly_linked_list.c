@@ -8,13 +8,13 @@ struct SinglyLinkedList {
     // Counts the nodes currently linked into the list.
     size_t size;
     // Points to the first node, or NULL when the list is empty.
-    Node *head;
+    LinkedNode *head;
 };
 
 // Defines one node in the forward-only chain.
-struct Node {
+struct LinkedNode {
     // Points to the next node, or NULL for the final node.
-    Node *next;
+    LinkedNode *next;
     // Stores the caller-owned item pointer.
     void *value;
 };
@@ -46,9 +46,9 @@ void singly_linked_list_destroy(SinglyLinkedList *list) {
     }
 
     // Starts traversal at the first node.
-    Node *temp = list->head;
+    LinkedNode *temp = list->head;
     // Holds the next node before the current node is freed.
-    Node *next = list->head;
+    LinkedNode *next = list->head;
     // Continues until every node has been released.
     while (temp != NULL) {
         // Saves the forward link before freeing its owning node.
@@ -74,7 +74,7 @@ bool singly_linked_list_push_front(SinglyLinkedList *list, void *item) {
     }
 
     // Allocates one node for the new item pointer.
-    Node *node = malloc(sizeof(Node));
+    LinkedNode *node = malloc(sizeof(LinkedNode));
     // Checks whether allocation failed.
     if (node == NULL) {
         // Leaves the list unchanged and reports failure.
@@ -102,7 +102,7 @@ bool singly_linked_list_push_back(SinglyLinkedList *list, void *item) {
     }
 
     // Allocates one node for the new item pointer.
-    Node *node = malloc(sizeof(Node));
+    LinkedNode *node = malloc(sizeof(LinkedNode));
     // Checks whether allocation failed.
     if (node == NULL) {
         // Leaves the list unchanged and reports failure.
@@ -125,7 +125,7 @@ bool singly_linked_list_push_back(SinglyLinkedList *list, void *item) {
     }
 
     // Starts traversal at the first existing node.
-    Node *temp = list->head;
+    LinkedNode *temp = list->head;
     // Advances until temp points at the final existing node.
     for (size_t i = 0U; i < list->size - 1U; i++) {
         // Follows the next link by one node.
@@ -161,7 +161,7 @@ bool singly_linked_list_pop_front(SinglyLinkedList *list, void **out_item) {
     }
 
     // Saves the second node before freeing the current head.
-    Node *next_head = list->head->next;
+    LinkedNode *next_head = list->head->next;
     // Copies the removed item pointer into the caller's output variable.
     *out_item = list->head->value;
     // Frees the removed node but not its caller-owned value.
@@ -209,7 +209,7 @@ bool singly_linked_list_pop_back(SinglyLinkedList *list, void **out_item) {
     }
 
     // Starts traversal at the first node.
-    Node *temp = list->head;
+    LinkedNode *temp = list->head;
     // Advances until temp points at the node before the final node.
     for (size_t i = 0U; i < list->size - 2U; i++) {
         // Follows the next link by one node.
@@ -255,7 +255,7 @@ bool singly_linked_list_get(const SinglyLinkedList *list, size_t index, void **o
     }
 
     // Starts traversal at the first node without permitting mutation.
-    const Node *temp = list->head;
+    const LinkedNode *temp = list->head;
     // Counts how many forward links have been followed.
     size_t n = 0U;
     // Stops when temp reaches the node at the requested index.
@@ -293,7 +293,7 @@ bool singly_linked_list_insert(SinglyLinkedList *list, size_t index, void *item)
     }
 
     // Allocates one node for the new item pointer.
-    Node *new_node = malloc(sizeof(Node));
+    LinkedNode *new_node = malloc(sizeof(LinkedNode));
     // Checks whether allocation failed.
     if (new_node == NULL) {
         // Leaves the list unchanged and reports failure.
@@ -303,7 +303,7 @@ bool singly_linked_list_insert(SinglyLinkedList *list, size_t index, void *item)
     // Stores the caller-owned item pointer in the new node.
     new_node->value = item;
     // Starts traversal at the first node, which has index zero.
-    Node *temp = list->head;
+    LinkedNode *temp = list->head;
     // Counts how many forward links have been followed.
     size_t n = 0U;
     // Stops at the node immediately before the insertion position.
@@ -351,7 +351,7 @@ bool singly_linked_list_remove(SinglyLinkedList *list, size_t index, void **out_
     }
 
     // Starts traversal at the first node, which has index zero.
-    Node *temp = list->head;
+    LinkedNode *temp = list->head;
     // Counts how many forward links have been followed.
     size_t n = 0U;
     // Stops at the node immediately before the removal position.
@@ -363,7 +363,7 @@ bool singly_linked_list_remove(SinglyLinkedList *list, size_t index, void **out_
     }
 
     // Saves the successor before the removed node is freed.
-    Node *next = temp->next->next;
+    LinkedNode *next = temp->next->next;
     // Copies the removed caller-owned item pointer into the output location.
     *out_item = temp->next->value;
     // Frees the removed node but not its caller-owned value.
@@ -398,4 +398,64 @@ bool singly_linked_list_is_empty(const SinglyLinkedList *list) {
 
     // Compares the logical node count with zero.
     return list->size == 0U;
+}
+
+// Locates one native list Node by walking forward from the head.
+static const LinkedNode *linked_node_at(const SinglyLinkedList *list,
+                                        size_t index) {
+    if (list == NULL || index >= list->size) {
+        return NULL;
+    }
+
+    const LinkedNode *node = list->head;
+    for (size_t current = 0U; current < index; current++) {
+        node = node->next;
+    }
+    return node;
+}
+
+// Reports the list size through the GraphView callback type.
+static size_t singly_linked_list_graph_view_vertex_count(const void *context) {
+    return singly_linked_list_size(context);
+}
+
+// Validates lookup by performing the native singly linked-list walk.
+static bool singly_linked_list_graph_view_node_at(const void *context,
+                                                   size_t index) {
+    return linked_node_at(context, index) != NULL;
+}
+
+// Follows one native next link and reports its dense index as a GraphView edge.
+static bool singly_linked_list_graph_view_neighbors(const void *context,
+                                                    size_t index,
+                                                    GraphViewVisitFn visit,
+                                                    void *visit_context) {
+    const LinkedNode *node = linked_node_at(context, index);
+    if (node == NULL || visit == NULL) {
+        return false;
+    }
+    if (node->next == NULL) {
+        return true;
+    }
+    return visit(index + 1U, 1U, visit_context);
+}
+
+// Reports the one-way next-link graph as directed.
+static bool singly_linked_list_graph_view_is_directed(const void *context) {
+    return context != NULL;
+}
+
+// Fills a non-owning direct GraphView adapter for this singly linked list.
+bool singly_linked_list_graph_view(const SinglyLinkedList *list,
+                                   GraphView *out_view) {
+    if (list == NULL || out_view == NULL) {
+        return false;
+    }
+
+    out_view->context = list;
+    out_view->vertex_count = singly_linked_list_graph_view_vertex_count;
+    out_view->node_at = singly_linked_list_graph_view_node_at;
+    out_view->neighbors = singly_linked_list_graph_view_neighbors;
+    out_view->is_directed = singly_linked_list_graph_view_is_directed;
+    return true;
 }

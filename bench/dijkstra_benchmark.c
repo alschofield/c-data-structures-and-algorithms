@@ -75,7 +75,7 @@ static bool setup(void *context) {
 static bool dijkstra_operation(void *context) {
     struct DijkstraContext *dijkstra_context = context;
 
-    return dijkstra(&dijkstra_context->view, dijkstra_context->nodes[0], dijkstra_context->distances, dijkstra_context->parents);
+    return dijkstra(&dijkstra_context->view, 0U, dijkstra_context->distances, dijkstra_context->parents);
 }
 
 // Confirms the final chain Node receives its expected unit-edge distance.
@@ -132,7 +132,7 @@ static bool matrix_setup(void *context) {
 static bool matrix_dijkstra_operation(void *context) {
     struct MatrixDijkstraContext *dijkstra_context = context;
 
-    return dijkstra(&dijkstra_context->view, dijkstra_context->nodes[0], dijkstra_context->distances, dijkstra_context->parents);
+    return dijkstra(&dijkstra_context->view, 0U, dijkstra_context->distances, dijkstra_context->parents);
 }
 
 // Confirms the final matrix Node receives its expected unit-edge distance.

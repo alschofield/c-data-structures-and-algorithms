@@ -200,6 +200,31 @@ static void test_null_container(void) {
     doubly_linked_list_destroy(NULL);
 }
 
+struct GraphLog { size_t indexes[4]; size_t count; };
+
+static bool record_graph_index(size_t index, uint64_t weight, void *context) {
+    (void)weight;
+    struct GraphLog *log = context;
+    log->indexes[log->count++] = index;
+    return true;
+}
+
+static void test_graph_view_adapter(void) {
+    int values[] = { 1, 2, 3 };
+    DoublyLinkedList *list = doubly_linked_list_create();
+    GraphView view = { 0 };
+    struct GraphLog log = { 0 };
+
+    assert(list != NULL);
+    for (size_t index = 0U; index < 3U; index++) assert(doubly_linked_list_push_back(list, &values[index]));
+    assert(doubly_linked_list_graph_view(list, &view));
+    assert(graph_view_is_valid(&view) && graph_view_is_directed(&view));
+    assert(graph_view_vertex_count(&view) == 3U && graph_view_node_at(&view, 2U));
+    assert(graph_view_neighbors(&view, 1U, record_graph_index, &log));
+    assert(log.count == 2U && log.indexes[0] == 2U && log.indexes[1] == 0U);
+    doubly_linked_list_destroy(list);
+}
+
 int main(void) {
     test_empty_list();
     test_insert_remove_and_generic_values();
@@ -208,5 +233,6 @@ int main(void) {
     test_large_list_and_reuse();
     test_index_boundaries();
     test_null_container();
+    test_graph_view_adapter();
     return 0;
 }

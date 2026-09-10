@@ -1,10 +1,12 @@
-// Declares GraphView and shared Node handles.
+// Declares GraphView, bool, and size_t.
 #include "../../../data-structures/graphs/graph-view/graph_view.h"
 
-// Visits one discovered Node and returns false to stop traversal early.
-typedef bool (*DepthFirstSearchVisitFn)(Node *node, void *context);
+// Visits one discovered dense node index and returns false to stop traversal.
+typedef bool (*DepthFirstSearchVisitFn)(size_t node_index, void *context);
 
+// Names private LIFO frontier state used by neighbor enumeration.
 typedef struct DepthFirstSearchStackContext DepthFirstSearchStackContext;
 
-// Traverses Nodes reachable from source in depth-first discovery order.
-bool depth_first_search(const GraphView *graph, Node *source, DepthFirstSearchVisitFn visit, void *context);
+// Traverses indexes reachable from source in depth-first discovery order.
+bool depth_first_search(const GraphView *graph, size_t source,
+                        DepthFirstSearchVisitFn visit, void *context);

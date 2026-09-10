@@ -20,7 +20,7 @@ repeatedly through different neighbors.
 ```c
 typedef bool (*BreadthFirstSearchVisitFn)(Node *node, void *context);
 
-bool breadth_first_search(const GraphView *graph, Node *source,
+bool breadth_first_search(const GraphView *graph, size_t source,
                           BreadthFirstSearchVisitFn visit, void *context);
 ```
 
@@ -62,11 +62,8 @@ make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=br
 
 | Workload | Adjacency list | Adjacency matrix |
 | --- | ---: | ---: |
-| Full chain traversal | 0.020 ms / 2,000 Nodes | 0.886 ms / 1,000 Nodes |
-| Shallow first-enqueued target early exit | 0.0003 ms / 2 visits | 0.0019 ms / 2 visits |
+| Full chain traversal | 0.031 ms / 2,000 Nodes | 1.090 ms / 1,000 Nodes |
 
-The early-stop workload places the target as the source's first-enqueued
-neighbor and a deep distraction branch second. BFS reaches the target after
-visiting only source and target; DFS with the same neighbor order would follow
-the later-pushed deep branch first. Graph construction is outside the timed
-loop.
+Graph construction is outside the timed loop. The matrix workload is slower
+because each visited index scans its full matrix row, while the list traverses
+only stored outgoing edges.

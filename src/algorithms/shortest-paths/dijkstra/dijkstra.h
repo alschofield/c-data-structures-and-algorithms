@@ -1,4 +1,4 @@
-// Declares GraphView, Node, uint64_t, and size_t.
+// Declares GraphView, uint64_t, and size_t.
 #include "../../../data-structures/graphs/graph-view/graph_view.h"
 
 // Marks an unreachable Node distance.
@@ -10,4 +10,5 @@ typedef struct DijkstraNode DijkstraNode;
 typedef struct DijkstraHeapContext DijkstraHeapContext;
 
 // Computes shortest nonnegative-weight paths from source into caller arrays.
-bool dijkstra(const GraphView *graph, Node *source, uint64_t *out_distances, size_t *out_parents);
+bool dijkstra(const GraphView *graph, size_t source,
+              uint64_t *out_distances, size_t *out_parents);

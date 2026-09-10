@@ -435,3 +435,118 @@ size_t prefix_trie_size(const PrefixTrie *trie) {
     // Returns the tracked number of complete stored keys.
     return trie->size;
 }
+
+// Counts structural trie Nodes rather than stored complete keys.
+static size_t prefix_trie_node_count(const Node *node) {
+    if (node == NULL) {
+        return 0U;
+    }
+
+    size_t count = 1U;
+    for (size_t index = 0U; index < node->child_count; index++) {
+        count += prefix_trie_node_count(node->children[index]);
+    }
+    return count;
+}
+
+// Finds one trie Node by pre-order dense GraphView index.
+static const Node *prefix_trie_node_at(const Node *node, size_t *current,
+                                       size_t target) {
+    if (node == NULL) {
+        return NULL;
+    }
+    if (*current == target) {
+        return node;
+    }
+    (*current)++;
+    for (size_t index = 0U; index < node->child_count; index++) {
+        const Node *found = prefix_trie_node_at(
+            node->children[index], current, target
+        );
+        if (found != NULL) {
+            return found;
+        }
+    }
+    return NULL;
+}
+
+// Finds the pre-order dense index of one native trie Node.
+static bool prefix_trie_index_of(const Node *node, const Node *target,
+                                 size_t *current, size_t *out_index) {
+    if (node == NULL) {
+        return false;
+    }
+    if (node == target) {
+        *out_index = *current;
+        return true;
+    }
+    (*current)++;
+    for (size_t index = 0U; index < node->child_count; index++) {
+        if (prefix_trie_index_of(
+                node->children[index], target, current, out_index
+            )) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Reports structural trie Node count through the GraphView callback type.
+static size_t prefix_trie_graph_view_vertex_count(const void *context) {
+    const PrefixTrie *trie = context;
+
+    return trie == NULL ? 0U : prefix_trie_node_count(trie->root);
+}
+
+// Validates lookup by performing native trie pre-order traversal.
+static bool prefix_trie_graph_view_node_at(const void *context, size_t index) {
+    const PrefixTrie *trie = context;
+    size_t current = 0U;
+
+    return trie != NULL && prefix_trie_node_at(trie->root, &current, index) != NULL;
+}
+
+// Iterates native character-child links as directed unit-weight GraphView edges.
+static bool prefix_trie_graph_view_neighbors(const void *context, size_t index,
+                                             GraphViewVisitFn visit,
+                                             void *visit_context) {
+    const PrefixTrie *trie = context;
+    if (trie == NULL || visit == NULL) {
+        return false;
+    }
+
+    size_t current = 0U;
+    const Node *node = prefix_trie_node_at(trie->root, &current, index);
+    if (node == NULL) {
+        return false;
+    }
+    for (size_t child = 0U; child < node->child_count; child++) {
+        current = 0U;
+        size_t child_index = 0U;
+        if (!prefix_trie_index_of(
+                trie->root, node->children[child], &current, &child_index
+            ) || !visit(child_index, 1U, visit_context)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Reports parent-to-child trie relationships as directed.
+static bool prefix_trie_graph_view_is_directed(const void *context) {
+    return context != NULL;
+}
+
+// Fills a non-owning direct GraphView adapter for this trie.
+bool prefix_trie_graph_view(const PrefixTrie *trie, GraphView *out_view) {
+    if (trie == NULL || out_view == NULL) {
+        return false;
+    }
+
+    out_view->context = trie;
+    out_view->vertex_count = prefix_trie_graph_view_vertex_count;
+    out_view->node_at = prefix_trie_graph_view_node_at;
+    out_view->neighbors = prefix_trie_graph_view_neighbors;
+    out_view->is_directed = prefix_trie_graph_view_is_directed;
+    return true;
+}

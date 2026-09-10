@@ -428,17 +428,31 @@ static size_t graph_view_compatible_vertex_count(const void *graph_context) {
     return adjacency_list_node_count(graph);
 }
 
-// Adapts dense Node lookup to the GraphView callback type.
-static bool graph_view_compatible_node_at(const void *graph_context, size_t index,
-                                          Node **out_node) {
+// Validates dense index lookup through the GraphView callback type.
+static bool graph_view_compatible_node_at(const void *graph_context, size_t index) {
     const AdjacencyList *graph = graph_context;
+    Node *node = NULL;
 
-    return adjacency_list_node_at(graph, index, out_node);
+    return adjacency_list_node_at(graph, index, &node);
 }
 
-// Reuses concrete neighbor iteration through the GraphView callback type.
-static bool graph_view_compatible_neighbors(const void *graph_context, const Node *node,
-                                             GraphViewVisitFn visit, void *context) {
+// Carries an index-based GraphView visitor through Node-based list iteration.
+struct GraphViewVisitContext {
+    GraphViewVisitFn visit;
+    void *context;
+};
+
+// Converts one graph-native neighbor to its dense GraphView index.
+static bool graph_view_compatible_visit(Node *neighbor, uint64_t weight,
+                                        void *context) {
+    struct GraphViewVisitContext *visit_context = context;
+
+    return visit_context->visit(neighbor->index, weight, visit_context->context);
+}
+
+// Reuses concrete neighbor iteration through the index-based GraphView callback.
+static bool graph_view_compatible_neighbors(const void *graph_context, size_t index,
+                                              GraphViewVisitFn visit, void *context) {
     // Rejects a missing GraphView backing context.
     if (graph_context == NULL) {
         return false;
@@ -446,12 +460,23 @@ static bool graph_view_compatible_neighbors(const void *graph_context, const Nod
 
     // Restores the concrete type erased by the generic GraphView context.
     const AdjacencyList *graph = graph_context;
+    Node *node = NULL;
 
-    // Lets the concrete API validate node ownership and visit each neighbor.
-    return adjacency_list_neighbors(graph, node, visit, context);
+    // Resolves the graph-native Node only inside this representation adapter.
+    if (!adjacency_list_node_at(graph, index, &node)) {
+        return false;
+    }
+
+    // Lets the concrete API enumerate native neighbors and converts them to indexes.
+    return adjacency_list_neighbors(
+        graph,
+        node,
+        graph_view_compatible_visit,
+        &(struct GraphViewVisitContext) { .visit = visit, .context = context }
+    );
 }
 
-static bool adjacency_list_is_directed(const void *context) {
+static bool graph_view_compatible_is_directed(const void *context) {
     const AdjacencyList *graph = context;
 
     return graph->directed;
@@ -472,7 +497,7 @@ bool adjacency_list_graph_view(const AdjacencyList *graph, GraphView *out_view) 
     out_view->neighbors = graph_view_compatible_neighbors;
     out_view->vertex_count = graph_view_compatible_vertex_count;
     out_view->node_at = graph_view_compatible_node_at;
-    out_view->is_directed = adjacency_list_is_directed;
+    out_view->is_directed = graph_view_compatible_is_directed;
 
     return true;
 }

@@ -106,8 +106,8 @@ static bool a_star_operation(void *context) {
 
     return a_star(
         &a_star_context->view,
-        a_star_context->nodes[0],
-        a_star_context->nodes[ITEM_COUNT - 1U],
+        0U,
+        ITEM_COUNT - 1U,
         zero_heuristic,
         NULL,
         a_star_context->path,
@@ -183,8 +183,8 @@ static bool matrix_a_star_operation(void *context) {
 
     return a_star(
         &a_star_context->view,
-        a_star_context->nodes[0],
-        a_star_context->nodes[MATRIX_ITEM_COUNT - 1U],
+        0U,
+        MATRIX_ITEM_COUNT - 1U,
         zero_heuristic,
         NULL,
         a_star_context->path,

@@ -45,14 +45,13 @@ bool singly_linked_list_is_empty(const SinglyLinkedList *list);
 
 ## Optional GraphView Adapter
 
-A singly linked list can expose a read-only directed GraphView: each native
-list Node embeds a stable GraphView Node handle, and its native `next` link is
-one directed unit-weight edge. `node_at` walks the list to the requested index,
-so it intentionally retains singly linked-list lookup cost instead of using a
-cached Node map. BFS/DFS over this adapter is equivalent to walking the list.
+A singly linked list exposes a read-only directed GraphView where list position
+is the dense index and its native `next` link is one directed unit-weight edge.
+`node_at` walks the list to the requested index, retaining native lookup cost
+without a cached Node map. BFS/DFS over this adapter walks the list.
 
 - `vertex_count` returns list size; `is_directed` returns `true`.
 - `neighbors` follows the native `next` pointer directly and never populates a
   GraphView `Edge` cache.
 - List mutation is disallowed while the GraphView is used because it can
-  invalidate embedded handles and dense indexes.
+  change dense index meaning.

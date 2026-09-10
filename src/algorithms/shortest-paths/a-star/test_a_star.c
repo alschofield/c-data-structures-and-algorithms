@@ -29,47 +29,47 @@ static uint64_t table_heuristic(size_t vertex, void *context) {
 }
 
 // Verifies both zero and informed heuristics reconstruct the weighted best path.
-static void assert_weighted_shortest_path(const GraphView *view, Node *nodes[]) {
+static void assert_weighted_shortest_path(const GraphView *view) {
     uint64_t remaining_costs[5] = { 4U, 1U, 3U, 0U, 0U };
     size_t path[5] = { 99U, 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
     size_t too_small_path[3] = { 77U, 77U, 77U };
     size_t too_small_length = 99U;
 
-    assert(a_star(view, nodes[0], nodes[3], zero_heuristic, NULL, path, 5U, &path_length));
+    assert(a_star(view, 0U, 3U, zero_heuristic, NULL, path, 5U, &path_length));
     assert(path_length == 4U);
     assert(path[0] == 0U);
     assert(path[1] == 2U);
     assert(path[2] == 1U);
     assert(path[3] == 3U);
 
-    assert(a_star(view, nodes[0], nodes[3], table_heuristic, remaining_costs, path, 5U, &path_length));
+    assert(a_star(view, 0U, 3U, table_heuristic, remaining_costs, path, 5U, &path_length));
     assert(path_length == 4U);
     assert(path[0] == 0U);
     assert(path[1] == 2U);
     assert(path[2] == 1U);
     assert(path[3] == 3U);
 
-    assert(a_star(view, nodes[2], nodes[2], zero_heuristic, NULL, path, 5U, &path_length));
+    assert(a_star(view, 2U, 2U, zero_heuristic, NULL, path, 5U, &path_length));
     assert(path_length == 1U);
     assert(path[0] == 2U);
 
-    assert(!a_star(view, nodes[0], nodes[3], zero_heuristic, NULL, too_small_path, 3U, &too_small_length));
+    assert(!a_star(view, 0U, 3U, zero_heuristic, NULL, too_small_path, 3U, &too_small_length));
     assert(too_small_length == 99U);
     assert(too_small_path[0] == 77U && too_small_path[1] == 77U && too_small_path[2] == 77U);
 
     path_length = 99U;
-    assert(!a_star(view, nodes[0], nodes[4], zero_heuristic, NULL, path, 5U, &path_length));
+    assert(!a_star(view, 0U, 4U, zero_heuristic, NULL, path, 5U, &path_length));
     assert(path_length == 99U);
 }
 
 // Verifies a lower g-score re-expands a Node under an inconsistent heuristic.
-static void assert_inconsistent_heuristic_path(const GraphView *view, Node *nodes[]) {
+static void assert_inconsistent_heuristic_path(const GraphView *view) {
     uint64_t heuristic[4] = { 0U, 0U, 101U, 0U };
     size_t path[4] = { 99U, 99U, 99U, 99U };
     size_t path_length = 0U;
 
-    assert(a_star(view, nodes[0], nodes[3], table_heuristic, heuristic, path, 4U, &path_length));
+    assert(a_star(view, 0U, 3U, table_heuristic, heuristic, path, 4U, &path_length));
     assert(path_length == 4U);
     assert(path[0] == 0U);
     assert(path[1] == 2U);
@@ -82,7 +82,6 @@ static void test_adjacency_list_adapter(void) {
     int values[] = { 0, 1, 2, 3, 4 };
     AdjacencyList *graph = adjacency_list_create(true);
     Node *nodes[5] = { NULL };
-    Node invalid_node = { .index = 5U };
     GraphView view = { 0 };
     size_t path[5] = { 0U };
     size_t path_length = 0U;
@@ -98,15 +97,13 @@ static void test_adjacency_list_adapter(void) {
     assert(adjacency_list_add_edge(graph, nodes[2], nodes[3], 5U));
     assert(adjacency_list_graph_view(graph, &view));
 
-    assert_weighted_shortest_path(&view, nodes);
-    assert(!a_star(&view, &invalid_node, nodes[3], zero_heuristic, NULL, path, 5U, &path_length));
-    assert(!a_star(&view, nodes[0], &invalid_node, zero_heuristic, NULL, path, 5U, &path_length));
-    assert(!a_star(&view, NULL, nodes[3], zero_heuristic, NULL, path, 5U, &path_length));
-    assert(!a_star(&view, nodes[0], NULL, zero_heuristic, NULL, path, 5U, &path_length));
-    assert(!a_star(&view, nodes[0], nodes[3], NULL, NULL, path, 5U, &path_length));
-    assert(!a_star(&view, nodes[0], nodes[3], zero_heuristic, NULL, NULL, 5U, &path_length));
-    assert(!a_star(&view, nodes[0], nodes[3], zero_heuristic, NULL, path, 5U, NULL));
-    assert(!a_star(&view, nodes[0], nodes[3], zero_heuristic, NULL, path, 0U, &path_length));
+    assert_weighted_shortest_path(&view);
+    assert(!a_star(&view, 5U, 3U, zero_heuristic, NULL, path, 5U, &path_length));
+    assert(!a_star(&view, 0U, 5U, zero_heuristic, NULL, path, 5U, &path_length));
+    assert(!a_star(&view, 0U, 3U, NULL, NULL, path, 5U, &path_length));
+    assert(!a_star(&view, 0U, 3U, zero_heuristic, NULL, NULL, 5U, &path_length));
+    assert(!a_star(&view, 0U, 3U, zero_heuristic, NULL, path, 5U, NULL));
+    assert(!a_star(&view, 0U, 3U, zero_heuristic, NULL, path, 0U, &path_length));
     adjacency_list_destroy(graph);
 }
 
@@ -128,7 +125,7 @@ static void test_adjacency_matrix_adapter(void) {
     assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[3], 5U));
     assert(adjacency_matrix_graph_view(graph, &view));
 
-    assert_weighted_shortest_path(&view, nodes);
+    assert_weighted_shortest_path(&view);
     adjacency_matrix_destroy(graph);
 }
 
@@ -149,7 +146,7 @@ static void test_inconsistent_heuristic_with_adjacency_list(void) {
     assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 100U));
     assert(adjacency_list_graph_view(graph, &view));
 
-    assert_inconsistent_heuristic_path(&view, nodes);
+    assert_inconsistent_heuristic_path(&view);
     adjacency_list_destroy(graph);
 }
 
@@ -170,7 +167,7 @@ static void test_inconsistent_heuristic_with_adjacency_matrix(void) {
     assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[3], 100U));
     assert(adjacency_matrix_graph_view(graph, &view));
 
-    assert_inconsistent_heuristic_path(&view, nodes);
+    assert_inconsistent_heuristic_path(&view);
     adjacency_matrix_destroy(graph);
 }
 

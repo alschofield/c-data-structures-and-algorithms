@@ -36,6 +36,14 @@ ifeq ($(NAME),algorithms/minimum-spanning-trees/kruskal)
 	EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c src/data-structures/graphs/representations/adjacency-list/adjacency_list.c src/data-structures/graphs/representations/adjacency-matrix/adjacency_matrix.c src/data-structures/graphs/disjoint-sets/union-find/union_find.c src/algorithms/sorting/comparison/quick-sort/quick_sort.c
 endif
 
+ifneq ($(filter $(NAME),data-structures/linear/linked/singly-linked-list data-structures/linear/linked/doubly-linked-list data-structures/trees/binary-search-trees/binary-search-tree data-structures/trees/tries/prefix-trie data-structures/trees/heaps/binary-heap),)
+	EXTRA_SOURCES += src/data-structures/graphs/graph-view/graph_view.c
+endif
+
+ifeq ($(BENCHMARK),structural_graph_view)
+	EXTRA_SOURCES += src/algorithms/graph-traversal/breadth-first-search/breadth_first_search.c src/algorithms/graph-traversal/depth-first-search/depth_first_search.c src/algorithms/shortest-paths/dijkstra/dijkstra.c src/algorithms/shortest-paths/a-star/a_star.c src/data-structures/linear/queues/queue/queue.c src/data-structures/linear/stacks/stack/stack.c src/data-structures/trees/heaps/binary-heap/binary_heap.c src/data-structures/linear/linked/singly-linked-list/singly_linked_list.c src/data-structures/linear/linked/doubly-linked-list/doubly_linked_list.c src/data-structures/trees/binary-search-trees/binary-search-tree/binary_search_tree.c src/data-structures/trees/tries/prefix-trie/prefix_trie.c
+endif
+
 ifneq ($(filter $(NAME),data-structures/graphs/representations/adjacency-list data-structures/graphs/representations/adjacency-matrix),)
 EXTRA_SOURCES := src/data-structures/graphs/graph-view/graph_view.c
 endif

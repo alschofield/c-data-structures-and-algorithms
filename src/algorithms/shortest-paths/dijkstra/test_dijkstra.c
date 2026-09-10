@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-static void assert_weighted_shortest_paths(const GraphView *view, Node *source) {
+static void assert_weighted_shortest_paths(const GraphView *view, size_t source) {
     uint64_t distances[5] = { 0U };
     size_t parents[5] = { 0U };
 
@@ -42,10 +42,10 @@ static void test_adjacency_list_adapter(void) {
     assert(adjacency_list_add_edge(graph, nodes[1], nodes[3], 1U));
     assert(adjacency_list_add_edge(graph, nodes[2], nodes[3], 5U));
     assert(adjacency_list_graph_view(graph, &view));
-    assert_weighted_shortest_paths(&view, nodes[0]);
-    assert(!dijkstra(&view, NULL, distances, parents));
-    assert(!dijkstra(&view, nodes[0], NULL, parents));
-    assert(!dijkstra(&view, nodes[0], distances, NULL));
+    assert_weighted_shortest_paths(&view, 0U);
+    assert(!dijkstra(&view, 5U, distances, parents));
+    assert(!dijkstra(&view, 0U, NULL, parents));
+    assert(!dijkstra(&view, 0U, distances, NULL));
     adjacency_list_destroy(graph);
 }
 
@@ -65,7 +65,7 @@ static void test_adjacency_matrix_adapter(void) {
     assert(adjacency_matrix_add_edge(graph, nodes[1], nodes[3], 1U));
     assert(adjacency_matrix_add_edge(graph, nodes[2], nodes[3], 5U));
     assert(adjacency_matrix_graph_view(graph, &view));
-    assert_weighted_shortest_paths(&view, nodes[0]);
+    assert_weighted_shortest_paths(&view, 0U);
     adjacency_matrix_destroy(graph);
 }
 
@@ -84,7 +84,7 @@ static void test_zero_weight_edges(void) {
     assert(adjacency_list_add_edge(graph, nodes[0], nodes[1], 0U));
     assert(adjacency_list_add_edge(graph, nodes[1], nodes[2], 0U));
     assert(adjacency_list_graph_view(graph, &view));
-    assert(dijkstra(&view, nodes[0], distances, parents));
+    assert(dijkstra(&view, 0U, distances, parents));
     assert(distances[0] == 0U && distances[1] == 0U && distances[2] == 0U);
     assert(parents[0] == 0U && parents[1] == 0U && parents[2] == 1U);
     adjacency_list_destroy(graph);

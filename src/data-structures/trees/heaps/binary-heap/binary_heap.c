@@ -231,3 +231,57 @@ bool binary_heap_is_empty(const BinaryHeap *heap) {
     // Compares the tracked item count against zero.
     return heap->size == 0U;
 }
+
+// Reports the occupied heap slots through the GraphView callback type.
+static size_t binary_heap_graph_view_vertex_count(const void *context) {
+    return binary_heap_size(context);
+}
+
+// Validates direct lookup of one occupied heap slot.
+static bool binary_heap_graph_view_node_at(const void *context, size_t index) {
+    const BinaryHeap *heap = context;
+
+    return heap != NULL && index < heap->size;
+}
+
+// Computes existing implicit-tree child slots as directed unit-weight edges.
+static bool binary_heap_graph_view_neighbors(const void *context, size_t index,
+                                             GraphViewVisitFn visit,
+                                             void *visit_context) {
+    const BinaryHeap *heap = context;
+    if (heap == NULL || visit == NULL || index >= heap->size) {
+        return false;
+    }
+
+    if (index > (SIZE_MAX - 2U) / 2U) {
+        return false;
+    }
+    size_t left = index * 2U + 1U;
+    size_t right = index * 2U + 2U;
+    if (left < heap->size && !visit(left, 1U, visit_context)) {
+        return false;
+    }
+    if (right < heap->size && !visit(right, 1U, visit_context)) {
+        return false;
+    }
+    return true;
+}
+
+// Reports parent-to-child implicit-tree relationships as directed.
+static bool binary_heap_graph_view_is_directed(const void *context) {
+    return context != NULL;
+}
+
+// Fills a non-owning direct GraphView adapter for this heap.
+bool binary_heap_graph_view(const BinaryHeap *heap, GraphView *out_view) {
+    if (heap == NULL || out_view == NULL) {
+        return false;
+    }
+
+    out_view->context = heap;
+    out_view->vertex_count = binary_heap_graph_view_vertex_count;
+    out_view->node_at = binary_heap_graph_view_node_at;
+    out_view->neighbors = binary_heap_graph_view_neighbors;
+    out_view->is_directed = binary_heap_graph_view_is_directed;
+    return true;
+}

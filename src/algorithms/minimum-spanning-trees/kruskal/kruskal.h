@@ -1,15 +1,15 @@
 #ifndef KRUSKAL_H
 #define KRUSKAL_H
 
-// Declares GraphView, Node, uint64_t, and size_t.
+// Declares GraphView, uint64_t, and size_t.
 #include "../../../data-structures/graphs/graph-view/graph_view.h"
 
 // Stores one selected weighted edge in a minimum spanning forest.
 typedef struct KruskalEdge {
-    // Identifies one graph-owned endpoint.
-    Node *from;
-    // Identifies the other graph-owned endpoint.
-    Node *to;
+    // Identifies one dense graph endpoint.
+    size_t from;
+    // Identifies the other dense graph endpoint.
+    size_t to;
     // Stores the nonnegative cost of connecting the endpoints.
     uint64_t weight;
 } KruskalEdge;

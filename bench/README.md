@@ -58,9 +58,9 @@ growth.
 
 | Structure / operation | Median ns/op | Expected complexity |
 | --- | ---: | --- |
-| GraphView neighbors | 3.07 | O(1) wrapper plus adapter cost |
-| GraphView node at | 3.15 | O(1) |
-| GraphView vertex count | 3.28 | O(1) |
+| GraphView neighbors | 25.96 | adapter neighbor delegation |
+| GraphView index lookup | 17.51 | backing lookup cost |
+| GraphView vertex count | 12.51 | adapter count cost |
 | Adjacency matrix has edge | 2.30 | O(1) |
 | Adjacency matrix remove edge | 2.90 | O(1) |
 | Adjacency matrix insert edge | 8.50 | O(1) |
@@ -594,37 +594,31 @@ not the linear scan cost visible in linear search.
 
 | Graph representation | Traversal shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node directed chain | 0.020 ms |
-| Adjacency matrix | 1,000-Node directed chain | 0.886 ms |
-| Adjacency list | shallow target early exit / 2 visits | 0.0003 ms |
-| Adjacency matrix | shallow target early exit / 2 visits | 0.0019 ms |
+| Adjacency list | 2,000-Node directed chain | 0.031 ms |
+| Adjacency matrix | 1,000-Node directed chain | 1.090 ms |
 
 Graph construction is outside the timed loop; the measurement includes queue,
-visited-state, visitor, and GraphView neighbor-delegation work. The matrix
-scan is substantially slower because every visited Node examines its full row,
-while the list traverses only its stored outgoing edge.
+visited-state, visitor, and index-based GraphView neighbor-delegation work. The
+matrix scan is substantially slower because every visited index examines its
+full row, while the list traverses only its stored outgoing edge.
 
 ### Depth-first search: LIFO frontier traversal
 
 | Graph representation | Traversal shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node directed chain | 0.015 ms |
-| Adjacency matrix | 1,000-Node directed chain | 0.834 ms |
-| Adjacency list | deep target early exit / 3 visits | 0.0005 ms |
-| Adjacency matrix | deep target early exit / 3 visits | 0.0025 ms |
+| Adjacency list | 2,000-Node directed chain | 0.026 ms |
+| Adjacency matrix | 1,000-Node directed chain | 1.162 ms |
 
 Graph construction is outside the timed loop; the measurement includes stack,
-visited-state, visitor, and GraphView neighbor-delegation work. As with BFS,
-the matrix scan is slower because each visited Node examines its full row. The
-early target is last in neighbor enumeration, so it is pushed last and popped
-first by the LIFO DFS stack.
+visited-state, visitor, and index-based GraphView neighbor-delegation work. As
+with BFS, the matrix scan is slower because each visited index examines its full row.
 
 ### Dijkstra: weighted min-heap shortest paths
 
 | Graph representation | Traversal shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node unit-weight chain | 0.077 ms |
-| Adjacency matrix | 1,000-Node unit-weight chain | 1.026 ms |
+| Adjacency list | 2,000-Node unit-weight chain | 0.084 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain | 1.150 ms |
 
 Graph construction is outside the timed loop. The benchmark includes tentative
 heap proposals, stale-entry checks, settled-state tracking, and all reachable
@@ -634,8 +628,8 @@ shortest-path output updates. The matrix cost reflects full-row neighbor scans.
 
 | Graph representation | Path shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node unit-weight chain, `h(n) = 0` | 0.093 ms |
-| Adjacency matrix | 1,000-Node unit-weight chain, `h(n) = 0` | 1.236 ms |
+| Adjacency list | 2,000-Node unit-weight chain, `h(n) = 0` | 0.109 ms |
+| Adjacency matrix | 1,000-Node unit-weight chain, `h(n) = 0` | 1.426 ms |
 
 Graph construction is outside the timed loop. The zero heuristic establishes
 the Dijkstra-equivalent baseline, including A-star's heap proposals,
@@ -646,13 +640,52 @@ validation. The matrix workload again pays for a full row scan per expansion.
 
 | Graph representation | Forest shape | Median time |
 | --- | --- | ---: |
-| Adjacency list | 2,000-Node descending-weight chain | 0.089 ms |
-| Adjacency matrix | 1,000-Node descending-weight chain | 1.096 ms |
+| Adjacency list | 2,000-Node descending-weight chain | 0.110 ms |
+| Adjacency matrix | 1,000-Node descending-weight chain | 0.981 ms |
 
 Graph construction is outside the timed loop. Distinct descending weights make
 candidate sorting meaningful; each run includes canonical undirected-edge
 collection, quicksort pointer ordering, union-find cycle rejection, and output
 copying. Matrix neighbor enumeration scans every row, producing the larger cost.
+
+### Structural GraphView Adapters: native traversal costs
+
+All rows use 64 structural Nodes, unit-weight links, and a zero A* heuristic.
+GraphView adapters hold no Node or edge map: `node_at` and `neighbors` follow
+the native structure. Dijkstra computes all reachable distances; A* returns a
+source-to-goal path. Kruskal is not applicable because every structural adapter
+is directed.
+
+| Structure | BFS | DFS | Dijkstra | A* |
+| --- | ---: | ---: | ---: | ---: |
+| Singly linked list | 0.0017 ms | 0.0016 ms | 0.0037 ms | 0.0042 ms |
+| Doubly linked list | 0.0013 ms | 0.0012 ms | 0.0030 ms | 0.0034 ms |
+| Binary heap | 0.0011 ms | 0.0009 ms | 0.0033 ms | 0.0036 ms |
+| Binary search tree | 0.0087 ms | 0.0083 ms | 0.0114 ms | 0.0116 ms |
+| Prefix trie | 0.0289 ms | 0.0287 ms | 0.0306 ms | 0.0309 ms |
+
+The heap uses direct array indexes, so it is fastest for unweighted traversal.
+Both linked-list adapters repeatedly walk to native positions; the doubly list
+benefits from nearer-end lookup. BST child-index lookup requires structural
+in-order traversal. The trie pays for structural Node counting and pre-order
+index resolution on its native child chain, making the abstraction cost visible.
+
+At 1,024 Nodes, the same matrix uses five samples per workload:
+
+| Structure | BFS | DFS | Dijkstra | A* |
+| --- | ---: | ---: | ---: | ---: |
+| Singly linked list | 0.494 ms | 0.533 ms | 0.553 ms | 0.571 ms |
+| Doubly linked list | 0.240 ms | 0.240 ms | 0.285 ms | 0.301 ms |
+| Binary heap | 0.014 ms | 0.009 ms | 0.084 ms | 0.091 ms |
+| Binary search tree | 1.814 ms | 1.637 ms | 1.818 ms | 1.955 ms |
+| Prefix trie | 15.124 ms | 14.266 ms | 15.002 ms | 14.215 ms |
+
+The workload grows by 16x from 64 to 1,024 Nodes. Heap traversal remains near
+linear because slots are directly indexable. The singly linked list rises by
+roughly 290x, exposing repeated forward walks; the doubly list is about half as
+costly through nearer-end lookup. The BST's in-order index and child-index
+resolution grows sharply, while the trie amplifies its repeated structural count
+and pre-order lookup work to roughly 14-15 ms.
 
 ## Reproducing
 
@@ -680,6 +713,8 @@ make benchmark NAME=algorithms/graph-traversal/depth-first-search BENCHMARK=dept
 make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
 make benchmark NAME=algorithms/shortest-paths/a-star BENCHMARK=a_star
 make benchmark NAME=algorithms/minimum-spanning-trees/kruskal BENCHMARK=kruskal
+make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=structural_graph_view
+make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=structural_graph_view BENCHMARK_ITEM_COUNT=1024
 make benchmark NAME=data-structures/trees/tries/prefix-trie BENCHMARK=prefix_trie
 make benchmark NAME=data-structures/graphs/graph-view BENCHMARK=graph_view
 make benchmark NAME=data-structures/graphs/disjoint-sets/union-find BENCHMARK=union_find
@@ -722,6 +757,7 @@ compare normalized ns/op — constant means O(1)-like, additive increments per
 | Dijkstra | `dijkstra_benchmark.c` | full weighted shortest paths through adjacency-list and matrix chains |
 | A-star | `a_star_benchmark.c` | full source-to-goal paths through adjacency-list and matrix chains |
 | Kruskal | `kruskal_benchmark.c` | complete minimum spanning forests through adjacency-list and matrix chains |
+| Structural GraphView adapters | `structural_graph_view_benchmark.c` | BFS, DFS, Dijkstra, and A* across list, heap, tree, and trie adapters |
 | Prefix trie | `prefix_trie_benchmark.c` | insert, exact contains, shared-prefix lookup, remove |
 | GraphView | `graph_view_benchmark.c` | vertex count, Node lookup, one-neighbor delegation |
 | Union-find | `union_find_benchmark.c` | union, find, connected |

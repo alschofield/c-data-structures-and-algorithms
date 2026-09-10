@@ -145,6 +145,31 @@ static void test_null_container(void) {
     prefix_trie_destroy(trie);
 }
 
+struct GraphLog { size_t indexes[2]; size_t count; };
+
+static bool record_graph_index(size_t index, uint64_t weight, void *context) {
+    (void)weight;
+    struct GraphLog *log = context;
+    log->indexes[log->count++] = index;
+    return true;
+}
+
+static void test_graph_view_adapter(void) {
+    PrefixTrie *trie = prefix_trie_create();
+    GraphView view = { 0 };
+    struct GraphLog log = { 0 };
+
+    assert(trie != NULL);
+    assert(prefix_trie_insert(trie, "a"));
+    assert(prefix_trie_insert(trie, "b"));
+    assert(prefix_trie_graph_view(trie, &view));
+    assert(graph_view_is_valid(&view) && graph_view_is_directed(&view));
+    assert(graph_view_vertex_count(&view) == 3U && graph_view_node_at(&view, 2U));
+    assert(graph_view_neighbors(&view, 0U, record_graph_index, &log));
+    assert(log.count == 2U && log.indexes[0] == 1U && log.indexes[1] == 2U);
+    prefix_trie_destroy(trie);
+}
+
 int main(void) {
     test_empty_trie();
     test_keys_versus_prefixes();
@@ -155,5 +180,6 @@ int main(void) {
     test_remove_word_prefix_preserves_descendant();
     test_reuse_after_emptying_trie();
     test_null_container();
+    test_graph_view_adapter();
     return 0;
 }

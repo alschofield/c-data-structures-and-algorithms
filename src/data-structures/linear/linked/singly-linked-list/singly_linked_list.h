@@ -3,10 +3,12 @@
 // Declares size_t.
 #include <stddef.h>
 
+#include "../../../graphs/graph-view/graph_view.h"
+
 // Names the opaque singly linked list.
 typedef struct SinglyLinkedList SinglyLinkedList;
 // Names the private list-node type used by implementation helpers.
-typedef struct Node Node;
+typedef struct LinkedNode LinkedNode;
 
 // Allocates an empty singly linked list.
 SinglyLinkedList *singly_linked_list_create(void);
@@ -30,3 +32,5 @@ bool singly_linked_list_remove(SinglyLinkedList *list, size_t index, void **out_
 size_t singly_linked_list_size(const SinglyLinkedList *list);
 // Reports whether the list contains no items.
 bool singly_linked_list_is_empty(const SinglyLinkedList *list);
+// Fills a non-owning GraphView adapter for this list.
+bool singly_linked_list_graph_view(const SinglyLinkedList *list, GraphView *out_view);
