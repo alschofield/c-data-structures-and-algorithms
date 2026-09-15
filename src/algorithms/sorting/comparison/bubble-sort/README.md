@@ -1,5 +1,21 @@
 # Bubble Sort
 
+Repeatedly swaps adjacent out-of-order item pointers, shrinking the unsorted suffix after each pass. A pass with no swaps ends early.
+
+## C API
+```c
+typedef int (*BubbleSortCompareFn)(const void *left, const void *right);
+bool bubble_sort(void **items, size_t count, BubbleSortCompareFn compare);
+```
+
+## Contract
+- Sorts `items` in ascending callback order in place and is stable because equal items are never swapped.
+- `compare` is required even for `count == 0`; an empty array succeeds without dereferencing `items`. A nonempty null array fails.
+- The function reorders only caller-owned pointer slots; it neither allocates nor owns or frees items. A failed validation leaves the array unchanged.
+
+## Complexity and Verification
+Best O(n); average and worst O(n^2); O(1) auxiliary space. Verify with `make test NAME=algorithms/sorting/comparison/bubble-sort`.
+
 Comparison sort that repeatedly sweeps the array, swapping adjacent
 out-of-order pairs until a full pass makes no swaps.
 

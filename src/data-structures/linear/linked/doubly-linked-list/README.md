@@ -1,65 +1,21 @@
 # Doubly Linked List
 
-Generic node-based collection with forward and backward links per node.
-Stored `void *` values, including `NULL`, remain caller-owned.
+An opaque bidirectional chain of borrowed pointers with first/last links. Indexed operations choose the nearer end.
 
-## How It Works
-
-The singly list with a second pointer per node (prev) and a held tail.
-Both ends become O(1), and indexed operations walk from whichever end is
-nearer, halving the worst-case steps. The bookkeeping invariant that makes
-removal correct: after any mutation, node->next->prev == node and
-node->prev->next == node everywhere — the boundary cases (first node, last
-node, sole node) are exactly where first/last syncing must hold.
-
-## Required API
-
+## C API
 ```c
-typedef struct DoublyLinkedList DoublyLinkedList;
-
-DoublyLinkedList *doubly_linked_list_create(void);
-void doubly_linked_list_destroy(DoublyLinkedList *list);
-bool doubly_linked_list_push_front(DoublyLinkedList *list, void *item);
-bool doubly_linked_list_push_back(DoublyLinkedList *list, void *item);
-bool doubly_linked_list_pop_front(DoublyLinkedList *list, void **out_item);
-bool doubly_linked_list_pop_back(DoublyLinkedList *list, void **out_item);
-bool doubly_linked_list_get(const DoublyLinkedList *list, size_t index, void **out_item);
-bool doubly_linked_list_insert(DoublyLinkedList *list, size_t index, void *item);
-bool doubly_linked_list_remove(DoublyLinkedList *list, size_t index, void **out_item);
-size_t doubly_linked_list_size(const DoublyLinkedList *list);
-bool doubly_linked_list_is_empty(const DoublyLinkedList *list);
+DoublyLinkedList *doubly_linked_list_create(void); void doubly_linked_list_destroy(DoublyLinkedList *list);
+bool doubly_linked_list_push_front(DoublyLinkedList *list, void *item); bool doubly_linked_list_push_back(DoublyLinkedList *list, void *item);
+bool doubly_linked_list_pop_front(DoublyLinkedList *list, void **out_item); bool doubly_linked_list_pop_back(DoublyLinkedList *list, void **out_item);
+bool doubly_linked_list_get(const DoublyLinkedList *list, size_t index, void **out_item); bool doubly_linked_list_insert(DoublyLinkedList *list, size_t index, void *item);
+bool doubly_linked_list_remove(DoublyLinkedList *list, size_t index, void **out_item); size_t doubly_linked_list_size(const DoublyLinkedList *list);
+bool doubly_linked_list_is_empty(const DoublyLinkedList *list); bool doubly_linked_list_graph_view(const DoublyLinkedList *list, GraphView *out_view);
 ```
 
-## Contract
+## Behavior, Ownership, and Invariants
+- Element indexes are `[0, size)`; insertion also allows `size`. Missing list/output storage, empty pops, and invalid indexes fail without mutation.
+- The list owns nodes only. Payload pointers, including null, remain caller-owned; `destroy(NULL)` is a no-op. Empty lists have null first and last pointers; neighboring nodes maintain reciprocal links.
+- Its borrowed GraphView uses list-order indexes and directed unit arcs to both adjacent nodes. Do not retain it beyond the list lifetime or a structural mutation.
 
-- Every node maintains both `next` and `prev`; after any mutation,
-  `node->next->prev == node` and `node->prev->next == node` hold throughout
-  the list.
-- Both ends support O(1) push and pop via head and tail pointers.
-- Valid element indexes are `[0, size)`; `insert` also accepts `size` to
-  append. Indexed traversal should start from the nearer end.
-- Failed operations leave output parameters and list contents unchanged.
-- Removing the final node returns the list to a valid empty state with both
-  head and tail cleared.
-- `destroy` frees nodes only, never stored values.
-
-## Complexity Targets
-
-- `push_front`, `pop_front`, `push_back`, `pop_back`, `size`, `is_empty`: O(1)
-- `get`, `insert`, `remove` by index: O(n), at most n/2 traversal steps from
-  the nearer end
-- Space: O(n) nodes, two pointers of overhead per node
-
-## Optional GraphView Adapter
-
-A doubly linked list exposes a read-only directed GraphView where list position
-is the dense index and native `next`/`prev` links become up to two directed
-unit-weight edges. The graph is cyclic,
-so BFS/DFS use their normal visited state; it is not an undirected graph and
-Kruskal rejects it.
-
-- `vertex_count` returns list size; `is_directed` returns `true`.
-- `node_at` walks from the nearer end to retain native doubly linked-list
-  lookup cost, while `neighbors` follows native links directly.
-- List mutation is disallowed while the GraphView is used because it can
-  change dense index meaning.
+## Complexity and Verification
+End push/pop are O(1); indexed work is O(min(index, size - index)); size/empty are O(1). Verify with `make test NAME=data-structures/linear/linked/doubly-linked-list`.

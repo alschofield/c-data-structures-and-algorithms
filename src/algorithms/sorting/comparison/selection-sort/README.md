@@ -1,5 +1,21 @@
 # Selection Sort
 
+For each prefix position, selects the minimum from the remaining pointers and swaps it into place.
+
+## C API
+```c
+typedef int (*SelectionSortCompareFn)(const void *left, const void *right);
+bool selection_sort(void **items, size_t count, SelectionSortCompareFn compare);
+```
+
+## Contract
+- Sorts in ascending callback order in place. It is not stable: a selected minimum can move equal items past one another.
+- `compare` must be non-null; empty input succeeds without reading `items`, while a nonempty null array fails.
+- No allocation occurs; the caller retains ownership of every item and of the array. Validation failures do not reorder items.
+
+## Complexity and Verification
+Time is O(n^2) in every case, with O(1) auxiliary space and at most `n - 1` swaps. Verify with `make test NAME=algorithms/sorting/comparison/selection-sort`.
+
 Comparison sort that grows a sorted prefix by repeatedly selecting the minimum
 of the unsorted remainder and swapping it into place.
 

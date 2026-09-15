@@ -1,5 +1,22 @@
 # Binary Search
 
+Recursively searches a caller-owned pointer array using half-open windows. The midpoint calculation is overflow-safe; the array is not changed.
+
+## C API
+```c
+typedef int (*BinarySearchCompareFn)(const void *left, const void *right);
+bool binary_search(void *const *items, size_t count, const void *key,
+                   BinarySearchCompareFn compare, size_t *out_index);
+```
+
+## Contract
+- `items` must be ascending under `compare`; duplicates are permitted, but the returned matching index is unspecified.
+- Returns `false` for empty input, null `items`, `key`, `compare`, or `out_index`, or for a miss. On failure, it does not write `out_index`.
+- All array storage and item lifetime remain the caller's responsibility. The callback must safely compare the key with every candidate item.
+
+## Complexity and Verification
+Time is O(log n), recursion space is O(log n). Verify with `make test NAME=algorithms/searching/binary-search`.
+
 Divide-and-conquer search over a sorted array that halves the candidate range
 on every comparison.
 

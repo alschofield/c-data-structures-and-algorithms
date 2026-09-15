@@ -1,5 +1,20 @@
 # Counting Sort
 
+Counts each unsigned key in a declared range, turns counts into output positions, and writes a stable sorted copy back to the input array.
+
+## C API
+```c
+bool counting_sort(uint32_t *items, size_t count, uint32_t key_limit);
+```
+
+## Contract
+- Every input key must satisfy `items[i] < key_limit`; `key_limit == 0` fails for nonempty input. Empty input is a successful no-op even with null `items`.
+- The sort is stable at the value level and changes `items` only after both allocations succeed and keys have been range-checked. Allocation failure or `count * sizeof(uint32_t)` overflow fails.
+- The caller owns `items`; temporary count/output arrays are internal and freed before return.
+
+## Complexity and Verification
+Time and auxiliary space are O(n + key_limit). Verify with `make test NAME=algorithms/sorting/non-comparison/counting-sort`.
+
 Non-comparison integer sort that counts key occurrences, prefix-sums the
 counts into positions, and places elements directly.
 

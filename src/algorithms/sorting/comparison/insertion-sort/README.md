@@ -1,5 +1,21 @@
 # Insertion Sort
 
+Builds a sorted prefix by swapping each later pointer left until its predecessor is not greater.
+
+## C API
+```c
+typedef int (*InsertionSortCompareFn)(const void *left, const void *right);
+bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
+```
+
+## Contract
+- Sorts ascending in place and is stable because equal items do not cross.
+- `compare` is mandatory; empty input succeeds without dereferencing `items`, and a nonempty null array fails.
+- It allocates nothing and reorders only caller-owned pointer slots. Items and array storage stay caller-owned.
+
+## Complexity and Verification
+Best O(n), average and worst O(n^2), O(1) auxiliary space. Verify with `make test NAME=algorithms/sorting/comparison/insertion-sort`.
+
 Comparison sort that grows a sorted prefix by shifting each new element left
 until it reaches its correct position.
 

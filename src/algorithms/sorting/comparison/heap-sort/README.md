@@ -1,5 +1,21 @@
 # Heap Sort
 
+Builds an in-place max heap, then repeatedly exchanges its root with the end of the active range and sifts the replacement down.
+
+## C API
+```c
+typedef int (*HeapSortCompareFn)(const void *left, const void *right);
+bool heap_sort(void **items, size_t count, HeapSortCompareFn compare);
+```
+
+## Contract
+- Sorts pointers ascending in place and is not stable.
+- Empty input succeeds without dereferencing `items` or `compare`. For nonempty input, both must be non-null.
+- It owns no caller storage and makes no allocations; only pointer slots are exchanged.
+
+## Complexity and Verification
+Time is O(n log n) in all cases and auxiliary space O(1). Verify with `make test NAME=algorithms/sorting/comparison/heap-sort`.
+
 Comparison sort that builds a max-heap in the array, then repeatedly swaps the
 root to the tail and re-heapifies the shrinking prefix.
 

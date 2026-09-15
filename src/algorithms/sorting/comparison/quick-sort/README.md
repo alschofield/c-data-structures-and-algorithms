@@ -1,5 +1,21 @@
 # Quick Sort
 
+Uses the middle element as a pivot and partitions pointers into less-than, equal-to, and greater-than regions before recursively sorting the outer regions.
+
+## C API
+```c
+typedef int (*QuickSortCompareFn)(const void *left, const void *right);
+bool quick_sort(void **items, size_t count, QuickSortCompareFn compare);
+```
+
+## Contract
+- Sorts ascending in place; partition swaps make it unstable.
+- Empty input succeeds before pointer or callback validation. For nonempty input, both `items` and `compare` are required.
+- The caller owns all pointers and items. No heap storage is allocated, but recursion consumes stack space; validation failure occurs before reordering.
+
+## Complexity and Verification
+Expected O(n log n), worst O(n^2), with O(log n) expected recursion space and O(n) worst. Verify with `make test NAME=algorithms/sorting/comparison/quick-sort`.
+
 In-place divide-and-conquer comparison sort that partitions around a pivot and
 recursively sorts both sides.
 

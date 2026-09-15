@@ -1,73 +1,17 @@
-# Dijkstra
+# Dijkstra Shortest Paths
 
-Single-source shortest paths on a weighted graph with non-negative edge
-weights, driven by a min-priority queue over tentative distances.
+Computes shortest paths from one source using a min-heap of distance proposals. Stale proposals are discarded and settled vertices are expanded once.
 
-## How It Works
-
-BFS grown up to handle weighted edges: the ripple expands by total path cost
-instead of hop count. Every vertex carries a tentative best-known distance
-(infinity at the start). Repeatedly extract the cheapest unsettled vertex —
-this is why the min-priority queue exists — and settle it: no cheaper route
-to it can exist, because any alternative would have to pass through something
-already more expensive. That settlement argument is exactly what negative
-edge weights break, which is why they must be rejected.
-
-Settling a vertex relaxes its edges: for each neighbor, if going through the
-settled vertex beats the neighbor's current best, update the distance and
-record the settled vertex as its parent. The parent links reconstruct the
-actual shortest path once the goal settles.
-
-## Required API
-
+## C API
 ```c
 #define DIJKSTRA_INFINITY UINT64_MAX
-
-bool dijkstra(const GraphView *graph, size_t source,
-               uint64_t *out_distances, size_t *out_parents);
+bool dijkstra(const GraphView *graph, size_t source, uint64_t *out_distances, size_t *out_parents);
 ```
 
-The checked-in implementation uses a min-heap of tentative path proposals,
-stale-entry skipping, and caller-owned dense distance/parent arrays.
-`GraphView` is the representation-independent non-negative weighted graph
-interface from `data-structures/graphs/graph-view`. Unreachable vertexes
-report `DIJKSTRA_INFINITY`.
+## Behavior, Outputs, and Errors
+- Requires a valid nonempty GraphView, valid source node, and caller arrays sized for every graph vertex. On success, unreachable distances are `DIJKSTRA_INFINITY` with parent `SIZE_MAX`; source distance is zero and parent is itself.
+- Edge weights are `uint64_t` and must be nonnegative by type. A relaxation whose addition would overflow fails. Graph/heap/allocation failures also return false; arrays are initialized before later internal failures, so false does not promise unchanged outputs.
+- The function borrows graph and output arrays, while owning/freeing its temporary settled array and heap proposals.
 
-## Contract
-
-- Precondition: all edge weights are non-negative. Negative weights break the
-  greedy settlement argument and must be rejected, not silently mis-answered.
-- A vertex's distance is final when it is extracted from the priority queue;
-  it is never revisited afterward.
-- Relaxation: for edge (u, v, w), if `dist[u] + w < dist[v]`, update `dist[v]`
-  and `parent[v]`. With a binary heap, either decrease-key or lazy insertion
-  with stale-entry skipping is acceptable; stale entries must be detectably
-  skipped.
-- Unreachable vertices report an explicit infinite distance, never a garbage
-  value.
-- Parent links must reconstruct an actual shortest path from the source.
-- `out_distances[node->index]` is `DIJKSTRA_INFINITY` for unreachable Nodes.
-  `out_parents[node->index]` is `SIZE_MAX` for unreachable Nodes and source's
-  own index for the source Node.
-- Correct on graphs with cycles, parallel edges, and self-loops; an invalid
-  source vertex is rejected cleanly.
-
-## Complexity Targets
-
-- Time: O((V + E) log V) with a binary heap
-- Space: O(V) for distances, parents, and the heap
-
-## Verification
-
-```text
-make test NAME=algorithms/shortest-paths/dijkstra
-make benchmark NAME=algorithms/shortest-paths/dijkstra BENCHMARK=dijkstra
-```
-
-| Graph representation | Traversal shape | Median time |
-| --- | --- | ---: |
-| Adjacency list | 2,000-Node unit-weight chain | 0.084 ms |
-| Adjacency matrix | 1,000-Node unit-weight chain | 1.150 ms |
-
-Graph construction is outside the timed loop. The matrix workload is slower
-because every settled Node scans its full matrix row.
+## Complexity and Verification
+Time is O((V + E) log V) with duplicate heap proposals; auxiliary space O(V + E). Verify with `make test NAME=algorithms/shortest-paths/dijkstra`.

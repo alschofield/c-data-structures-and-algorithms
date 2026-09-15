@@ -1,5 +1,20 @@
 # Radix Sort
 
+Performs four stable least-significant-byte counting passes to order full-width `uint32_t` values.
+
+## C API
+```c
+bool radix_sort(uint32_t *items, size_t count);
+```
+
+## Contract
+- Sorts unsigned 32-bit values ascending in place. Empty input succeeds without dereferencing `items`; a nonempty null array fails.
+- Each pass allocates and frees a 256-entry count array and an output array. A pass rejects byte-allocation overflow or allocation failure; earlier successful passes may already have reordered `items`.
+- The caller owns `items`; no ownership of values is transferred.
+
+## Complexity and Verification
+Four fixed passes give O(n) time and O(n + 256) auxiliary space. Verify with `make test NAME=algorithms/sorting/non-comparison/radix-sort`.
+
 Non-comparison integer sort that sorts by one digit at a time using a stable
 counting sort per digit, least significant digit first.
 

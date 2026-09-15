@@ -1,5 +1,28 @@
 # Dynamic Array
 
+An opaque growable contiguous array of borrowed `void *` items. Insertion doubles capacity from two slots; removal shifts the suffix left and does not shrink storage.
+
+## C API
+```c
+DynamicArray *dynamic_array_create(void);
+void dynamic_array_destroy(DynamicArray *array);
+bool dynamic_array_get(const DynamicArray *array, size_t index, void **out_item);
+bool dynamic_array_set(DynamicArray *array, size_t index, void *item, void **out_old_item);
+bool dynamic_array_insert(DynamicArray *array, size_t index, void *item);
+bool dynamic_array_remove(DynamicArray *array, size_t index, void **out_item);
+size_t dynamic_array_size(const DynamicArray *array);
+size_t dynamic_array_capacity(const DynamicArray *array);
+bool dynamic_array_is_empty(const DynamicArray *array);
+```
+
+## Contract
+- Valid element indexes are `[0, size)`; insertion also accepts `size` for append. `get`, `set`, and `remove` require output storage where declared and leave it unchanged on failure.
+- Stored item pointers, including null, are borrowed. `destroy` frees only wrapper/buffer storage and accepts null. Do not use the array or pointers returned through it after its owner or items are destroyed.
+- Growth rejects capacity and byte-size overflow; failed `realloc` preserves the existing array. Null queries report size/capacity zero and empty true.
+
+## Complexity and Verification
+`get`, `set`, size, capacity, and empty are O(1); append is amortized O(1); indexed insert/remove are O(n). Verify with `make test NAME=data-structures/linear/arrays/dynamic-array`.
+
 Generic resizable contiguous collection of caller-owned `void *` values,
 including `NULL`.
 

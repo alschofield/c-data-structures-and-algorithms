@@ -1,5 +1,24 @@
 # Queue
 
+An opaque FIFO queue over a circular, doubling pointer buffer. Enqueue appends at the tail; dequeue removes from the head.
+
+## C API
+```c
+Queue *queue_create(void); void queue_destroy(Queue *queue);
+bool queue_enqueue(Queue *queue, void *item);
+bool queue_dequeue(Queue *queue, void **out_item);
+bool queue_peek(const Queue *queue, void **out_item);
+size_t queue_size(const Queue *queue); bool queue_is_empty(const Queue *queue);
+```
+
+## Contract
+- Dequeue/peek fail for a null or empty queue and for null output storage; failures preserve state and output.
+- Payload pointers are borrowed, including null. `destroy` is null-safe and never frees payloads.
+- On growth, live entries are copied into FIFO order before the old buffer is freed. Capacity/byte-size overflow and allocation failures leave the queue unchanged. Null size is zero and null is empty.
+
+## Complexity and Verification
+Enqueue is amortized O(1); dequeue, peek, size, and empty are O(1). Verify with `make test NAME=data-structures/linear/queues/queue`.
+
 Generic FIFO collection that stores caller-owned `void *` values, including
 `NULL`.
 

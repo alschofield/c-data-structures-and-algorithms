@@ -1,69 +1,17 @@
 # Breadth-First Search
 
-Level-order graph traversal that explores all vertices at distance k before
-any vertex at distance k + 1, using a FIFO queue.
+Traverses vertices reachable from a source using a FIFO frontier. A vertex is marked when enqueued, so cycles and converging paths cannot visit it twice.
 
-## How It Works
-
-Ripple outward. Starting from the source, visit everything one edge away,
-then everything two edges away, ring by ring. The FIFO queue is what creates
-that order: vertices enter the frontier in discovery order and leave it in
-the same order, so distance-k vertices are fully processed before any
-distance-k+1 vertex. That ripple property is why BFS computes minimum-hop
-distances on unweighted graphs and why its parent links form a shortest-path
-tree. The classic bug: a vertex must be marked visited when it is enqueued,
-not when dequeued — otherwise cycles push the same vertex into the queue
-repeatedly through different neighbors.
-
-## Required API
-
+## C API
 ```c
-typedef bool (*BreadthFirstSearchVisitFn)(Node *node, void *context);
-
-bool breadth_first_search(const GraphView *graph, size_t source,
-                          BreadthFirstSearchVisitFn visit, void *context);
+typedef bool (*BreadthFirstSearchVisitFn)(size_t node_index, void *context);
+bool breadth_first_search(const GraphView *graph, size_t source, BreadthFirstSearchVisitFn visit, void *context);
 ```
 
-The checked-in implementation uses the workspace FIFO queue plus dense visited
-tracking to traverse GraphView adapters without modifying their graphs.
-`GraphView` is the representation-independent graph interface from
-`data-structures/graphs/graph-view`. BFS ignores edge weights; adjacency-list,
-adjacency-matrix, and imported graph adapters all use the same API. Distance
-and parent-tracking variants extend the same shape.
+## Behavior, Allocation, and Errors
+- Visits source first, then reachable vertices in breadth-first discovery order. Exact sibling order follows the backing `GraphView` neighbor order.
+- Requires a valid graph, non-null visitor, nonempty graph, and a valid source index/node. A visitor returning false, a graph neighbor error, queue failure, or allocation failure returns false and stops traversal.
+- It allocates internal discovered flags, stable index storage, and a queue, then frees all of them before return. It never owns the graph or visitor context.
 
-## Contract
-
-- Uses a FIFO queue as the frontier; the queue discipline is what produces
-  level order.
-- Invokes `visit` in breadth-first discovery order. A `false` visitor result
-  stops traversal immediately; caller context owns optional found Node, order,
-  count, distance, and parent outputs.
-- A vertex is marked visited when enqueued, not when dequeued; otherwise the
-  same vertex can enter the queue multiple times.
-- Visits every vertex reachable from the source exactly once; unreachable
-  vertices are never visited.
-- On an unweighted graph, the traversal computes minimum-edge-count distances,
-  and recorded parent links form a valid shortest-path tree.
-- Correct on cyclic graphs, self-loops, and disconnected graphs; an invalid
-  source vertex is rejected cleanly.
-- The graph is never modified during traversal.
-
-## Complexity Targets
-
-- Time: O(V + E) with an adjacency list
-- Space: O(V) for the visited set, queue, and parent array
-
-## Verification
-
-```text
-make test NAME=algorithms/graph-traversal/breadth-first-search
-make benchmark NAME=algorithms/graph-traversal/breadth-first-search BENCHMARK=breadth_first_search
-```
-
-| Workload | Adjacency list | Adjacency matrix |
-| --- | ---: | ---: |
-| Full chain traversal | 0.031 ms / 2,000 Nodes | 1.090 ms / 1,000 Nodes |
-
-Graph construction is outside the timed loop. The matrix workload is slower
-because each visited index scans its full matrix row, while the list traverses
-only stored outgoing edges.
+## Complexity and Verification
+Time is O(V + E) for a normal GraphView; auxiliary space O(V). Verify with `make test NAME=algorithms/graph-traversal/breadth-first-search`.

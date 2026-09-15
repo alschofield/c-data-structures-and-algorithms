@@ -1,5 +1,21 @@
 # Merge Sort
 
+Recursively halves the pointer range, then merges adjacent sorted runs through one reusable temporary pointer buffer.
+
+## C API
+```c
+typedef int (*MergeSortCompareFn)(const void *left, const void *right);
+bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
+```
+
+## Contract
+- Sorts ascending in place and is stable: merge takes from the left run on equal comparisons.
+- A null callback fails. Empty input succeeds without reading `items`; a nonempty null array fails. It rejects `count * sizeof(void *)` overflow and allocation failure before moving items.
+- The temporary buffer is internal and freed before return. The caller retains array and item ownership.
+
+## Complexity and Verification
+Time is O(n log n), auxiliary space O(n), recursion depth O(log n). Verify with `make test NAME=algorithms/sorting/comparison/merge-sort`.
+
 Divide-and-conquer comparison sort that recursively sorts halves and merges
 them with an auxiliary buffer.
 

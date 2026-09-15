@@ -1,5 +1,22 @@
 # Linear Search
 
+Scans a caller-owned pointer array from index zero upward and returns the first item whose qsort-style comparison with `key` is zero. The input need not be sorted and is never modified.
+
+## C API
+```c
+typedef int (*LinearSearchCompareFn)(const void *left, const void *right);
+bool linear_search(void *const *items, size_t count, const void *key,
+                   LinearSearchCompareFn compare, size_t *out_index);
+```
+
+## Contract
+- `compare(key, items[index])` must define equality consistently; on success, `*out_index` is the lowest matching index.
+- Returns `false` for a missing `items`, `key`, callback, or output pointer, for `count == 0`, and when no item matches. Failed calls leave `out_index` unchanged.
+- The array and the pointed-to items remain caller-owned. Item pointers may be null only if the callback supports them.
+
+## Complexity and Verification
+Time is O(n), space is O(1). Verify with `make test NAME=algorithms/searching/linear-search`.
+
 Sequential scan that finds a target by comparing every element in order until a
 match is found or the input is exhausted.
 

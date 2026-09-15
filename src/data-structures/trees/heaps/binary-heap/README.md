@@ -1,69 +1,18 @@
 # Binary Heap
 
-Array-backed complete binary tree maintaining the heap property: every parent
-orders before its children under the caller's comparison.
+An opaque array-backed min heap of borrowed pointers. The comparator defines priority: a lower result has higher priority.
 
-## How It Works
-
-The priority queue. An array treated as an implicit complete tree — children
-of index i at 2i+1 and 2i+2, parent at (i-1)/2, no gaps, no pointers — under
-one rule: every parent orders at or before its children, which pins the
-extreme element at index 0 without sorting anything else.
-
-Push appends at the end and sifts up (swap with the parent while it orders
-after the new element). Pop swaps the root with the last element, shrinks,
-and sifts the new root down (swap with the better-ordered child until
-settled). Both cost one root-to-leaf path, O(log n). This structure is heap
-sort's engine and the frontier Dijkstra and A* extract from.
-
-## Required API
-
+## C API
 ```c
-typedef struct BinaryHeap BinaryHeap;
-typedef int (*BinaryHeapCompareFn)(const void *left, const void *right);
-
-BinaryHeap *binary_heap_create(BinaryHeapCompareFn compare);
-void binary_heap_destroy(BinaryHeap *heap);
-bool binary_heap_push(BinaryHeap *heap, void *item);
-bool binary_heap_pop(BinaryHeap *heap, void **out_item);
-bool binary_heap_peek(const BinaryHeap *heap, void **out_item);
-size_t binary_heap_size(const BinaryHeap *heap);
-bool binary_heap_is_empty(const BinaryHeap *heap);
+typedef int (*BinaryHeapCompareFn)(const void *left, const void *right); BinaryHeap *binary_heap_create(BinaryHeapCompareFn compare); void binary_heap_destroy(BinaryHeap *heap);
+bool binary_heap_push(BinaryHeap *heap, void *item); bool binary_heap_pop(BinaryHeap *heap, void **out_item); bool binary_heap_peek(const BinaryHeap *heap, void **out_item);
+size_t binary_heap_size(const BinaryHeap *heap); bool binary_heap_is_empty(const BinaryHeap *heap); bool binary_heap_graph_view(const BinaryHeap *heap, GraphView *out_view);
 ```
 
-## Contract
+## Behavior, Ownership, and Invariants
+- Create requires a comparator. Pop/peek require a nonempty heap and output storage. Parent priority never follows a lower-priority child.
+- Growth reserves full levels (3, 7, 15, ...) and rejects arithmetic/allocation failure without changing heap fields. Payloads are borrowed and may be null only when the comparator supports them; destroy frees no payload.
+- The direct, borrowed GraphView exposes heap array indexes with directed unit edges from parent to children and expires on mutation/destruction.
 
-- Implicit array layout: children of index `i` live at `2i + 1` and `2i + 2`,
-  parent at `(i - 1) / 2`; no node allocation.
-- The tree is always complete: elements occupy indexes `[0, size)` with no
-  gaps, which is what makes the array encoding valid.
-- `push` appends then sifts up; `pop` swaps the root with the last element,
-  shrinks, then sifts down. After either, the heap property holds everywhere.
-- `pop` and `peek` return the extreme element; `peek` does not remove. Both
-  fail cleanly on an empty heap without touching output parameters.
-- Equal-priority elements dequeue in no guaranteed order; the heap is not
-  stable and callers must not rely on insertion order among equals.
-- Backing storage grows geometrically; allocation failure leaves the heap
-  unchanged. `destroy` frees heap-owned storage only, never stored values.
-
-## Complexity Targets
-
-- `push`: O(log n) (amortized, including geometric growth)
-- `pop`: O(log n)
-- `peek`, `size`, `is_empty`: O(1)
-- Build from n items via bottom-up heapify: O(n)
-- Space: O(n) contiguous, no per-element pointer overhead
-
-## Optional GraphView Adapter
-
-A binary heap exposes a read-only directed GraphView over its implicit tree:
-each occupied array slot is its dense index, and child positions `2i + 1` and
-`2i + 2` become directed unit-weight edges. `node_at` uses direct slot lookup,
-while `neighbors` computes child indexes rather than materializing graph edges.
-This is for structure visualization or traversal experiments, not heap priority
-operations.
-
-- `vertex_count` returns heap size; `is_directed` returns `true`.
-- Heap mutation is disallowed while the GraphView is used because sifting and
-  resizing can change slot-index meaning.
-- Benchmark a fixed heap traversal separately from heap push/pop operations.
+## Complexity and Verification
+Push/pop are O(log n); peek, size, and empty are O(1). Verify with `make test NAME=data-structures/trees/heaps/binary-heap`.
