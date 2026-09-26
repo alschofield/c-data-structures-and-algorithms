@@ -1,30 +1,17 @@
 # Selection Sort
 
-For each prefix position, selects the minimum from the remaining pointers and swaps it into place.
+## Implementation Status
 
-## C API
-```c
-typedef int (*SelectionSortCompareFn)(const void *left, const void *right);
-bool selection_sort(void **items, size_t count, SelectionSortCompareFn compare);
-```
-
-## Contract
-- Sorts in ascending callback order in place. It is not stable: a selected minimum can move equal items past one another.
-- `compare` must be non-null; empty input succeeds without reading `items`, while a nonempty null array fails.
-- No allocation occurs; the caller retains ownership of every item and of the array. Validation failures do not reorder items.
-
-## Complexity and Verification
-Time is O(n^2) in every case, with O(1) auxiliary space and at most `n - 1` swaps. Verify with `make test NAME=algorithms/sorting/comparison/selection-sort`.
-
-Comparison sort that grows a sorted prefix by repeatedly selecting the minimum
-of the unsorted remainder and swapping it into place.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
 
+For each prefix position, selects the minimum from the remaining pointers and swaps it into place.
+
 Grow a sorted prefix by selection: scan the unsorted remainder for its
 minimum, swap it into the next prefix slot, repeat. Comparisons never shrink
-— sorted input still costs a full scan per position, so every case is O(n^2)
-— but the sort performs at most n-1 swaps total, its one real advantage when
+-- sorted input still costs a full scan per position, so every case is O(n^2)
+-- but the sort performs at most n-1 swaps total, its one real advantage when
 writes are expensive. The long-distance swap can carry an element past an
 equal one, so the classic form is not stable.
 
@@ -37,6 +24,15 @@ bool selection_sort(void **items, size_t count, SelectionSortCompareFn compare);
 ```
 
 ## Contract
+
+- Sorts in ascending callback order in place. It is not stable: a selected minimum can move equal items past one another.
+- `compare` must be non-null; empty input succeeds without reading `items`, while a nonempty null array fails.
+- No allocation occurs; the caller retains ownership of every item and of the array. Validation failures do not reorder items.
+
+Time is O(n^2) in every case, with O(1) auxiliary space and at most `n - 1` swaps. Verify with `make test NAME=algorithms/sorting/comparison/selection-sort`.
+
+Comparison sort that grows a sorted prefix by repeatedly selecting the minimum
+of the unsorted remainder and swapping it into place.
 
 - Sorts in place into ascending order under the caller's comparison.
 - Performs at most n - 1 swaps total; this is the algorithm's defining
@@ -53,3 +49,9 @@ bool selection_sort(void **items, size_t count, SelectionSortCompareFn compare);
 - Average: O(n^2)
 - Worst: O(n^2)
 - Space: O(1), in place
+
+## Verification
+
+```sh
+make test NAME=<topic-path>
+```

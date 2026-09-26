@@ -1,30 +1,18 @@
 # Counting Sort
 
-Counts each unsigned key in a declared range, turns counts into output positions, and writes a stable sorted copy back to the input array.
+## Implementation Status
 
-## C API
-```c
-bool counting_sort(uint32_t *items, size_t count, uint32_t key_limit);
-```
-
-## Contract
-- Every input key must satisfy `items[i] < key_limit`; `key_limit == 0` fails for nonempty input. Empty input is a successful no-op even with null `items`.
-- The sort is stable at the value level and changes `items` only after both allocations succeed and keys have been range-checked. Allocation failure or `count * sizeof(uint32_t)` overflow fails.
-- The caller owns `items`; temporary count/output arrays are internal and freed before return.
-
-## Complexity and Verification
-Time and auxiliary space are O(n + key_limit). Verify with `make test NAME=algorithms/sorting/non-comparison/counting-sort`.
-
-Non-comparison integer sort that counts key occurrences, prefix-sums the
-counts into positions, and places elements directly.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
+
+Counts each unsigned key in a declared range, turns counts into output positions, and writes a stable sorted copy back to the input array.
 
 No comparisons at all. Keys are small integers in a known range [0, k), so
 counting replaces comparing: tally how many of each key exist, prefix-sum the
 tallies so each key knows where its block of the output starts, then place
 every element directly into its computed slot. Because nothing is compared,
-the O(n log n) lower bound on comparison sorts does not apply — the cost is
+the O(n log n) lower bound on comparison sorts does not apply -- the cost is
 O(n + k). The placement pass iterates the input in reverse so equal keys keep
 their original order; that stability is not a nicety, it is the property
 radix sort is built on.
@@ -39,6 +27,15 @@ The checked-in implementation uses raw counts, prefix sums, reverse stable
 placement, and copy-back. Keys must lie in `[0, key_limit)`.
 
 ## Contract
+
+- Every input key must satisfy `items[i] < key_limit`; `key_limit == 0` fails for nonempty input. Empty input is a successful no-op even with null `items`.
+- The sort is stable at the value level and changes `items` only after both allocations succeed and keys have been range-checked. Allocation failure or `count * sizeof(uint32_t)` overflow fails.
+- The caller owns `items`; temporary count/output arrays are internal and freed before return.
+
+Time and auxiliary space are O(n + key_limit). Verify with `make test NAME=algorithms/sorting/non-comparison/counting-sort`.
+
+Non-comparison integer sort that counts key occurrences, prefix-sums the
+counts into positions, and places elements directly.
 
 - Applies to integer keys in a known range `[0, k)` (or an offset range); the
   key range is a precondition, not something discovered by comparison.

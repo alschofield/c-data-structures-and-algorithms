@@ -1,8 +1,17 @@
 # Adjacency Matrix
 
+## Implementation Status
+
+Implemented. This document describes the current learner-owned implementation contract.
+
+## How It Works
+
 An opaque weighted graph using a flat, dynamically grown square `Edge` matrix and stable graph-owned node handles. It favors dense graphs and constant-time edge queries.
 
-## C API
+The representation records directed or undirected weighted relationships and exposes neighbors by dense vertex index.
+
+## Required API
+
 ```c
 AdjacencyMatrix *adjacency_matrix_create(bool directed); void adjacency_matrix_destroy(AdjacencyMatrix *graph);
 bool adjacency_matrix_add_node(AdjacencyMatrix *graph, void *value, Node **out_node); bool adjacency_matrix_node_value(const Node *node, void **out_value);
@@ -13,10 +22,20 @@ typedef bool (*AdjacencyMatrixVisitFn)(Node *neighbor, uint64_t weight, void *co
 size_t adjacency_matrix_node_count(const AdjacencyMatrix *graph); size_t adjacency_matrix_edge_count(const AdjacencyMatrix *graph); bool adjacency_matrix_graph_view(const AdjacencyMatrix *graph, GraphView *out_view);
 ```
 
-## Behavior, Ownership, and Invariants
+## Contract
+
 - Nodes and matrix storage are graph-owned; values are borrowed. Handles must belong to `graph`; outputs/visitors must be non-null where declared.
 - A present matrix slot is one edge. Add rejects an existing direct edge; remove/get reject an absent edge. Undirected graphs mirror add/remove yet count one logical edge.
 - Growing checks pointer, squared-cell, and byte-size overflow and prepares replacement allocations before publishing them. The GraphView is borrowed and becomes invalid after graph destruction or structural mutation.
 
-## Complexity and Verification
 Edge test/add/remove/weight lookup are O(1); neighbor iteration O(V); node growth copies O(V^2); space O(V^2). Verify with `make test NAME=data-structures/graphs/representations/adjacency-matrix`.
+
+## Complexity Targets
+
+Target: O(V^2) storage, O(1) edge lookup, and O(V) neighbor scans.
+
+## Verification
+
+```sh
+make test NAME=<topic-path>
+```

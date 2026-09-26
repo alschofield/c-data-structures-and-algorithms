@@ -1,8 +1,17 @@
 # Graph View
 
+## Implementation Status
+
+Implemented. This document describes the current learner-owned implementation contract.
+
+## How It Works
+
 `GraphView` is a non-owning, read-only adapter from a concrete graph-like structure to dense vertex indexes and weighted outgoing-neighbor iteration.
 
-## C API
+The abstraction exposes vertex counts and weighted indexed neighbors without coupling algorithms to a graph representation.
+
+## Required API
+
 ```c
 typedef bool (*GraphViewVisitFn)(size_t neighbor_index, uint64_t weight, void *context);
 typedef size_t (*GraphViewVertexCountFn)(const void *graph_context); typedef bool (*GraphViewIsDirectedFn)(const void *graph_context);
@@ -13,10 +22,20 @@ bool graph_view_is_valid(const GraphView *view); size_t graph_view_vertex_count(
 bool graph_view_neighbors(const GraphView *view, size_t index, GraphViewVisitFn visit, void *context); bool graph_view_is_directed(const GraphView *view);
 ```
 
-## Behavior, Lifetime, and Invariants
+## Contract
+
 - A valid view has non-null context and all four callbacks. Invalid views return false for boolean operations and zero for vertex count.
 - `node_at` and `neighbors` reject indexes outside `[0, vertex_count)`; neighbor iteration also requires a callback and propagates a callback's false result.
 - It allocates nothing and owns neither context nor callback state. The backing object and its callbacks must outlive every use; mutations must preserve the adapter's dense-index and neighbor contracts.
 
-## Complexity and Verification
 Wrapper overhead is O(1), plus backing callback cost. Verify with `make test NAME=data-structures/graphs/graph-view`.
+
+## Complexity Targets
+
+Target complexity is the topic-specific bound stated in the existing contract; add a measured benchmark only after an implementation exists.
+
+## Verification
+
+```sh
+make test NAME=<topic-path>
+```

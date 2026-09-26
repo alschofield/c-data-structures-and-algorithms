@@ -1,25 +1,12 @@
 # Insertion Sort
 
-Builds a sorted prefix by swapping each later pointer left until its predecessor is not greater.
+## Implementation Status
 
-## C API
-```c
-typedef int (*InsertionSortCompareFn)(const void *left, const void *right);
-bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
-```
-
-## Contract
-- Sorts ascending in place and is stable because equal items do not cross.
-- `compare` is mandatory; empty input succeeds without dereferencing `items`, and a nonempty null array fails.
-- It allocates nothing and reorders only caller-owned pointer slots. Items and array storage stay caller-owned.
-
-## Complexity and Verification
-Best O(n), average and worst O(n^2), O(1) auxiliary space. Verify with `make test NAME=algorithms/sorting/comparison/insertion-sort`.
-
-Comparison sort that grows a sorted prefix by shifting each new element left
-until it reaches its correct position.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
+
+Builds a sorted prefix by swapping each later pointer left until its predecessor is not greater.
 
 Sorting cards in a hand. An invisible line divides the array: left of it is
 sorted, right of it is raw. Each round takes the first raw element and walks
@@ -39,6 +26,15 @@ bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
 
 ## Contract
 
+- Sorts ascending in place and is stable because equal items do not cross.
+- `compare` is mandatory; empty input succeeds without dereferencing `items`, and a nonempty null array fails.
+- It allocates nothing and reorders only caller-owned pointer slots. Items and array storage stay caller-owned.
+
+Best O(n), average and worst O(n^2), O(1) auxiliary space. Verify with `make test NAME=algorithms/sorting/comparison/insertion-sort`.
+
+Comparison sort that grows a sorted prefix by shifting each new element left
+until it reaches its correct position.
+
 - Sorts in place into ascending order under the caller's comparison.
 - Stable: shift while strictly greater, insert after equal elements, so equal
   elements keep their original relative order.
@@ -54,3 +50,9 @@ bool insertion_sort(void **items, size_t count, InsertionSortCompareFn compare);
 - Average: O(n^2)
 - Worst: O(n^2) (reverse-sorted input)
 - Space: O(1), in place
+
+## Verification
+
+```sh
+make test NAME=<topic-path>
+```

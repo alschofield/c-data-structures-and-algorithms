@@ -1,32 +1,18 @@
 # Binary Search
 
-Recursively searches a caller-owned pointer array using half-open windows. The midpoint calculation is overflow-safe; the array is not changed.
+## Implementation Status
 
-## C API
-```c
-typedef int (*BinarySearchCompareFn)(const void *left, const void *right);
-bool binary_search(void *const *items, size_t count, const void *key,
-                   BinarySearchCompareFn compare, size_t *out_index);
-```
-
-## Contract
-- `items` must be ascending under `compare`; duplicates are permitted, but the returned matching index is unspecified.
-- Returns `false` for empty input, null `items`, `key`, `compare`, or `out_index`, or for a miss. On failure, it does not write `out_index`.
-- All array storage and item lifetime remain the caller's responsibility. The callback must safely compare the key with every candidate item.
-
-## Complexity and Verification
-Time is O(log n), recursion space is O(log n). Verify with `make test NAME=algorithms/searching/binary-search`.
-
-Divide-and-conquer search over a sorted array that halves the candidate range
-on every comparison.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
+
+Recursively searches a caller-owned pointer array using half-open windows. The midpoint calculation is overflow-safe; the array is not changed.
 
 Guided elimination over sorted input. Check the middle element: too small,
 and the target can only be right of it; too large, only left. Either way half
 the candidates disappear, so the search finishes in O(log n) comparisons. The
 invariant that keeps the implementation honest: if the target exists, it is
-always inside the current [low, high] window — every step must shrink the
+always inside the current [low, high] window -- every step must shrink the
 window or exit. The famous defects are boundary bugs: midpoint overflow
 (hence `low + (high - low) / 2`), off-by-one window updates, and loops that
 stop shrinking.
@@ -44,6 +30,15 @@ The checked-in implementation recursively narrows a half-open `[low, high)`
 window using overflow-safe midpoint arithmetic.
 
 ## Contract
+
+- `items` must be ascending under `compare`; duplicates are permitted, but the returned matching index is unspecified.
+- Returns `false` for empty input, null `items`, `key`, `compare`, or `out_index`, or for a miss. On failure, it does not write `out_index`.
+- All array storage and item lifetime remain the caller's responsibility. The callback must safely compare the key with every candidate item.
+
+Time is O(log n), recursion space is O(log n). Verify with `make test NAME=algorithms/searching/binary-search`.
+
+Divide-and-conquer search over a sorted array that halves the candidate range
+on every comparison.
 
 - Input must already be sorted ascending under the caller's comparison; the
   function may assume but never verify or re-sort it.

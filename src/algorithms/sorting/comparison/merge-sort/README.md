@@ -1,30 +1,17 @@
 # Merge Sort
 
-Recursively halves the pointer range, then merges adjacent sorted runs through one reusable temporary pointer buffer.
+## Implementation Status
 
-## C API
-```c
-typedef int (*MergeSortCompareFn)(const void *left, const void *right);
-bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
-```
-
-## Contract
-- Sorts ascending in place and is stable: merge takes from the left run on equal comparisons.
-- A null callback fails. Empty input succeeds without reading `items`; a nonempty null array fails. It rejects `count * sizeof(void *)` overflow and allocation failure before moving items.
-- The temporary buffer is internal and freed before return. The caller retains array and item ownership.
-
-## Complexity and Verification
-Time is O(n log n), auxiliary space O(n), recursion depth O(log n). Verify with `make test NAME=algorithms/sorting/comparison/merge-sort`.
-
-Divide-and-conquer comparison sort that recursively sorts halves and merges
-them with an auxiliary buffer.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
+
+Recursively halves the pointer range, then merges adjacent sorted runs through one reusable temporary pointer buffer.
 
 Divide and conquer. Split the array in half, sort each half (recursively,
 down to single elements, which are trivially sorted), then merge: walk both
 sorted halves front-to-front, repeatedly taking the smaller head into the
-output. The merge is where the work and the guarantees live — taking from the
+output. The merge is where the work and the guarantees live -- taking from the
 left run on ties is what makes the sort stable, and no input order can make
 merging degrade, which is why the cost is O(n log n) unconditionally. The
 price is the O(n) auxiliary buffer the merge writes into.
@@ -38,6 +25,15 @@ bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
 ```
 
 ## Contract
+
+- Sorts ascending in place and is stable: merge takes from the left run on equal comparisons.
+- A null callback fails. Empty input succeeds without reading `items`; a nonempty null array fails. It rejects `count * sizeof(void *)` overflow and allocation failure before moving items.
+- The temporary buffer is internal and freed before return. The caller retains array and item ownership.
+
+Time is O(n log n), auxiliary space O(n), recursion depth O(log n). Verify with `make test NAME=algorithms/sorting/comparison/merge-sort`.
+
+Divide-and-conquer comparison sort that recursively sorts halves and merges
+them with an auxiliary buffer.
 
 - Sorts into ascending order under the caller's comparison.
 - Stable: on ties the merge step must take from the left run first.
@@ -56,3 +52,9 @@ bool merge_sort(void **items, size_t count, MergeSortCompareFn compare);
 - Average: O(n log n)
 - Worst: O(n log n)
 - Space: O(n) auxiliary buffer (plus O(log n) recursion depth)
+
+## Verification
+
+```sh
+make test NAME=<topic-path>
+```

@@ -1,25 +1,12 @@
 # Heap Sort
 
-Builds an in-place max heap, then repeatedly exchanges its root with the end of the active range and sifts the replacement down.
+## Implementation Status
 
-## C API
-```c
-typedef int (*HeapSortCompareFn)(const void *left, const void *right);
-bool heap_sort(void **items, size_t count, HeapSortCompareFn compare);
-```
-
-## Contract
-- Sorts pointers ascending in place and is not stable.
-- Empty input succeeds without dereferencing `items` or `compare`. For nonempty input, both must be non-null.
-- It owns no caller storage and makes no allocations; only pointer slots are exchanged.
-
-## Complexity and Verification
-Time is O(n log n) in all cases and auxiliary space O(1). Verify with `make test NAME=algorithms/sorting/comparison/heap-sort`.
-
-Comparison sort that builds a max-heap in the array, then repeatedly swaps the
-root to the tail and re-heapifies the shrinking prefix.
+Implemented. This document describes the current learner-owned implementation contract.
 
 ## How It Works
+
+Builds an in-place max heap, then repeatedly exchanges its root with the end of the active range and sifts the replacement down.
 
 Two ideas glued together. First, the array is treated as an implicit tree:
 the element at index i has children at 2i+1 and 2i+2, and the max-heap rule
@@ -30,7 +17,7 @@ position until it settles.
 
 Second, harvest: swap the root (the maximum) with the last heap element,
 shrink the heap by one so that slot is final, and sift the new root down to
-restore the rule. Each round locks one element at the tail — bubble sort's
+restore the rule. Each round locks one element at the tail -- bubble sort's
 shape, but finding the max costs O(log n) instead of an O(n) pass. The build
 step walks backward from the last parent sifting each node down, which is
 O(n) because most nodes are near the bottom and barely move. Long-distance
@@ -48,6 +35,15 @@ The checked-in implementation uses in-place bottom-up max-heap construction
 and repeated root extraction.
 
 ## Contract
+
+- Sorts pointers ascending in place and is not stable.
+- Empty input succeeds without dereferencing `items` or `compare`. For nonempty input, both must be non-null.
+- It owns no caller storage and makes no allocations; only pointer slots are exchanged.
+
+Time is O(n log n) in all cases and auxiliary space O(1). Verify with `make test NAME=algorithms/sorting/comparison/heap-sort`.
+
+Comparison sort that builds a max-heap in the array, then repeatedly swaps the
+root to the tail and re-heapifies the shrinking prefix.
 
 - Sorts in place into ascending order under the caller's comparison.
 - Not stable; sift operations reorder equal elements. Do not claim stability.
